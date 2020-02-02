@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Example Post</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: .9em;
+            color: #a8abb6;
+            background: #1d1e22;
+        }
+
+        a { color: #d2ab71; }
+
+        p { line-height: 1.45em}
+
+        img { max-width: 100% }
+
+        h1, h2 { color: #fff;  }
+        h1 { font-size: 1.5em }
+        h2 { font-size: 1.25em }
+
+        time { font-style: italic }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 0.9em;
+            background: #121212;
+            color: #fff;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+        }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Extracting Data from Invoices with Google AutoML Natural Language</h1>
+        <time>2020-02-02</time>
+
+    <p>In this tutorial I will show how to use <a href="https://cloud.google.com/natural-language/automl/docs/">Google AutoML Natural Language</a> to setup a machine learning model that will automatically extract the total from invoices.</p>
+
+    <h2>Why?</h2>
+    <p>Manually extracting data from invoices and entering them into an accounting system is time consuming and tedious work.</p>
+    <p>To automate this there are template-based systems like <a href="https://github.com/invoice-x/invoice2data">invoice2data</a> available. They extract the data using pre-defined extraction rules (regular expressions):</p>
+    <pre>Invoice Total: \$(\d+.\d{2})</pre>
+    <p>With such a system there's still manual work required. YAML templates with extraction rules need to be written for each supplier and then maintained as invoice structures change over time. In the example above the supplier could decide to change <code>Invoice Total</code> to <code>Total</code> on the next invoice. The extraction would fail and the rule would have to be adjusted.</p>
+    <p>A better solution is to use a machine learning model that can extract the information without writing extraction rules. In this post I'm going to show how to setup such a model.</p>
+
+    <h2>Steps To Do</h2>
+    <p>To build our invoice data extraction ML model we have to do the following steps:</p>
+    <ul>
+        <li>Collect the training documents</li>
+        <li>Upload the documents to Google Cloud Storage</li>
+        <li>Create a CSV and JSONL file for AutoML to import the uploaded documents</li>
+        <li>Import the documents</li>
+        <li>Annotate the documents</li>
+        <li>Build/Train the model</li>
+    </ul>
+    <p>After that we can manually test the model by uploading invoices and checking how well it's able to extract the data.</p>
+    <p>I'm using Google AutoML Natural Language which is part of Google Cloud Platform and a GCP account is required. Regarding cost there are two things to note: Google will give $300 free credit for new GCP accounts and $25 promotional credit for developers using AutoML for the fist time.</p>
+    <p>Note that for the <code>gsutil</code> commands below I installed the <a href="https://cloud.google.com/sdk/">Google Cloud SDK</a> but it's not necessary to do so, the GCS operations from below can also be done over the web ui.</p>
+
+    <h2>Training Documents</h2>
+    <p>The first step is to collect training documents that are structured in the same way as the documents we want the model to handle later on. I was able to collect 150 invoices from different consultants. All invoices are text based PDF files with either 1 or 2 pages and the total written somewhere in the bottom right (single page invoices) or top-right (two-page invoices).</p>
+    <p>This is almost the minimum amount of training documents that is required by AutoML to work. Feel free to add more. The more training documents the better the model's performance.</p>
+
+<p>It's important to use documents that have a similar structure. AutoML will use those documents to build the model by trying out different algorithms to find patterns. If those documents are structured in a different way it won't be able to find any patterns and the model will have a poor performance.</p>
+
+<h2>Uploading Documents to GCS</h2>
+<p>All documents need to be stored in a Google Cloud Storage (GCS) bucket. AutoML doesn't support other document sources. There are three important restrictions when creating the bucket:</p>
+<ul>
+    <li>The <em>Location Type</em> has to be <code>Region</code></li>
+    <li>The <em>Location</em> has to be <code>us-central1 (Iowa)</code></li>
+    <li>The <em>Storage Class</em> has to be <code>Standard</code></li>
+</ul>
+<p>The bucket can be created by running:</p>
+<pre>gsutil mb -l us-central1 gs://automl-nlp-example</pre>
+
+<p>I have all my training documents in a folder called <code>invoices/</code> and named with the same pattern: <code>invoice-X</code> where X is the number of the invoice (1 to 150). I recommend using the same pattern for all the invoice files as we will need to iterate over them later on. We can upload the folder with the invoices by running:</p>
+
+<pre>gsutil -m cp -r invoices/ gs://automl-nlp-example/</pre>
+
+<h2>Importing the documents</h2>
+<p>For AutoML to be able to import the training documents we need to create a CSV file. The CSV file contains a link to a <a href="http://jsonlines.org/">JSONL</a> document. The JSONL file then contains links to the actual invoice PDF files. The import flow is:</p>
+<p>AutoML -> CSV file → JSONL file → PDF file(s)</p>
+
+<h2>Creating the CSV file</h2>
+<p>Creating the CSV file is simple and requires only one line:<p>
+<pre>,gs://automl-nlp-example/data.jsonl</pre>
+<p>It's important to have the comma at the beginning of the line which will make AutoML randomly assign the documents to different sets (TRAIN, VALIDATION, TEST). It will use:</p>
+<ul>
+    <li>80% of the PDF documents for training the model</li>
+    <li>10% for validating the results during training</li>
+    <li>10% for verifying the model's results after it has been trained</li>
+</ul>
+<p>We can upload the CSV file to GCS:</p>
+<pre>gsutil cp data.csv gs://automl-nlp-example/</pre>
+
+<h2>Creating a JSONL File</h2>
+<p>The JSONL file contains links to the invoice PDF documents. Each line links to one PDF document and needs to have the following structure:</p>
+
+<pre>{"document": {"input_config": {"gcs_source": {"input_uris": [ "gs://automl-nlp-example/invoice-1.pdf" ]}}}}</pre>
+
+<p>We need to repeat this line for all documents and change the value of <code>input_uris</code> to use the actual filename of the PDF file. I used a small Python script to generate the file (this is easy since my documents follow the same filename pattern) and upload it to GCS:</p>
+
+<pre>python3 -c 'for x in range(1, 151): print("""{"document": {"input_config": {"gcs_source": {"input_uris": [ "gs://automl-nlp-example/invoice-%s.pdf" ]}}}}""" % x)' > data.jsonl
+
+gsutil cp data.jsonl gs://automl-nlp-example/
+</pre>
+
+<p>After creating and uploading the files we should have the following files in the GCS bucket:</p>
+<ul>
+    <li>The <code>invoice/</code> directory contains all invoices as PDF files</li>
+    <li>The <code>data.csv</code> file contains a link to the JSONL file</li>
+    <li>The <code>data.jsonl</code> file contains links to the PDF files</li>
+</ul>
+
+<h2>Creating the AutoML Dataset</h2>
+
+<p>After the data is uploaded we can start creating the dataset. This can only be done in the GCP console. Go to <em>Natual Language</em> and then <em>AutoML Entity Extraction</em> to create the dataset. The location has to be <em>Global</em> and the model objective has to be <em>Entity Extraction</em>:</p>
+
+<p><img src="create-new-dataset.png"/></p>
+
+<p>The CSV file can be imported from the GCS bucket at the bottom of the screen:</p>
+
+<p><img src="import-csv.png"/></p>
+
+<p>In my case the import process took <em>13 minutes</em> to finish.</p>
+
+<p><img src="import-done.png"/></p>
+
+<p>I created a <code>totalPrice</code> label. We can do this in the bottom by clicking on "<em>Add New Label</em>". We will use that label in the next step to annotate the entity we want to extract.</p>
+
+<h2>Annotating the Documents</h2>
+<p>Annotating the documents is the most time-consuming part. We need to go through the following number of invoice documents in each set and mark the total in them:</p>
+
+<ul>
+    <li>100 documents in the Training set</li>
+    <li>10 documents in the Validation set</li>
+    <li>10 documents in the Test set</li>
+</ul>
+
+<p>This is the minimum number of annotations to make the model train. Feel free to annotate more documents if there's time.</p>
+
+<p>Next we click on a document and navigate to the <em>Structured Text</em> view which. This will show the content of the PDF file and make it easy to annotate by simply selecting the text with the mouse and picking a label in the overlay popup. In the example below I would annotate the total: <code>5,032.50</code></p>
+
+<p><img src="annotating.png"/></p>
+
+<p>When using this view AutoML will use the PDFs annotation's position during training and learn to distinguish between entities based on the position of the annotation.</p>
+
+<p>After all the documents have been annotated we can switch to the "TRAIN" tab and start the training:</p>
+
+<p><img src="pre-start-training.png"/></p>
+
+<p>In my case the training process took <em>2 hours and 18 minutes</em> to finish.</p>
+
+<h2>Manual Testing</h2>
+
+<p>After we trained the model we can try it out by uploading an invoice to GCS:</p>
+<pre>gsutil cp testing-invoice.pdf gs://automl-nlp-example/</pre>
+
+<p>Then selecting it in the "TEST & USE" tab and clicking on the "PREDICT" button:</p>
+
+<p><img src="test-and-use.png"/></p>
+
+<p>The prediction will only take a second and shows the result in a PDF view:</p>
+
+<p><img src="prediction-results.png"/></p>
+
+<p>In the example above we can see that the totalPrice was successfully extracted. Feel free to try it out with other invoices. Multiple documents can be submitted by using the <a href="https://cloud.google.com/natural-language/automl/docs/predict#batch_prediction">Batch prediction REST API</a>.</p>
+
+<h2>Conclusion</h2>
+
+<p>I found Google AutoML Natural Language easy to use. Most of the tasks (except creating the CSV and JSONL files) can be done in the web ui and the whole process doesn't require any coding experience. I only had a very small training dataset available but the results are good enough. In my manual tests I was able to extract the total in around 80% of the cases. I'm sure this could be improved by making a higher quality training dataset. The downside is that the price for AutoML is high. It cost me around $25 to train, test and deploy this model.</p>
+    </article>
+  </body>
+</html>
