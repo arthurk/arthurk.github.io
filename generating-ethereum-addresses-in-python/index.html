@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Generating Ethereum Addresses in Python</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: .9em;
+            color: #aaaaaa;
+            background: #1d1e22;
+            padding-bottom: 2em;
+        }
+
+        a { color: #d2ab71; }
+
+        p, li { line-height: 1.45em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff;  border-bottom: 2px solid gray}
+        h1 { font-size: 1.5em }
+        h2 { font-size: 1.25em }
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            background: #000;
+            color: #fff;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            border: 1px dashed #666;
+            line-height: 1.5em;
+        }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Generating Ethereum Addresses in Python</h1>
+        <time>February 16, 2020</time>
+        <p>
+            I've been wondering how long it would take to generate all Ethereum private keys with addresses on my laptop.
+        </p>
+        <p>
+            I know there is <a href="https://bitcointalk.org/index.php?topic=7769.msg1010711#msg1010711">not enough energy in our star system</a>
+            to do this in a reasonable timeframe, even on an imaginative computer that would use the absolute minimum of energy possible.
+            This was more of a learning experience for me to get to know more about SHA-3 and KECCAK hashes,
+            ECDSA curves, Public Keys and Ethereum addresses.
+        </p>
+        <p>
+            Due to its slow interpreter, Python is usually not a good choice when it comes to writing performant applications.
+            The exception being Python modules which use an interface that calls C/C++ code. These modules are usually very fast,
+            popular examples are <a href="https://www.tensorflow.org/">Tensorflow</a> and <a href="https://numpy.org/">Numpy</a>.
+            To generate Ethereum addresses we can use the following two Python modules which are both C based and have a good performance:
+        </p>
+        <ul>
+            <li><a href="https://github.com/ofek/coincurve/">coincurve</a>: Cross-platform Python CFFI bindings for libsecp256k1</li>
+            <li><a href="https://github.com/tiran/pysha3">pysha3</a>: SHA-3 wrapper for Python (with support for keccak)</li>
+        </ul>
+        <p>
+            Generating Ethereum addresses is a 3-step process:
+        </p>
+        <ol>
+            <li>Generate a private key</li>
+            <li>Derive the public key from the private key</li>
+            <li>Derive the Ethereum address from the public key</li>
+        </ol>
+        <p>
+            Note that public keys and Ethereum addresses are not the same. Addresses are hashes of public keys.
+            It's not possible to send funds to a public key.
+        </p>
+
+        <h2>Step 1: Generate a private key</h2>
+
+        <p>
+            Ethereum private keys are based on <a href="https://keccak.team/keccak.html">KECCAK-256 hashes</a>. To generate such a hash we
+            use the <code>keccak_256</code> function from the pysha3 module on a random 32 byte seed:
+        </p>
+<pre>
+import secrets
+from sha3 import keccak_256
+
+private_key = keccak_256(secrets.token_bytes(32)).digest()
+</pre>
+
+        <p>
+            Note that a KECCAK hash is not the same as a SHA-3 hash.
+            KECCAK won a competition to become the SHA-3 standard but was slightly modified
+            before it became standardized. Some SHA3 libraries such as pysha3 include
+            the legacy KECCAK algorithm while others, such as the <a href="https://docs.python.org/3.7/library/hashlib.html">Python hashlib module</a>,
+            only implement the official SHA-3 standard.
+        </p>
+
+        <h2>Step 2: Derive the public key from the private key</h2>
+        <p>
+            To get our public key we need to sign our private key with an Elliptic Curve Digital Signature Algorithm (ECDSA).
+            Ethereum uses the <a href="https://en.bitcoin.it/wiki/Secp256k1">secp256k1 curve ECDSA</a>. Coincurve uses this as a default
+            so we don't need to explicitly specify it when calling the function:
+        </p>
+<pre>
+from coincurve import PublicKey
+
+public_key = PublicKey.from_valid_secret(private_key).format(compressed=False)[1:]
+</pre>
+        <p>
+            The <a href="https://ethereum.github.io/yellowpaper/paper.pdf">Ethereum Yellow Paper</a> states that the public key has to be a byte array of size 64.
+        </p>
+        <p>
+            By default coincurve uses the compressed format for public keys (libsecp256k1 was developed for Bitcoin where compressed keys are commonly used) which is 33 bytes in size.
+            Uncompressed keys are 65 bytes in size. Additionally all public keys are
+            prepended with a single byte to indicate if they are compressed or uncompressed.
+            This means we first need to get the uncompressed 65 byte key (<code>compressed=False</code>)
+            and then strip the first byte (<code>[1:]</code>) to get our 64 byte Ethereum public key.
+        </p>
+
+        <h2>Step 3: Derive the Ethereum address from the public key</h2>
+
+        <p>
+            We can now generate our Ethereum address:
+        </p>
+<pre>
+addr = keccak_256(public_key).digest()[-20:]
+</pre>
+        <p>As specified in the <a href="https://ethereum.github.io/yellowpaper/paper.pdf">Yellow Paper</a> we take the right most 20 bytes of the 32 byte KECCAK hash of the corresponding ECDSA public key.</p>
+
+        <h2>Full Example</h2>
+        <p>
+            This is the full example code from the above steps. It generates a random private key, derives the address
+            and prints them in hex format:
+        </p>
+<pre>
+from secrets import token_bytes
+from coincurve import PublicKey
+from sha3 import keccak_256
+
+private_key = keccak_256(token_bytes(32)).digest()
+public_key = PublicKey.from_valid_secret(private_key).format(compressed=False)[1:]
+addr = keccak_256(public_key).digest()[-20:]
+
+print('private_key:', private_key.hex())
+print('eth addr: 0x' + addr.hex())
+
+### Output ###
+# private_key: 7bf19806aa6d5b31d7b7ea9e833c202e51ff8ee6311df6a036f0261f216f09ef
+# eth addr: 0x3db763bbbb1ac900eb2eb8b106218f85f9f64a13
+</pre>
+
+        <h2>Conclusion</h2>
+        <p>
+            I used the Python <code>timeit</code> module to do <a href="https://gist.github.com/arthurk/fbc876951379e2b0c889ea71b5167b4e">a quick benchmark</a> with the above code.
+            The result is that my laptop can generate 18k addresses per second on a single cpu core.
+            Using all 4 cpu cores that's 72k addresses per second, ~6.2 billion (6.220.800.000) addresses per day or around
+            two trillion (2.270.592.000.000) addresses per year.
+        </p>
+        <p>
+            Ethereum's address space is 2^160. This means that by using this method it would take my laptop
+            643665439999999976814879449351716864 (six hundred and forty-three decillion ...) years
+            to generate all Ethereum private keys with addresses.
+        </p>
+    </article>
+  </body>
+</html>
