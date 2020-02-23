@@ -12,22 +12,26 @@
             width: 90%;
             font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
             font-size: .9em;
-            color: #a8abb6;
+            color: #aaaaaa;
             background: #1d1e22;
         }
 
         a { color: #d2ab71; }
 
-        p { line-height: 1.45em}
+        p, li { line-height: 1.45em}
 
-        h1, h2 { color: #fff;  }
-        h1 { font-size: 1.5em; }
+        /* Headers */
+        h1, h2 { color: #fff;  border-bottom: 2px solid gray}
+        h1 { font-size: 1.5em }
         h2 { font-size: 1.25em }
 
-        time { display: block;  }
+        time { font-style: italic; opacity: 0.5; }
 
+        /* Lists */
         ul { padding-left: 1em }
-        ul li { margin-bottom: 1em }
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
 
         /* Desktop/Laptop screens */
         @media only screen and (min-width : 1200px) {
@@ -38,13 +42,12 @@
   </head>
   <body>
     <h1>Welcome!</h1>
-    <p>Hi, I'm Arthur Koziel. I'm working as a DevOps Engineer.</p>
-    <p>For any questions or comments you can contact me at <a href="mailto:arthur@arthurkoziel.com">arthur@arthurkoziel.com</a></p>
-    <p><a href="https://github.com/arthurk/">GitHub</a></p>
-    <p><a href="https://www.linkedin.com/in/arthur-koziel/">Linkedin</a></p>
+    <p>Hi, I'm Arthur Koziel. This is my blog where I share what I learned about things that interest me.</p>
+    <p>For any questions or comments you can contact me via Email at <a href="mailto:arthur@arthurkoziel.com">arthur@arthurkoziel.com</a> or message on <a href="https://github.com/arthurk/">GitHub</a> or <a href="https://www.linkedin.com/in/arthur-koziel/">Linkedin</a></p>
 
     <h2>Blog Posts</h2>
     <ul>
+        <li><a href="pre-installed-daemons-on-google-compute-engine/">Pre-Installed Daemons on Google Compute Engine</a><time>February 23, 2020</time></li>
         <li><a href="generating-ethereum-addresses-in-python/">Generating Ethereum Addresses in Python</a><time>February 16, 2020</time></li>
         <li><a href="validate-helm-chart-values-with-json-schemas/">Validating Helm Chart Values with JSON Schemas</a><time>February 08, 2020</time></li>
         <li><a href="automl-invoice-data-extraction/">Extracting Data from Invoices with Google AutoML Natural Language</a><time>February 02, 2020</time></li>

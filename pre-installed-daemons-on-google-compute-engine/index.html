@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Pre-Installed Daemons on Google Compute Engine</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: .9em;
+            color: #aaaaaa;
+            background: #1d1e22;
+            padding-bottom: 2em;
+        }
+
+        a { color: #d2ab71; }
+
+        p, li { line-height: 1.45em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff;  border-bottom: 2px solid gray}
+        h1 { font-size: 1.5em }
+        h2 { font-size: 1.25em }
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            background: #000;
+            color: #fff;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            border: 1px dashed #666;
+            line-height: 1.5em;
+        }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Pre-Installed Daemons on Google Compute Engine</h1>
+        <time>February 23, 2020</time>
+        <p>I recently found out that <a href="https://cloud.google.com/compute/">Google Compute Engine</a> instances will come with the Google Guest Environment pre-installed that runs daemons in the background. This is unlike AWS EC2 instances which only come with <a href="https://github.com/aws/aws-cli">aws-cli</a> installed. In this blog post I'm going to explain what those daemons are for and how to uninstall them.</p>
+            <p>We can see the following output when listing the running processes on a new Debian GCE intance:</p>
+
+<pre>
+$ ps ax | grep google
+
+418 ?        Ssl    2:52 /usr/bin/google_osconfig_agent
+526 ?        Ss     2:17 /usr/bin/python3 /usr/bin/google_network_daemon
+528 ?        Ss     3:32 /usr/bin/python3 /usr/bin/google_accounts_daemon
+529 ?        Ss     1:14 /usr/bin/python3 /usr/bin/google_clock_skew_daemon
+</pre>
+
+<p>We can check all installed google packages:</p>
+
+<pre>
+$ apt list --installed | grep google
+
+gce-disk-expand
+google-cloud-packages-archive-keyring
+google-cloud-sdk
+google-compute-engine-oslogin
+google-compute-engine
+google-osconfig-agent
+python-google-compute-engine
+python3-google-compute-engine
+</pre>
+
+<p>and systemd services:</p>
+<pre>
+$ systemctl list-unit-files | grep google
+
+google-accounts-daemon.service         enabled
+google-clock-skew-daemon.service       enabled
+google-instance-setup.service          enabled
+google-network-daemon.service          enabled
+google-osconfig-agent.service          enabled
+google-shutdown-scripts.service        enabled
+google-startup-scripts.service         enabled
+</pre>
+
+<p>These packages and services are part of the Google <a href="https://cloud.google.com/compute/docs/images/guest-environment">Linux Guest Environment</a> and <a href="https://cloud.google.com/compute/docs/instances/managing-instance-access">OS Login Guest Environment</a>.</p>
+<p>The GCP docs have some information on the <a href="https://cloud.google.com/compute/docs/images/guest-environment">Guest Environment</a> but it lacks details on the specifics of each daemon/script. A better source is the <a href="https://github.com/GoogleCloudPlatform/compute-image-packages/tree/master/packages/python-google-compute-engine">GitHub repo</a> where we can find a good explanation for each daemon and script:</p>
+
+<ul>
+    <li><strong>google-network-daemon:</strong> handles network setup for multiple network interfaces on boot and integrates network load balancing with forwarding rule changes into the guest</li>
+    <li><strong>google-accounts-daemon:</strong> daemon to setup and manage user accounts, and to enable SSH key based authentication</li>
+    <li><strong>google-clock-skew-daemon:</strong> daemon to keep the system clock in sync after VM start and stop events</li>
+    <li><strong>google-instance-setup:</strong> scripts to execute VM configuration scripts during boot</li>
+    <li><strong>google-startup-scripts/google-shutdown-scripts:</strong> run user-provided scripts at VM startup and shutdown</li>
+</ul>
+
+<p>The remaining daemon is the agent for the <a href="https://github.com/GoogleCloudPlatform/guest-oslogin">OS Login Guest Environment</a>. It manages access control when using the <a href="https://cloud.google.com/compute/docs/oslogin/">OS Login</a> feature by linking linux user accounts to Google accounts (which can then be managed with Cloud IAM). This feature is disabled by default and I'm not sure why the package is installed and the daemon is running.</p>
+
+<h2>Uninstall</h2>
+<p>If all that's needed is a simple VM instance without Google Cloud integration, all daemons and scripts can be uninstalled by removing the packages:</p>
+
+<pre>
+$ apt-get remove python-google-compute-engine python3-google-compute-engine \
+                 google-osconfig-agent google-compute-engine-oslogin
+</pre>
+<p>I think it's good to at least remove the <code>google-osconfig-agent</code> package and get rid of the <code>google_osconfig_agent</code> daemon running in the background. The package can be re-installed before enabling OS Login.</p>
+<p>Each daemon can also be disabled separately:</p>
+<pre>
+$ systemctl disable google-accounts-daemon.service
+</pre>
+
+    </article>
+  </body>
+</html>
