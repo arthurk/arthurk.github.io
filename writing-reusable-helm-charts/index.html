@@ -85,7 +85,7 @@
             for projects that have different requirements.
         </p>
         <p>
-            In the next sections I'm going to go over the templates from the default Helm Chart template (that is created when running
+            In the next sections I'm going to go over the templates from the default Helm chart template (that is created when running
             <code>helm create</code>) and explain what makes them reusable (and what can be improved).
         </p>
 
@@ -99,7 +99,7 @@
 
         <ul>
             <li>Using the Ingress should be optional. Not every developer wants to expose their service to external users</li>
-            <li>It should be possible to choose an ingress controller</li>
+            <li>It should be possible to choose an ingress controller such as nginx or GCE</li>
             <li>Traffic routing should be configurable</li>
             <li>TLS should be optional</li>
         </ul>
@@ -124,8 +124,8 @@ ingress:
 </pre>
         <p>We have the ingress enabled and use nginx as a controller. We specify a custom
             <code>server-snippet</code> (used by the nginx-ingress to inject custom code into the server config) that adds a custom header
-        (<code>X-Frame-Options</code>). We use annotations to signal <a href="cert-manager.readthedocs.io/">cert-manager</a> that
-        it should provision a SSL certificate.</p>
+        (<code>X-Frame-Options</code>). We use annotations to signal <a href="cert-manager.readthedocs.io/">cert-manager</a> to
+        provision a SSL certificate for this host.</p>
 
         <p>
         Other ingress controllers such as <a href="https://github.com/kubernetes/ingress-gce">GCE</a> also make use of annotations
@@ -159,7 +159,7 @@ ingress:
         </p>
 
         <p>
-        The requirements for a Service template in a reusable Helm Chart are:
+        The requirements for a Service template in a reusable Helm chart are:
         </p>
 
         <ul>
@@ -181,7 +181,7 @@ service:
 
         <p>
         The service has a <code>ClusterIP</code> Service type. In environments where higher availability is required
-        this could be changed to a <code>LoadBalancer</code>. The annotations are used by the Prometheus Helm Chart:
+        this could be changed to a <code>LoadBalancer</code>. The annotations are used by the Prometheus Helm chart:
         The prometheus server looks for all services in a cluster that have the <code>prometheus.io/scrape: "true"</code>
         annotation and automatically scrapes them every minute.
         </p>
@@ -207,10 +207,10 @@ service:
                 <strong>Modify arguments and environment variables</strong>: As an example
                 we should be able to pass <code>--log.level=debug</code> to a container to see debug logs in case we have
                 to identify problems with our application. Environment variables such as <code>MIX_ENV=prod</code> often
-                tell the application in which environment it is running</li>
+                tell the application in which environment it is running and which configuration it should load</li>
             <li>
                 <strong>Add custom ConfigMaps and Secrets</strong>: It should be possible to load application-specific
-                configuration files or secrets that were added externally (for example SSL certificates for a database connection)
+                configuration files or secrets that were added externally (for example SSL certificates for a database connection or API keys)
             </li>
             <li>
                 <strong>Add Liveness and Readiness probes</strong> to check if the container is started and alive</li>
@@ -224,11 +224,10 @@ service:
                 sidecar container to establish a secure connection to the database</li>
             <li>
                 <strong>Allow to set Affinity and Tolerations</strong>: To optimize the performance of the application we should be able
-                to run it on the same machine as certain other applications or have it scheduled on a specific NodePool</li>
+                to run it on the same machine as certain other applications or have it scheduled on a specific node pool</li>
         </ul>
 
-        <p>The <a href="https://gist.github.com/arthurk/5f833ec5b264b84b6e1bedbd8eac69ea">default template</a> doesn't meet the
-            requirements and we need to modify the template code. Specifically we need to allow to:
+        <p>Unlike the Ingress and Service templates, the <a href="https://gist.github.com/arthurk/5f833ec5b264b84b6e1bedbd8eac69ea">default template</a> doesn't meet the requirements from above. Specifically we need to allow to:
 
 <ul>
     <li>Add Pod annotations so that other applications such as Linkerd know where to inject sidecar containers</li>
@@ -243,7 +242,7 @@ service:
         (such as <a href="https://github.com/GoogleCloudPlatform/cloudsql-proxy/">cloudsql-proxy</a>)</li>
 </ul>
 
-The modified template code looks as follows (<span class="diff_add">green</span> text marks added and changed code):</p>
+<p>The modified template code looks as follows (<span class="diff_add">green</span> text marks added and changed code):</p>
 
 <pre>
 apiVersion: apps/v1
@@ -330,14 +329,14 @@ spec:
 
     <p>
     The default helm chart template is a great starting point for building reusable helm charts. The Ingress and Service
-    templates are perfect examples. The Deployment template is lacking a few options but can easily be modified and improved.
+    templates are perfect examples. The Deployment template is lacking a few options to be reusable enough but can
+    easily be modified and improved.
     </p>
 
     <p>
-    For good examples of reusable Helm Charts I recommend to check the
+    For good examples of reusable Helm charts I recommend checking the
     <a href="https://github.com/helm/charts/tree/master/stable">helm/charts stable repo</a>.
-    Charts such as <a href="https://github.com/helm/charts/tree/master/stable/prometheus">Prometheus</a>, <a href="https://github.com/helm/charts/tree/master/stable/grafana">Grafana</a> or <a href="https://github.com/helm/charts/tree/master/stable/nginx-ingress">nginx-ingress</a> are actively maintained and constantly improved.
-    They are good references when it comes to writing a new Helm Chart.
+    Charts such as <a href="https://github.com/helm/charts/tree/master/stable/prometheus">Prometheus</a>, <a href="https://github.com/helm/charts/tree/master/stable/grafana">Grafana</a> or <a href="https://github.com/helm/charts/tree/master/stable/nginx-ingress">nginx-ingress</a> are actively maintained and constantly improved. They are good references to look at when writing a new Helm chart.
     </p>
 
     </article>
