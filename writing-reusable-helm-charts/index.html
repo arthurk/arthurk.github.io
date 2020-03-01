@@ -67,22 +67,22 @@
         <h1>Writing Reusable Helm Charts</h1>
         <time>March 1, 2020</time>
         <p>
-            <a href="https://helm.sh/">Helm Charts</a> make it possible to package Kubernetes manifests, version them and share them with
-            other developers. To use a chart across projects that have different requirements it needs to be <em>reusable</em>, meaning
-            that common parts of the Kubernetes manifests can be changed in a values file.
+            <a href="https://helm.sh/">Helm charts</a> make it possible to easily package <a href="https://kubernetes.io/">Kubernetes</a> manifests, version them and share them with
+            other developers. To use a Helm chart across projects with different requirements it needs to be <em>reusable</em>, meaning
+            that common parts of the Kubernetes manifests can be changed in a values file without having to re-write the templates.
         </p>
         <p>
-            Let's say you are looking into deploying Prometheus via Helm in your Kubernetes cluster. You search
+            Let's say we are looking into deploying Prometheus via Helm into our Kubernetes cluster. We search
             around and find a chart that is stable, well documented and actively maintained. It looks like a good choice.
-            There are a few options that you need to change in order to fit your requirements. Ideally this could be done
-            by creating a <code>values.yaml</code> file and overriding the default settings. However, the chart you found
-            is not reusable enough and the options that you need to change are not available.
+            But there are a few options that you need to change in order to fit our requirements. Normally this could be done
+            by creating a <code>values.yaml</code> file and overriding the default settings. However, the chart that is available
+            is not reusable enough and the options that we need to change are not available.
         </p>
         <p>
-            In such a case the only option is to copy the whole chart and modify it to fit your requirements even if the modification
+            In such a case the only option for us is to copy the whole chart and modify it to fit the requirements even if the modification
             is only 1 or 2 lines of code. After copying the chart we also have to maintain it and keep it up to date with the upstream
-            branch. It would've saved us a lot of time and work if the author of the chart added a few options to make the
-            chart reusable for projects that have different requirements.
+            branch. It would've saved us a lot of time and work if the chart added a few options to make it reusable
+            for projects that have different requirements.
         </p>
         <p>
             In the next sections I'm going to go over the templates from the default Helm Chart template (that is created when running
