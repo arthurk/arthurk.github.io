@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Writing Reusable Helm Charts</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: .9em;
+            color: #aaaaaa;
+            background: #1d1e22;
+            padding-bottom: 2em;
+        }
+
+        a { color: #d2ab71; }
+
+        p, li { line-height: 1.45em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff;  border-bottom: 2px solid gray}
+        h1 { font-size: 1.5em }
+        h2 { font-size: 1.25em }
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            background: #000;
+            color: #fff;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            border: 1px dashed #666;
+            line-height: 1.5em;
+        }
+
+        span.diff_add { color: lime }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Writing Reusable Helm Charts</h1>
+        <time>March 1, 2020</time>
+        <p>
+            <a href="https://helm.sh/">Helm Charts</a> make it possible to package Kubernetes manifests, version them and share them with
+            other developers. To use a chart across projects that have different requirements it needs to be <em>reusable</em>, meaning
+            that common parts of the Kubernetes manifests can be changed in a values file.
+        </p>
+        <p>
+            Let's say you are looking into deploying Prometheus via Helm in your Kubernetes cluster. You search
+            around and find a chart that is stable, well documented and actively maintained. It looks like a good choice.
+            There are a few options that you need to change in order to fit your requirements. Ideally this could be done
+            by creating a <code>values.yaml</code> file and overriding the default settings. However, the chart you found
+            is not reusable enough and the options that you need to change are not available.
+        </p>
+        <p>
+            In such a case the only option is to copy the whole chart and modify it to fit your requirements even if the modification
+            is only 1 or 2 lines of code. After copying the chart we also have to maintain it and keep it up to date with the upstream
+            branch. It would've saved us a lot of time and work if the author of the chart added a few options to make the
+            chart reusable for projects that have different requirements.
+        </p>
+        <p>
+            In the next sections I'm going to go over the templates from the default Helm Chart template (that is created when running
+            <code>helm create</code>) and explain what makes them reusable (and what can be improved).
+        </p>
+
+        <h2>Ingress</h2>
+
+        <p>An Ingress allows external users to access Kubernetes Services. It provides a reverse-proxy,
+        configurable traffic routing and TLS termination. There are several Ingress controllers available
+        such as <a href="https://github.com/kubernetes/ingress-nginx">nginx</a>, <a href="https://github.com/kubernetes/ingress-gce">GCE</a>, <a href="https://github.com/containous/traefik">Traefik</a>, <a href="https://github.com/haproxytech/kubernetes-ingress/">HAProxy</a>, <a href="https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/">and more</a>.</p>
+
+        <p>For a reusable Ingress template we need to consider the following requirements:</p>
+
+        <ul>
+            <li>Using the Ingress should be optional. Not every developer wants to expose their service to external users</li>
+            <li>It should be possible to choose an ingress controller</li>
+            <li>Traffic routing should be configurable</li>
+            <li>TLS should be optional</li>
+        </ul>
+
+        <p>
+        The <a href="https://gist.github.com/arthurk/d872e92fabfca4f2e6af84662da10106">default Ingress template</a> meets all of
+        our requirements and is a great example of a reusable template. The custom annotations are a very important part.
+        A typical usage example of would look like this:
+        </p>
+
+<pre>
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/server-snippet: |
+      add_header X-Frame-Options "DENY";
+      proxy_set_header X-Frame-Options "DENY";
+    certmanager.k8s.io/cluster-issuer: letsencrypt
+    certmanager.k8s.io/acme-challenge-type: dns01
+    certmanager.k8s.io/acme-dns01-provider: cloudflare
+</pre>
+        <p>We have the ingress enabled and use nginx as a controller. We specify a custom
+            <code>server-snippet</code> (used by the nginx-ingress to inject custom code into the server config) that adds a custom header
+        (<code>X-Frame-Options</code>). We use annotations to signal <a href="cert-manager.readthedocs.io/">cert-manager</a> that
+        it should provision a SSL certificate.</p>
+
+        <p>
+        Other ingress controllers such as <a href="https://github.com/kubernetes/ingress-gce">GCE</a> also make use of annotations
+        to integrate with Google Cloud services. In this example we assign an external static IP and provision an SSL certificate
+        (with <a href="http://github.com/GoogleCloudPlatform/gke-managed-certs">gke-managed-certs</a>):
+        </p>
+
+<pre>
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: my-external-ip
+    kubernetes.io/ingress.allow-http: 'false'
+    networking.gke.io/managed-certificates: example-certificate
+  hosts:
+    - host: example.org
+      paths:
+        - "/*"
+  tls:
+    - hosts:
+        - example.org
+      secretName: "example-org-tls"
+</pre>
+
+        <h2>Service</h2>
+        <p>
+        A Service is an abstraction for a grouping of pods. It selects pods based on labels and
+        allows network access to them. There are several Service types that Kubernetes supports such as
+        ClusterIP, LoadBalancer or NodePort.
+        </p>
+
+        <p>
+        The requirements for a Service template in a reusable Helm Chart are:
+        </p>
+
+        <ul>
+          <li>It should be possible to pick a Service type. Not everyone wants to run an application behind a Load Balancer</li>
+          <li>It should be possible to add annotations</li>
+        </ul>
+
+        <p>
+            These are fairly simple requirements and the <a href="https://gist.github.com/arthurk/e7bec72e9e7f4ea8785656f582846421">default Service template</a> meets all of them. A usage example looks like this:</p>
+
+<pre>
+service:
+  type: ClusterIP
+  port: 80
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "4000"
+</pre>
+
+        <p>
+        The service has a <code>ClusterIP</code> Service type. In environments where higher availability is required
+        this could be changed to a <code>LoadBalancer</code>. The annotations are used by the Prometheus Helm Chart:
+        The prometheus server looks for all services in a cluster that have the <code>prometheus.io/scrape: "true"</code>
+        annotation and automatically scrapes them every minute.
+        </p>
+
+        <h2>Deployment</h2>
+        <p>
+        A Deployment is an abstraction for pods. It runs multiple replicas of an application and keeps them
+        in the desired state. If an application fails or becomes unresponsive it will be replaced automatically.
+        </p>
+
+        <p>In a reusable Deployment template we should be able to:</p>
+        <ul>
+            <li>
+                <strong>Set the number of replicas</strong>: Depending on the environment we should be able to adjust
+                this value. A test environment doesn't need to run as many replicas as a production environment.</li>
+            <li>
+                <strong>Add Pod annotations</strong>: Applications such as <a href="https://linkerd.io/">Linkerd</a> use
+                annotations to identify Pods into which to inject a sidecar container (<code>linkerd.io/inject: enabled</code>)
+            </li>
+            <li>
+                <strong>Pull the Docker image from a custom (private) registry</strong></li>
+            <li>
+                <strong>Modify arguments and environment variables</strong>: As an example
+                we should be able to pass <code>--log.level=debug</code> to a container to see debug logs in case we have
+                to identify problems with our application. Environment variables such as <code>MIX_ENV=prod</code> often
+                tell the application in which environment it is running</li>
+            <li>
+                <strong>Add custom ConfigMaps and Secrets</strong>: It should be possible to load application-specific
+                configuration files or secrets that were added externally (for example SSL certificates for a database connection)
+            </li>
+            <li>
+                <strong>Add Liveness and Readiness probes</strong> to check if the container is started and alive</li>
+            <li>
+                <strong>Configure container resource limits and requests</strong>: In test or staging environments we should be able to
+                disable it or set it to a low value
+            </li>
+            <li>
+                <strong>Run Sidecar Containers</strong>: If the application requires a database connection but the database is on CloudSQL it
+                is often recommended to run <a href="https://github.com/GoogleCloudPlatform/cloudsql-proxy/">cloudsql-proxy</a> as a
+                sidecar container to establish a secure connection to the database</li>
+            <li>
+                <strong>Allow to set Affinity and Tolerations</strong>: To optimize the performance of the application we should be able
+                to run it on the same machine as certain other applications or have it scheduled on a specific NodePool</li>
+        </ul>
+
+        <p>The <a href="https://gist.github.com/arthurk/5f833ec5b264b84b6e1bedbd8eac69ea">default template</a> doesn't meet the
+            requirements and we need to modify the template code. Specifically we need to allow to:
+
+<ul>
+    <li>Add Pod annotations so that other applications such as Linkerd know where to inject sidecar containers</li>
+    <li>Replace <code>appVersion</code> with <code>image.tag</code>. This allows to change the docker image tag
+        without having to re-package the chart with a different <code>appVersion</code></li>
+    <li>Add <code>extraArgs</code> to allow additional arguments to be passed into the container</li>
+    <li>Add <code>env</code> to allow additional environment variables to be passed into the container</li>
+    <li>Replace the default livenessProbe/readinessProbe with a block that allows us to set all values (the default
+        template only allows <code>httpGet</code> probes on <code>/</code></li>
+    <li>Add <code>extraVolumes</code> and <code>extraVolumeMounts</code> to allow mounting of custom ConfigMaps and Secrets</li>
+    <li>Add <code>sidecarContainers</code> to allow to inject additional containers into the pod
+        (such as <a href="https://github.com/GoogleCloudPlatform/cloudsql-proxy/">cloudsql-proxy</a>)</li>
+</ul>
+
+The modified template code looks as follows (<span class="diff_add">green</span> text marks added and changed code):</p>
+
+<pre>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mychart.fullname" . }}
+  labels:
+    {{- include "mychart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mychart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mychart.selectorLabels" . | nindent 8 }}<span class="diff_add">
+      annotations:
+      {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+      {{- end }}</span>
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "mychart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}<span class="diff_add">
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"</span>
+          imagePullPolicy: {{ .Values.image.pullPolicy }}<span class="diff_add">
+          args:
+          {{- range $key, $value := .Values.extraArgs }}
+            - --{{ $key }}={{ $value }}
+          {{- end }}
+          {{- if .Values.env }}
+          env:
+            {{ toYaml .Values.env | nindent 12}}
+          {{- end }}</span>
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP<span class="diff_add">
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}</span>
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}<span class="diff_add">
+          volumeMounts:
+          {{- if .Values.extraVolumeMounts }}
+          {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+       {{- if .Values.sidecarContainers }}
+       {{- toYaml .Values.sidecarContainers | nindent 8 }}
+       {{- end }}
+      volumes:
+      {{- if .Values.extraVolumes }}
+      {{ toYaml .Values.extraVolumes | nindent 8}}
+      {{- end }}</span>
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+</pre>
+
+    <h2>Conclusion</h2>
+
+    <p>
+    The default helm chart template is a great starting point for building reusable helm charts. The Ingress and Service
+    templates are perfect examples. The Deployment template is lacking a few options but can easily be modified and improved.
+    </p>
+
+    <p>
+    For good examples of reusable Helm Charts I recommend to check the
+    <a href="https://github.com/helm/charts/tree/master/stable">helm/charts stable repo</a>.
+    Charts such as <a href="https://github.com/helm/charts/tree/master/stable/prometheus">Prometheus</a>, <a href="https://github.com/helm/charts/tree/master/stable/grafana">Grafana</a> or <a href="https://github.com/helm/charts/tree/master/stable/nginx-ingress">nginx-ingress</a> are actively maintained and constantly improved.
+    They are good references when it comes to writing a new Helm Chart.
+    </p>
+
+    </article>
+  </body>
+</html>
