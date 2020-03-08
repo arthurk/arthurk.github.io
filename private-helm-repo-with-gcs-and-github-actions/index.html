@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Private Helm Repo with GCS and GitHub Actions</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: .9em;
+            color: #aaaaaa;
+            background: #1d1e22;
+            padding-bottom: 2em;
+        }
+
+        a { color: #d2ab71; }
+
+        p, li { line-height: 1.45em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff;  border-bottom: 2px solid gray}
+        h1 { font-size: 1.5em; }
+        h2 { font-size: 1.25em; padding-top: 1em; }
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            background: #000;
+            color: #fff;
+            border: 1px dashed #666;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            line-height: 1.5em;
+        }
+
+        span.diff_add { color: lime }
+        span.out { color: grey }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Private Helm Repo with GCS and GitHub Actions</h1>
+        <time>March 8, 2020</time>
+        <p>
+In this blog post I'm going to show how to setup a private Helm chart repository on
+Google Cloud Storage (GCS) and use GitHub Actions to automatically push charts on new commits.
+        </p>
+
+        <h2>Setting up the GCS Bucket</h2>
+        <p>The first step is to create a GCS bucket that will hold our charts. We can do this over the CLI with the gcloud-sdk or over the Web UI. I'm going to use the CLI for the following examples.</p><p>To make it easier to handle access permissions we use the <code>-b on</code> flag to enable uniform bucket-level access. It let's us manage permissions on a bucket-level rather than on an object-level:</p>
+
+<pre>
+<span style="color: #CD5C5C">$</span> gsutil mb -b on gs://my-chart-repo-arthurk
+<span class="out">Creating gs://my-chart-repo-arthurk/...</span>
+</pre>
+
+<p>For Helm to be able to push charts to this bucket we need a Cloud IAM service account (with key) with <em>Storage Object Admin</em> permissions:</p>
+
+        <pre>
+<span style="color: #CD5C5C">$</span> gcloud iam service-accounts create my-chart-repo-svc-acc
+<span class="out">Created service account [my-chart-repo-svc-acc].</span>
+
+<span style="color: #CD5C5C">$</span> gcloud iam service-accounts keys create service-account.json --iam-account=my-chart-repo-svc-acc@PROJECT.iam.gserviceaccount.com
+<span class="out">created key [123123123] of type [json] as [service-account.json] for [my-chart-repo-svc-acc@PROJECT.iam.gserviceaccount.com]</span>
+
+<span style="color: #CD5C5C">$</span> gsutil iam ch serviceAccount:my-chart-repo-svc-acc@PROJECT.iam.gserviceaccount.com:roles/storage.objectAdmin gs://my-chart-repo-arthurk
+</pre>
+<p>When referring to the service account we have to use the email (not the name) which has the format <code>SERVICE_ACCOUNT_NAME@PROJECT_ID.iam.gserviceaccount.com</code>.</p>
+
+        <h2>Setting up GitHub Actions</h2>
+        <p>In this step we're going to setup GitHub Actions to detect charts that have changed and add them to our
+            helm repo.</p>
+        <p>We start by creating the <code>.github/workflows/helm-ci.yml</code> file and add:</p>
+        <pre>
+name: Helm Charts
+on: [push]
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+        </pre>
+        <p>By default the checkout action will clone the repo with a detached HEAD. To later compare files that have changed between the current HEAD and the previous commit we have to pass <code>fetch-depth: 2</code> to the action.</p>
+        <p>
+            After pushing the code we can open GitHub Actions in the browser and check the workflow. It should look like this:
+        </p>
+
+            <img src="gh-actions-1.png"/>
+
+        <h2>Installing Helm and helm-gcs</h2>
+        <p>
+            The next step in the CI pipeline is to install Helm and the <a href="https://github.com/hayorov/helm-gcs">helm-gcs plugin</a>. We add the following step to our workflow:
+        </p>
+
+<pre>
+- name: Install helm and plugins
+  run: ./scripts/install.sh
+</pre>
+
+        <p>and then create the <code>scripts/install.sh</code> file with the following content:</p>
+        <pre>
+#!/usr/bin/env bash
+
+set -o errexit
+
+HELM_VERSION=3.1.1
+HELM_GCS_VERSION=0.3.1
+
+echo "Installing Helm..."
+wget -q https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
+tar -zxf helm-v${HELM_VERSION}-linux-amd64.tar.gz
+sudo mv linux-amd64/helm /usr/local/bin/helm
+helm version
+
+echo "Installing helm-gcs plugin..."
+helm plugin install https://github.com/hayorov/helm-gcs --version ${HELM_GCS_VERSION}
+</pre>
+        <p>Set <code>chmod u+x scripts/install.sh</code> and push the file. We can check GitHub Actions to make sure everything installed correctly:</p>
+
+        <img src="gh-actions-2.png"/>
+
+        <p>This shows us that Helm 3.1.1 and helm-gcs 0.3.0 have been successfully installed</p>
+
+        <h2>Initializing the helm repository</h2>
+
+        <p>We can now initialize the helm repository. For this to work we need to add our previously created
+            service account key to GitHub. To do this we navigate to the repository and click on
+            <strong>"Settings" → "Secrets" → "Add a new secret"</strong>. There we set the name to be
+            <code>GCLOUD_SERVICE_ACCOUNT_KEY</code> and as a value add the content of the service-account.json file.
+            After saving the secret it should look like this:
+        </p>
+        <img src="gh-actions-3.png"/>
+        <p>We can now modify the workflow to pass the secret as an environment variable to our next shell script:</p>
+<pre>
+- name: Release charts
+  run: ./scripts/release.sh
+  env:
+    GCLOUD_SERVICE_ACCOUNT_KEY: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
+</pre>
+
+        <p>In the release.sh script we save the service account to a file and point the
+            <code>GOOGLE_APPLICATION_CREDENTIALS</code> environment variable to it. This is needed for helm-gcs
+            plugin to authenticate. Afterwards we initialize the gcs repo which will create an
+            empty <code>index.yaml</code> file in the repo. Finally we can add the repo to helm
+            so it can access its packages.
+        </p>
+        <pre>
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+GCS_BUCKET_NAME="gs://my-chart-repo-arthurk"
+
+# setup service account for helm-gcs plugin
+echo "${GCLOUD_SERVICE_ACCOUNT_KEY}" &gt; svc-acc.json
+export GOOGLE_APPLICATION_CREDENTIALS=svc-acc.json
+
+# initializing helm repo
+# (only needed on first run but will do nothing if already exists)
+echo "Initializing helm repo"
+helm gcs init ${GCS_BUCKET_NAME}
+
+# add gcs bucket as helm repo
+echo "Adding gcs bucket repo ${GCS_BUCKET_NAME}"
+helm repo add private ${GCS_BUCKET_NAME}
+        </pre>
+
+        <h2>Packaging and Pushing changed Charts</h2>
+        <p>In the final step of our CI script we need to identify which charts have changed and then
+            package and push them to the helm repo. We do this by running <code>git diff</code> on the previous
+            revision with the following arguments:</p>
+        <ul>
+            <li><code>--find-renames</code> detect if a file has been renamed</li>
+            <li><code>--diff-filter=d</code> will ignore deleted files (we can't package/push a deleted chart)</li>
+            <li><code>--name-only</code> only print the name of the changed file</li>
+            <li><code>cut -d '/' -f 2 | uniq</code> we only need unique directory names of files that have changed</li>
+        </ul>
+        <p>We add the following content to the release.sh file:</p>
+<pre>
+prev_rev=$(git rev-parse HEAD^)
+echo "Identifying changed charts since git rev ${prev_rev}"
+
+changed_charts=()
+readarray -t changed_charts <<< "$(git diff --find-renames --diff-filter=d --name-only "$prev_rev" -- charts | cut -d '/' -f 2 | uniq)"
+
+if [[ -n "${changed_charts[*]}" ]]; then
+    for chart in "${changed_charts[@]}"; do
+        echo "Packaging chart '$chart'..."
+        chart_file=$(helm package "charts/$chart" | awk '{print $NF}')
+
+        echo "Pushing $chart_file..."
+        helm gcs push "$chart_file" private
+    done
+else
+    echo "No chart changes detected"
+fi
+</pre>
+        <p>Commit and push the changes. After the CI run has finished, the GCS
+            bucket will be initialized and have an <code>index.yaml</code> file in it.
+        This file is an index of all the helm charts in the repo. As we currently have no charts indexed it has
+        the following content:</p>
+<pre>
+<span style="color: #CD5C5C">$</span> gsutil cat gs://my-chart-repo-arthurk/index.yaml
+<span class="out">apiVersion: v1
+entries: {}
+generated: "2020-03-08T06:51:49.496564824Z"</span>
+</pre>
+
+        <h2>Releasing our first chart</h2>
+        <p>We can now create and add the first chart to our helm repository. We do this by creating a <em>chart/</em>
+            directory and running <code>helm create</code> to create an example chart:
+
+<pre>
+<span style="color: #CD5C5C">$</span> mkdir charts
+<span style="color: #CD5C5C">$</span> helm create charts/foo
+<span class="out">Creating charts/foo</span>
+</pre>
+
+        <p>Add, commit and push all new files, then check GitHub Actions. It will show us that the chart
+            was successfully packaged and pushed to the repo:</p>
+
+        <img src="gh-actions-4.png"/>
+
+        <p>Note that it's not possible to push the same chart version to the same repo. The push will fail.
+        We need to always make sure to increase the <code>version</code> value in the <code>Chart.yaml</code> file when releasing a new chart.</p>
+
+        <h2>Trying it out</h2>
+        <p>To try out our private helm repo we can add it to helm on our client machine and list the repo contents:</p>
+<pre>
+<span style="color: #CD5C5C">$</span> helm plugin install https://github.com/hayorov/helm-gcs
+<span style="color: #CD5C5C">$</span> gcloud auth application-default login
+<span style="color: #CD5C5C">$</span> helm repo add private-repo gs://my-chart-repo-arthurk
+<span style="color: #CD5C5C">$</span> helm repo update
+<span style="color: #CD5C5C">$</span> helm search repo private-repo -l
+<span class="out">NAME            	CHART VERSION	APP VERSION	DESCRIPTION
+private-repo/foo	0.1.0        	1.16.0     	A Helm chart for Kubernetes</span>
+</pre>
+
+        <p>As you can see the chart was successfully added to the registry. It can now be used as any other chart, for example by installing it with <code>helm install private-repo/foo --version 0.1.0</code>.</p>
+        <p>The source code for all examples is available <a href="https://github.com/arthurk/private-gcs-helm">in this GitHub repo</a>.</p>
+    </article>
+  </body>
+</html>
