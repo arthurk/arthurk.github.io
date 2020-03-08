@@ -54,7 +54,7 @@
         }
 
         span.diff_add { color: lime }
-        span.out { color: grey }
+        span.out { color: darkgrey }
 
         /* Desktop/Laptop screens */
         @media only screen and (min-width : 1200px) {
@@ -110,7 +110,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
-        </pre>
+</pre>
         <p>By default the checkout action will clone the repo with a detached HEAD. To later compare files that have changed between the current HEAD and the previous commit we have to pass <code>fetch-depth: 2</code> to the action.</p>
         <p>
             After pushing the code we can open GitHub Actions in the browser and check the workflow. It should look like this:
@@ -171,8 +171,8 @@ helm plugin install https://github.com/hayorov/helm-gcs --version ${HELM_GCS_VER
 
         <p>In the release.sh script we save the service account to a file and point the
             <code>GOOGLE_APPLICATION_CREDENTIALS</code> environment variable to it. This is needed for helm-gcs
-            plugin to authenticate. Afterwards we initialize the gcs repo which will create an
-            empty <code>index.yaml</code> file in the repo. Finally we can add the repo to helm
+            plugin to authenticate. Afterwards we initialize the GCS repo which will create an
+            empty <code>index.yaml</code> file in the GCS bucket. Finally we can add the repo to helm
             so it can access its packages.
         </p>
         <pre>
@@ -184,19 +184,20 @@ set -o pipefail
 
 GCS_BUCKET_NAME="gs://my-chart-repo-arthurk"
 
-# setup service account for helm-gcs plugin
+<span class="out"># setup service account for helm-gcs plugin</span>
 echo "${GCLOUD_SERVICE_ACCOUNT_KEY}" &gt; svc-acc.json
 export GOOGLE_APPLICATION_CREDENTIALS=svc-acc.json
 
-# initializing helm repo
-# (only needed on first run but will do nothing if already exists)
+<span class="out"># initializing helm repo</span>
+<span class="out"># (only needed on first run but will do nothing if already exists)</span>
 echo "Initializing helm repo"
 helm gcs init ${GCS_BUCKET_NAME}
 
-# add gcs bucket as helm repo
+<span class="out"># add gcs bucket as helm repo</span>
 echo "Adding gcs bucket repo ${GCS_BUCKET_NAME}"
 helm repo add private ${GCS_BUCKET_NAME}
-        </pre>
+</pre>
+<p>Before committing the file make sure to mark it as executable with <code>chmod u+x scripts/release.sh</code>.</p>
 
         <h2>Packaging and Pushing changed Charts</h2>
         <p>In the final step of our CI script we need to identify which charts have changed and then
