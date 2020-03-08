@@ -116,7 +116,7 @@ jobs:
             After pushing the code we can open GitHub Actions in the browser and check the workflow. It should look like this:
         </p>
 
-            <img src="gh-actions-1.png"/>
+            <img src="gh-actions-1.png" alt="GitHub Actions checkout step finished successfully" />
 
         <h2>Installing Helm and helm-gcs</h2>
         <p>
@@ -148,7 +148,7 @@ helm plugin install https://github.com/hayorov/helm-gcs --version ${HELM_GCS_VER
 </pre>
         <p>Set <code>chmod u+x scripts/install.sh</code> and push the file. We can check GitHub Actions to make sure everything installed correctly:</p>
 
-        <img src="gh-actions-2.png"/>
+        <img src="gh-actions-2.png" alt="GitHub Actions showing that helm and helm-gcs have been installed successfully" />
 
         <p>This shows us that Helm 3.1.1 and helm-gcs 0.3.0 have been successfully installed</p>
 
@@ -160,7 +160,7 @@ helm plugin install https://github.com/hayorov/helm-gcs --version ${HELM_GCS_VER
             <code>GCLOUD_SERVICE_ACCOUNT_KEY</code> and as a value add the content of the service-account.json file.
             After saving the secret it should look like this:
         </p>
-        <img src="gh-actions-3.png"/>
+        <img src="gh-actions-3.png" alt="GitHub showing that a secret has been added to the project" />
         <p>We can now modify the workflow to pass the secret as an environment variable to our next shell script:</p>
 <pre>
 - name: Release charts
@@ -214,7 +214,7 @@ prev_rev=$(git rev-parse HEAD^)
 echo "Identifying changed charts since git rev ${prev_rev}"
 
 changed_charts=()
-readarray -t changed_charts <<< "$(git diff --find-renames --diff-filter=d --name-only "$prev_rev" -- charts | cut -d '/' -f 2 | uniq)"
+readarray -t changed_charts &lt;&lt;&lt; "$(git diff --find-renames --diff-filter=d --name-only "$prev_rev" -- charts | cut -d '/' -f 2 | uniq)"
 
 if [[ -n "${changed_charts[*]}" ]]; then
     for chart in "${changed_charts[@]}"; do
@@ -252,7 +252,7 @@ generated: "2020-03-08T06:51:49.496564824Z"</span>
         <p>Add, commit and push all new files, then check GitHub Actions. It will show us that the chart
             was successfully packaged and pushed to the repo:</p>
 
-        <img src="gh-actions-4.png"/>
+        <img src="gh-actions-4.png" alt="GitHub Actions showing that the chart has been successfully added to the repo" />
 
         <p>Note that it's not possible to push the same chart version to the same repo. The push will fail.
         We need to always make sure to increase the <code>version</code> value in the <code>Chart.yaml</code> file when releasing a new chart.</p>
