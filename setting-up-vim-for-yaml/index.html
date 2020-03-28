@@ -165,6 +165,15 @@ let g:indentLine_char = '⦙'
         </ul>
 
         <p>
+            After the plugin is installed and folding is enabled the default settings will fold all
+            blocks by default. To start with unfolded content we can set:
+        </p>
+
+<pre>
+set foldlevelstart=20
+</pre>
+
+        <p>
             There's also a plugin called <a href="https://www.vim.org/scripts/script.php?script_id=4021">restore_view</a>
             which will save the folds for each file. But be aware that this plugin will create an
             extra file with folding information for each opened document.
@@ -241,6 +250,8 @@ let g:ale_lint_on_text_changed = 'never'
     <p>In <code>~/.vimrc</code> or <code>~/.config/nvim/init.vim</code></p>
 <pre>
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+
+set foldlevelstart=20
 
 let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
 let g:ale_sign_error = '✘'
