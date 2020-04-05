@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Notes about Google CloudSQL for Postgres</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: .9em;
+            color: #aaa;
+            background: #202328;
+            padding-bottom: 2em;
+        }
+
+        a { color: #d2ab71; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #fff; border-bottom: 1px solid grey}
+        h2 { font-size: 1.25em; padding-top: 1em; color: #fff }
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            background: #000;
+            color: #fff;
+        }
+
+        pre {
+            border: 1px solid grey;
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Notes about Google CloudSQL for Postgres</h1>
+        <time datetime="2020-04-05">April 5, 2020</time>
+        <p>
+            Here are a few things that I've learned about Google CloudSQL for Postgres
+            during the last 2 years in which I've been using it.
+        </p>
+
+        <h2>Price</h2>
+        <ul>
+            <li>It's usually the most expensive part of the project accounting for around 80% of the total cost. The parts that need to be paid for are CPU Cores, RAM, Disk Storage and Network Internet Egress. Automated backups and HA are optional and cost extra.</li>
+            <li>There's a <a href="https://cloud.google.com/products/calculator">pricing calculator</a> available but I haven't been able to replicate the price on the invoice (at least in my case the total on the invoice was <em>lower</em> than what the calculator showed). I suggest to just try it for one or two months and see for yourself. Make sure to set a budget in GCP so the cost doesn't go too high.</li>
+            <li>Read-only replicas need to have at least the same hardware as the master instance. This means each read-replica will double the cost.</li>
+        </ul>
+
+        <h2>Replication</h2>
+        <ul>
+            <li>As mentioned above a read-replica needs to have at least the same hardware (cores, memory, storage) as the master instance. It can have better hardware.</li>
+            <li>External replication is not supported. You can create read-only replicas in CloudSQL but it's not possible to use streaming replication to an external Postgres instance.</li>
+        </ul>
+
+        <h2>HA (High Availability)</h2>
+        <ul>
+            <li>Failover will take place after the master instance is unresponsive for 1 minute. In total it takes 2-3 minutes for connections to be re-established.</li>
+        </ul>
+
+        <h2>Backups</h2>
+        <ul>
+            <li>Deleting the instance will delete all of its backups too. Always make sure to have an additional backup job running that will export the data to another location.</li>
+        </ul>
+
+        <h2>Performance</h2>
+
+        <ul>
+            <li>Network throughput (MB/s) depends on the number of CPU cores. More CPU Cores = More throughput. 1 CPU core has 250 MB/s throughput and the maximum is 2000 MB/s which is reached at 8 cores.</li>
+            <li>Disk throughput and IOPS depend on the disk size. The minimum size is 10 GB which has 4.8 MB/s of read/write throughput and 300 IOPS (read/write). The maximum is 800 MB/s read and 400 MB/s write throughput with 15,000 IOPS (read/write) which is reached at 500 GB disk size.</li>
+            <li>The network latency from a GKE instance to CloudSQL is around 3ms. There is no difference in latency between using a private and public ip.</li>
+        </ul>
+
+        <h2>Maintenance</h2>
+
+        <ul>
+            <li>The maintenance downtime is 1-2 minutes and occurs during a selected time window.</li>
+            <li>Maintenance notifications were recently added. Only e-mail notifications are supported.</li>
+            <li>Upgrading Postgres to a new major version is only possible by dumping the data and then importing it after the upgrade. For our 128 GB database it took around 40 minutes to export and 5 hours to import (pg_restore). This is not including the time it took to download the export from Cloud Storage.</li>
+        </ul>
+
+    </article>
+  </body>
+</html>
