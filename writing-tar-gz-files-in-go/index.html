@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Writing tar.gz files in Go</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: .9em;
+            color: #aaa;
+            background: #131217;
+            padding-bottom: 2em;
+        }
+
+        a { color: #d2ab71; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #fff; border-bottom: 1px solid grey}
+        h2 { font-size: 1.25em; padding-top: 1em; color: #fff }
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            background: #000;
+            color: #fff;
+        }
+
+        pre {
+            border: 1px solid #777;
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-wrap: normal;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Writing tar.gz files in Go</h1>
+        <time datetime="2020-04-12">April 12, 2020</time>
+        <p>
+            In this blog post I'm going to explain how to use the Go <code>archive/tar</code> and <code>compress/gzip</code>
+            packages to create a tar archive and compress it with gzip.
+        </p>
+        <p>Below is the full example code and after that there's an explanation of the parts.</p>
+
+        <h2>Full Code</h2>
+<pre><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> (
+	<span style="color:#e6db74">"io"</span>
+	<span style="color:#e6db74">"archive/tar"</span>
+	<span style="color:#e6db74">"compress/gzip"</span>
+	<span style="color:#e6db74">"log"</span>
+	<span style="color:#e6db74">"fmt"</span>
+	<span style="color:#e6db74">"os"</span>
+)
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#75715e">// Files which to include in the tar.gz archive
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">files</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">"example.txt"</span>, <span style="color:#e6db74">"test/test.txt"</span>}
+
+	<span style="color:#75715e">// Create output file
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#e6db74">"output.tar.gz"</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalln</span>(<span style="color:#e6db74">"Error writing archive:"</span>, <span style="color:#a6e22e">err</span>)
+	}
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">Close</span>()
+
+	<span style="color:#75715e">// Create the archive and write the output to the "out" Writer
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">createArchive</span>(<span style="color:#a6e22e">files</span>, <span style="color:#a6e22e">out</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalln</span>(<span style="color:#e6db74">"Error creating archive:"</span>, <span style="color:#a6e22e">err</span>)
+	}
+
+	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">"Archive created successfully"</span>)
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">createArchive</span>(<span style="color:#a6e22e">files</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">buf</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Writer</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#75715e">// Create new Writers for gzip and tar
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// These writers are chained. Writing to the tar writer will
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// write to the gzip writer which in turn will write to
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// the "buf" writer
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">gw</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gzip</span>.<span style="color:#a6e22e">NewWriter</span>(<span style="color:#a6e22e">buf</span>)
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">gw</span>.<span style="color:#a6e22e">Close</span>()
+	<span style="color:#a6e22e">tw</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">tar</span>.<span style="color:#a6e22e">NewWriter</span>(<span style="color:#a6e22e">gw</span>)
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">tw</span>.<span style="color:#a6e22e">Close</span>()
+
+	<span style="color:#75715e">// Iterate over files and add them to the tar archive
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">file</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">files</span> {
+		<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">addToArchive</span>(<span style="color:#a6e22e">tw</span>, <span style="color:#a6e22e">file</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+		}
+	}
+
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">addToArchive</span>(<span style="color:#a6e22e">tw</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">tar</span>.<span style="color:#a6e22e">Writer</span>, <span style="color:#a6e22e">filename</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#75715e">// Open the file which will be written into the archive
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#a6e22e">filename</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Close</span>()
+
+	<span style="color:#75715e">// Get FileInfo about our file providing file size, mode, etc.
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">info</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Stat</span>()
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+
+	<span style="color:#75715e">// Create a tar Header from the FileInfo data
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">header</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">tar</span>.<span style="color:#a6e22e">FileInfoHeader</span>(<span style="color:#a6e22e">info</span>, <span style="color:#a6e22e">info</span>.<span style="color:#a6e22e">Name</span>())
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+
+	<span style="color:#75715e">// Use full path as name (FileInfoHeader only takes the basename)
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// If we don't do this the directory strucuture would
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// not be preserved
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// https://golang.org/src/archive/tar/common.go?#L626
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">header</span>.<span style="color:#a6e22e">Name</span> = <span style="color:#a6e22e">filename</span>
+
+	<span style="color:#75715e">// Write file header to the tar archive
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">tw</span>.<span style="color:#a6e22e">WriteHeader</span>(<span style="color:#a6e22e">header</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+
+	<span style="color:#75715e">// Copy file content to tar archive
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">tw</span>, <span style="color:#a6e22e">file</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}</pre>
+
+        <h2>Explanation</h2>
+        <p>
+            In the main function we first declare <code>files</code> as a string slice.
+            It contains the paths of the files that will be included in the archive.
+        </p>
+        <p>
+            For this example I've created two text files. I placed one of them in the same
+            directory as the <code>main.go</code> file and the other one in a subdirectory. The purpose
+            of this is to test that the directory structure will be correctly restored after extraction.
+        </p>
+        <p>
+            We then create the output file with <code><a href="https://golang.org/pkg/os/#Create">os.Create()</a></code>
+            and pass it to the <code>createArchive</code> function along with our file paths.
+        </p>
+<pre>
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#75715e">// Files which to include in the tar.gz archive
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">files</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">"example.txt"</span>, <span style="color:#e6db74">"test/test.txt"</span>}
+
+	<span style="color:#75715e">// Create output file
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#e6db74">"output.tar.gz"</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalln</span>(<span style="color:#e6db74">"Error writing archive:"</span>, <span style="color:#a6e22e">err</span>)
+	}
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">Close</span>()
+
+	<span style="color:#75715e">// Create the archive and write the output to the "out" Writer
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">createArchive</span>(<span style="color:#a6e22e">files</span>, <span style="color:#a6e22e">out</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalln</span>(<span style="color:#e6db74">"Error creating archive:"</span>, <span style="color:#a6e22e">err</span>)
+	}
+
+	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">"Archive created successfully"</span>)
+}
+</pre>
+
+    <p>
+        The <code>createArchive</code> function creates two Writer: The <a href="https://golang.org/pkg/archive/tar/#NewWriter">tar Writer</a>
+        and the <a href="https://golang.org/pkg/compress/gzip/#NewWriter">gzip Writer</a>. Both implement the <a href="https://golang.org/pkg/io/#Writer">io.Writer</a> interface.
+    </p>
+    <p>
+        The Writers are chained which means that bytes written to the tar Writer <code>tw</code>
+        will simultaneously be written to the gzip Writer <code>gw</code>.
+    </p>
+    <p>
+        We will then iterate over the files in the <code>files</code> slice and
+        call the <code>addToArchive</code> function for each of them with the filename and the tar Writer
+        as arguments.
+    </p>
+
+<pre>
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">createArchive</span>(<span style="color:#a6e22e">files</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">buf</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Writer</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#75715e">// Create new Writers for gzip and tar
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// These writers are chained. Writing to the tar Writer will
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// write to the gzip writer which in turn will write to
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// the "buf" writer
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">gw</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gzip</span>.<span style="color:#a6e22e">NewWriter</span>(<span style="color:#a6e22e">buf</span>)
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">gw</span>.<span style="color:#a6e22e">Close</span>()
+	<span style="color:#a6e22e">tw</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">tar</span>.<span style="color:#a6e22e">NewWriter</span>(<span style="color:#a6e22e">gw</span>)
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">tw</span>.<span style="color:#a6e22e">Close</span>()
+
+	<span style="color:#75715e">// Iterate over files and and add them to the tar archive
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">file</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">files</span> {
+		<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">addToArchive</span>(<span style="color:#a6e22e">tw</span>, <span style="color:#a6e22e">file</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+		}
+	}
+
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+</pre>
+
+        <p>
+            Inside the <code>addToArchive</code> function we open the file and get
+            a <code><a href="https://golang.org/pkg/os/#FileInfo">FileInfo</a></code>.
+            The FileInfo contains information such as the file name, size or mode which is necessary for the next step.
+        </p>
+
+<pre>
+	<span style="color:#75715e">// Open the file which will be written into the archive
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#a6e22e">filename</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Close</span>()
+
+	<span style="color:#75715e">// Get FileInfo about our file providing file size, mode, etc.
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">info</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Stat</span>()
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+</pre>
+
+    <p>
+        Each file in a tar archive has a <a href="https://golang.org/pkg/archive/tar/#Header">header</a> containing metadata about the file
+        followed by the file content. In this step we create the header by
+        calling <a href="https://golang.org/pkg/archive/tar/#FileInfoHeader">FileInfoHeader</a> which will take our FileInfo <code>info</code>
+        and generate a valid tar Header from it.
+    </p>
+    <p>
+        The os.FileInfo <code>info</code> only stores the base name of the file. For example if we pass in <code>test/test.txt</code> it
+        will only store the filename <code>test.txt</code>. This is a problem when creating the tar archive as it would omit
+        the directory structure of our files.
+        To fix this we have to set <code>header.Name</code> to the full file path.
+    </p>
+
+<pre>
+	<span style="color:#75715e">// Create a tar Header from the FileInfo data
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">header</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">tar</span>.<span style="color:#a6e22e">FileInfoHeader</span>(<span style="color:#a6e22e">info</span>, <span style="color:#a6e22e">info</span>.<span style="color:#a6e22e">Name</span>())
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+
+	<span style="color:#75715e">// Use full path as name (FileInfoHeader only takes the basename)
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// If we don't do this the directory strucuture would
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// not be preserved
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// https://golang.org/src/archive/tar/common.go?#L626
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">header</span>.<span style="color:#a6e22e">Name</span> = <span style="color:#a6e22e">filename</span>
+</pre>
+
+        <p>
+            Now we can write the header and the file content to the Writer.
+        </p>
+
+<pre>
+	<span style="color:#75715e">// Write file header to the tar archive
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">tw</span>.<span style="color:#a6e22e">WriteHeader</span>(<span style="color:#a6e22e">header</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+
+	<span style="color:#75715e">// Copy file content to tar archive
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">tw</span>, <span style="color:#a6e22e">file</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+	}
+</pre>
+
+    <h2>Run the program</h2>
+    <p>We can now run our program and check that the files can be extracted.</p>
+
+<pre>
+<span style="color:#f92672">$</span> go run main.go
+Archive created successfully
+
+<span style="color:#f92672">$</span> tar xzfv output.tar.gz
+x example.txt
+x test/test.txt
+
+<span style="color:#f92672">$</span> exa --tree
+.
+├── example.txt
+├── output.tar.gz
+└── test
+   └── test.txt
+</pre>
+
+        <p>Both files have been extracted successfully.</p>
+    </article>
+  </body>
+</html>

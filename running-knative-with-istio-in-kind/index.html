@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Running Knative with Istio in a Kind Cluster</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: .9em;
+            color: #aaa;
+            background: #131217;
+            padding-bottom: 2em;
+        }
+
+        a { color: #d2ab71; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #fff; border-bottom: 1px solid grey}
+        h2 { font-size: 1.25em; padding-top: 1em; color: #fff }
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            color: #fff;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            border: 1px dashed gray;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+
+        /*** Chroma Syntax Highlighting ***/
+        /* Background */ .chroma { color: #f8f8f2; background-color: #272822 }
+        /* Error */ .chroma .err { color: #960050; background-color: #1e0010 }
+        /* LineTableTD */ .chroma .lntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
+        /* LineTable */ .chroma .lntable { border-spacing: 0; padding: 0; margin: 0; border: 0; width: auto; overflow: auto; display: block; }
+        /* LineHighlight */ .chroma .hl { display: block; width: 100%;background-color: #3c3d38 }
+        /* LineNumbersTable */ .chroma .lnt { margin-right: 0.4em; padding: 0 0.4em 0 0.4em;color: #7f7f7f }
+        /* LineNumbers */ .chroma .ln { margin-right: 0.4em; padding: 0 0.4em 0 0.4em;color: #7f7f7f }
+        /* Keyword */ .chroma .k { color: #66d9ef }
+        /* KeywordConstant */ .chroma .kc { color: #66d9ef }
+        /* KeywordDeclaration */ .chroma .kd { color: #66d9ef }
+        /* KeywordNamespace */ .chroma .kn { color: #f92672 }
+        /* KeywordPseudo */ .chroma .kp { color: #66d9ef }
+        /* KeywordReserved */ .chroma .kr { color: #66d9ef }
+        /* KeywordType */ .chroma .kt { color: #66d9ef }
+        /* NameAttribute */ .chroma .na { color: #a6e22e }
+        /* NameClass */ .chroma .nc { color: #a6e22e }
+        /* NameConstant */ .chroma .no { color: #66d9ef }
+        /* NameDecorator */ .chroma .nd { color: #a6e22e }
+        /* NameException */ .chroma .ne { color: #a6e22e }
+        /* NameFunction */ .chroma .nf { color: #a6e22e }
+        /* NameOther */ .chroma .nx { color: #a6e22e }
+        /* NameTag */ .chroma .nt { color: #f92672 }
+        /* Literal */ .chroma .l { color: #ae81ff }
+        /* LiteralDate */ .chroma .ld { color: #e6db74 }
+        /* LiteralString */ .chroma .s { color: #e6db74 }
+        /* LiteralStringAffix */ .chroma .sa { color: #e6db74 }
+        /* LiteralStringBacktick */ .chroma .sb { color: #e6db74 }
+        /* LiteralStringChar */ .chroma .sc { color: #e6db74 }
+        /* LiteralStringDelimiter */ .chroma .dl { color: #e6db74 }
+        /* LiteralStringDoc */ .chroma .sd { color: #e6db74 }
+        /* LiteralStringDouble */ .chroma .s2 { color: #e6db74 }
+        /* LiteralStringEscape */ .chroma .se { color: #ae81ff }
+        /* LiteralStringHeredoc */ .chroma .sh { color: #e6db74 }
+        /* LiteralStringInterpol */ .chroma .si { color: #e6db74 }
+        /* LiteralStringOther */ .chroma .sx { color: #e6db74 }
+        /* LiteralStringRegex */ .chroma .sr { color: #e6db74 }
+        /* LiteralStringSingle */ .chroma .s1 { color: #e6db74 }
+        /* LiteralStringSymbol */ .chroma .ss { color: #e6db74 }
+        /* LiteralNumber */ .chroma .m { color: #ae81ff }
+        /* LiteralNumberBin */ .chroma .mb { color: #ae81ff }
+        /* LiteralNumberFloat */ .chroma .mf { color: #ae81ff }
+        /* LiteralNumberHex */ .chroma .mh { color: #ae81ff }
+        /* LiteralNumberInteger */ .chroma .mi { color: #ae81ff }
+        /* LiteralNumberIntegerLong */ .chroma .il { color: #ae81ff }
+        /* LiteralNumberOct */ .chroma .mo { color: #ae81ff }
+        /* Operator */ .chroma .o { color: #f92672 }
+        /* OperatorWord */ .chroma .ow { color: #f92672 }
+        /* Comment */ .chroma .c { color: #75715e }
+        /* CommentHashbang */ .chroma .ch { color: #75715e }
+        /* CommentMultiline */ .chroma .cm { color: #75715e }
+        /* CommentSingle */ .chroma .c1 { color: #75715e }
+        /* CommentSpecial */ .chroma .cs { color: #75715e }
+        /* CommentPreproc */ .chroma .cp { color: #75715e }
+        /* CommentPreprocFile */ .chroma .cpf { color: #75715e }
+        /* GenericDeleted */ .chroma .gd { color: #f92672 }
+        /* GenericEmph */ .chroma .ge { font-style: italic }
+        /* GenericInserted */ .chroma .gi { color: #a6e22e }
+        /* GenericStrong */ .chroma .gs { font-weight: bold }
+        /* GenericSubheading */ .chroma .gu { color: #75715e }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Running Knative with Istio in a Kind Cluster</h1>
+        <time datetime="2020-04-19">April 19, 2020</time>
+
+        <p>
+        In this blog post I'm going to show how to run <a href="https://knative.dev">Knative</a> with <a href="https://istio.io">Istio</a>
+        as a networking layer on a local <a href="https://kind.sigs.k8s.io">kind</a> cluster.
+        </p>
+        <p>
+        I'm assuming that kind and kubectl are installed. Installation instructions for kind are <a href="https://kind.sigs.k8s.io/docs/user/quick-start/#installation">here</a>
+        and kubectl <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/">here</a>.
+        </p>
+
+<pre>
+<span class="cmd">$</span> kind --version
+kind kind version 0.7.0
+
+<span class="cmd">$</span> kubectl version --client
+Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.5", GitCommit:"20c265fef0741dd71a66480e35bd69f18351daea", GitTreeState:"clean", BuildDate:"2019-10-15T19:16:51Z", GoVersion:"go1.12.10", Compiler:"gc", Platform:"darwin/amd64"}
+</pre>
+
+        <h2>
+            Setup a kind cluster
+        </h2>
+
+        <p>
+        To get traffic into our cluster we need to create our kind cluster with a
+        custom configuration that sets up a port forward from host to ingress
+        controller.
+        </p>
+
+        <p>
+        In this setup we're going to use port <code>32000</code>. Later we will configure
+        the Istio ingress gateway to accept connections on this port.
+        </p>
+
+        <p>
+        Create a file named <code>kind-config-istio.yml</code> with the following content:
+        </p>
+
+<pre><span style="color:#66d9ef">kind</span>: Cluster
+<span style="color:#66d9ef">apiVersion</span>: kind.sigs.k8s.io/v1alpha3
+<span style="color:#66d9ef">nodes</span>:
+- <span style="color:#66d9ef">role</span>: control-plane
+  <span style="color:#66d9ef">extraPortMappings</span>:
+  - <span style="color:#66d9ef">containerPort</span>: <span style="color:#ae81ff">32000</span>
+    <span style="color:#66d9ef">hostPort</span>: <span style="color:#ae81ff">80</span>
+</pre>
+
+        <p>
+        To create the cluster with our custom configuration we use the <code>--config</code> argument:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kind create cluster --config kind-config-istio.yml
+
+Creating cluster "kind" ...
+ ✓ Ensuring node image (kindest/node:v1.17.0) 🖼
+ ✓ Preparing nodes 📦
+ ✓ Writing configuration 📜
+ ✓ Starting control-plane 🕹️
+ ✓ Installing CNI 🔌
+ ✓ Installing StorageClass 💾
+Set kubectl context to "kind-kind"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-kind
+</pre>
+
+        <h2>
+            Install Istio
+        </h2>
+
+        <p>
+        We're going to install Istio via the <a href="https://istio.io/docs/reference/commands/istioctl/">istioctl</a>
+        command-line tool.
+        The following command will download version istioctl v1.5.1 for macOS and extract it into the current directory:
+        </p>
+
+<pre>
+<span class="cmd">$</span> curl -L https://github.com/istio/istio/releases/download/1.5.1/istioctl-1.5.1-osx.tar.gz | tar xvz -
+<span class="cmd">$</span> ./istioctl version --remote=false
+1.5.1
+</pre>
+
+        <p>
+        Istio can be installed with different configuration profiles. In this example
+        we are going to use the <code>default</code> profile which will
+        install the pilot, ingressgateway and prometheus.
+        A list of all built-in
+        configuration profiles and their differences can be found <a href="https://istio.io/docs/setup/additional-setup/config-profiles/">here</a>.
+        </p>
+
+        <p>
+        The following command will perform the installation:
+        </p>
+
+<pre>
+<span class="cmd">$</span> ./istioctl manifest apply --set profile=default
+
+Detected that your cluster does not support third party JWT authentication. Falling back to less secure first party JWT. See https://istio.io/docs/ops/best-practices/security/#configure-third-party-service-account-tokens for details.
+- Applying manifest for component Base...
+✔ Finished applying manifest for component Base.
+- Applying manifest for component Pilot...
+✔ Finished applying manifest for component Pilot.
+- Applying manifest for component IngressGateways...
+- Applying manifest for component AddonComponents...
+✔ Finished applying manifest for component AddonComponents.
+✔ Finished applying manifest for component IngressGateways.
+
+✔ Installation complete
+</pre>
+
+        <p>
+        We can check that the pods are running via kubectl:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl get pods -n istio-system
+
+NAME                                    READY   STATUS    RESTARTS   AGE
+istio-ingressgateway-5f54974979-crw9d   1/1     Running   0          21s
+istiod-6548b95486-djvd6                 1/1     Running   0          6m57s
+prometheus-6c88c4cb8-wtdtn              2/2     Running   0          21s
+</pre>
+
+        <p>
+        To verify the installation we can run the <code>verify-install</code> command
+        and pass in the manifest of the default configuration profile:
+        </p>
+
+<pre>
+<span class="cmd">$</span> ./istioctl manifest generate --set profile=default | ./istioctl verify-install -f -
+...
+Checked 25 crds
+Checked 1 Istio Deployments
+Istio is installed successfully
+</pre>
+
+        <p>
+        The configuration profile
+        will set the ingress type to <code>LoadBalancer</code>, which
+        is not working on a local cluster.
+        </p>
+
+        <p>
+        For the ingress gateway to accept incoming connections we have to change
+        the type from <code>LoadBalancer</code> to <code>NodePort</code> and change the assigned port
+        to <code>32000</code> (the port we forwarded during the cluster creation).
+        </p>
+
+        <p>
+        Create a file named <code>patch-ingressgateway-nodeport.yaml</code> with the following content:
+        </p>
+
+<pre><span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">type</span>: NodePort
+  <span style="color:#66d9ef">ports</span>:
+  - <span style="color:#66d9ef">name</span>: http2
+    <span style="color:#66d9ef">nodePort</span>: <span style="color:#ae81ff">32000</span>
+    <span style="color:#66d9ef">port</span>: <span style="color:#ae81ff">80</span>
+    <span style="color:#66d9ef">protocol</span>: TCP
+    <span style="color:#66d9ef">targetPort</span>: <span style="color:#ae81ff">80</span>
+</pre>
+
+        <p>
+        We apply the file with <code>kubectl patch</code>:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl patch service istio-ingressgateway -n istio-system --patch "$(cat patch-ingressgateway-nodeport.yaml)"
+
+service/istio-ingressgateway patched
+</pre>
+
+        <p>
+        Istio is now set up and ready to accept connections.
+        </p>
+
+        <h2>
+            Install Knative
+        </h2>
+
+        <p>
+        Knative consists of two components: <a href="https://knative.dev/docs/serving/">Serving</a> and <a href="https://knative.dev/docs/eventing/">Eventing</a>. In this example we're going to install the Serving component.
+        </p>
+        <p>
+        We start by applying the Kubernetes manifests for the CRDs, Core and Istio ingress controller:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl apply -f https://github.com/knative/serving/releases/download/v0.14.0/serving-crds.yaml
+<span class="cmd">$</span> kubectl apply -f https://github.com/knative/serving/releases/download/v0.14.0/serving-core.yaml
+<span class="cmd">$</span> kubectl apply -f https://github.com/knative/net-istio/releases/download/v0.14.0/net-istio.yaml
+</pre>
+
+        <p>
+        We check the pods via kubectl and wait until they have the status <code>Running</code>:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl get pods --namespace knative-serving
+
+NAME                                READY   STATUS    RESTARTS   AGE
+activator-65fc4d666-2bj8r           2/2     Running   0          9m
+autoscaler-74b4bb97bd-9rql4         2/2     Running   0          9m
+controller-6b6978c965-rks25         2/2     Running   0          9m
+istio-webhook-856d84fbf9-8nswp      2/2     Running   0          8m58s
+networking-istio-6845f7cf59-6h25b   1/1     Running   0          8m58s
+webhook-577576647-rw264             2/2     Running   0          9m
+</pre>
+
+        <p>
+        Knative will create a custom URL for each service and for this to work
+        it needs to have DNS configured. Since our cluster is running locally we need to
+        use a wildcard DNS service (for example <a href="https://nip.io">nip.io</a>).
+        </p>
+        <p>
+        We patch the Knative config via kubectl and set the domain to <code>127.0.0.1.nip.io</code>
+        which will forward all requests to <code>127.0.0.1</code>:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl patch configmap/config-domain \
+  --namespace knative-serving \
+  --type merge \
+  --patch '{"data":{"127.0.0.1.nip.io":""}}'
+
+configmap/config-domain patched
+</pre>
+
+        <p>
+        Knative is now installed and ready to use.
+        </p>
+
+        <h2>
+            Creating a test service
+        </h2>
+
+        <p>
+        To check that Knative is working correctly we deploy a test service
+        that consists of an <a href="https://github.com/jmalloc/echo-server">echo-server</a> which will return the request
+        headers and body.
+        </p>
+
+        <p>
+        We start by creating a file named <code>knative-echoserver.yaml</code> with the following content:
+        </p>
+
+<pre><span style="color:#66d9ef">apiVersion</span>: serving.knative.dev/v1
+<span style="color:#66d9ef">kind</span>: Service
+<span style="color:#66d9ef">metadata</span>:
+  <span style="color:#66d9ef">name</span>: helloworld
+  <span style="color:#66d9ef">namespace</span>: default
+<span style="color:#66d9ef">spec</span>:
+  <span style="color:#66d9ef">template</span>:
+    <span style="color:#66d9ef">spec</span>:
+      <span style="color:#66d9ef">containers</span>:
+        - <span style="color:#66d9ef">image</span>: jmalloc/echo-server
+</pre>
+
+        <p>
+        We enable Istio sidecar injection for the default namespace
+        and deploy the Knative service in it:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl label namespace default istio-injection=enabled
+
+namespace/default labeled
+
+<span class="cmd">$</span> kubectl apply -f knative-echoserver.yaml
+
+service.serving.knative.dev/helloworld created
+</pre>
+
+        <p>
+        We can check the deployment of the pods via kubectl:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl get pods
+
+NAME                                           READY   STATUS    RESTARTS   AGE
+helloworld-96c68-deployment-6744444b5f-6htld   3/3     Running   0          108s
+</pre>
+
+        <p>
+        When all pods are running we can get the URL of the service and
+        make an HTTP request to it:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl get ksvc
+
+NAME         URL                                          LATESTCREATED      LATESTREADY        READY   REASON
+helloworld   http://helloworld.default.127.0.0.1.nip.io   helloworld-96c68   helloworld-96c68   True
+
+<span class="cmd">$</span> curl http://helloworld.default.127.0.0.1.nip.io
+
+Request served by helloworld-96c68-deployment-6744444b5f-6htld
+
+HTTP/1.1 GET /
+
+Host: helloworld.default.127.0.0.1.nip.io
+X-Request-Id: 9e5bf3c9-0bc8-4551-9302-ea2eca5f6446
+User-Agent: curl/7.64.1
+Accept-Encoding: gzip
+Forwarded: for=10.244.0.1;proto=http, for=127.0.0.1
+X-B3-Traceid: d22e218318367687170ce339b13b0c91
+X-Forwarded-For: 10.244.0.1, 127.0.0.1, 127.0.0.1
+X-B3-Spanid: 0e3174748253699d
+X-Forwarded-Proto: http
+Accept: */*
+K-Proxy-Request: activator
+X-B3-Parentspanid: c39ad4d28b42b25f
+X-B3-Sampled: 0
+</pre>
+
+        <p>
+            The response shows the pod which served the request (<code>helloworld-96c68-deployment-6744444b5f-6htld</code>)
+            and the tracing headers that Istio will add to every request.
+        </p>
+        <p>
+        If we wait a few minutes we can see that Knative will scale down our
+        service to zero replicas (no incoming requests). In this case
+        we can make another request to the service and see it scale up again.
+        </p>
+    </article>
+  </body>
+</html>
