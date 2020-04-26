@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Creating CI Pipelines with Tekton (Part 1/2)</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+            font-size: 1em;
+            color: #D7D7D7;
+            background: #262626;
+            padding-bottom: 2em;
+        }
+
+        a { color: #D7D7AF; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #D7D7AF; border-bottom: 1px solid}
+        h2 { font-size: 1.25em; padding-top: 1em; color: #87AFD7; border-bottom: 1px dashed}
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: .9em;
+            color: #fff;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            border: 1px dashed gray;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 55%; }
+        }
+
+        /*** Chroma Syntax Highlighting ***/
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Creating CI Pipelines with Tekton (Part 1/2)</h1>
+        <time datetime="2020-04-26">April 26, 2020</time>
+
+        <p>
+        In this blost post we're going to build a continuous integration (CI) pipeline with <a href="https://tekton.dev">Tekton</a>,
+        an open-source framework for creating CI/CD pipelines in Kubernetes.
+        </p>
+
+        <p>
+        We're going to provision a local Kubernetes cluster via <a href="https://kind.sigs.k8s.io">kind</a> and install Tekton on it.
+        After that we'll create a pipeline consisting of two steps which will run application unit tests, build a Docker image
+        and push it to DockerHub.
+        </p>
+
+        <p>This is part 1 of 2 in which we will install Tekton and create a task that runs our application test.
+        The second part will be available next week.</p>
+
+        <h2>
+            Creating the k8s cluster
+        </h2>
+
+        <p>
+        We use <a href="http://kind.sigs.k8s.io">kind</a> to create a Kubernetes cluster for our Tekton installation:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kind create cluster --name tekton
+</pre>
+
+        <h2>
+            Installing Tekton
+        </h2>
+
+        <p>
+        We can install Tekton by applying the <code>release.yaml</code> file from the latest release of the <a href="https://github.com/tektoncd/pipeline">tektoncd/pipeline</a> GitHub repo:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl apply -f https://github.com/tektoncd/pipeline/releases/download/v0.11.3/release.yaml
+</pre>
+
+        <p>
+        This will install Tekton into the <code>tekton-pipelines</code> namespace. We can check
+        that the installation succeeded by listing the Pods in that namespace and
+        making sure they're in <code>Running</code> state.
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl get pods --namespace tekton-pipelines
+NAME                                           READY   STATUS    RESTARTS   AGE
+tekton-pipelines-controller-74848c44df-m42gf   1/1     Running   0          20s
+tekton-pipelines-webhook-6f764dc8bf-zq44s      1/1     Running   0          19s
+</pre>
+
+        <h2>Setting up the Tekton CLI</h2>
+
+        <p>
+        Installing the CLI is optional but I found it to be more convenient
+        than <code>kubectl</code> when managing Tekton resources. The examples
+        later on will show both ways.
+        </p>
+
+        <p>
+        We can install it via Homebrew:
+        </p>
+
+<pre>
+<span class="cmd">$</span> brew tap tektoncd/tools
+<span class="cmd">$</span> brew install tektoncd/tools/tektoncd-cli
+
+<span class="cmd">$</span> tkn version
+Client version: 0.8.0
+Pipeline version: v0.11.3
+</pre>
+
+        <h2>Concepts</h2>
+
+        <p>
+        Tekton provides custom resource definitions (<a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/">CRDs</a>) for Kubernetes that can be used to define our Pipelines.
+        In this tutorial we will use the following custom resources:
+        </p>
+
+        <ul>
+            <li>Task: A series of steps that execute commands (In CircleCI this is called a <em>Job</em>)</li>
+            <li>Pipeline: A set of Tasks (In CircleCI this is called a <em>Workflow</em>)</li>
+            <li>PipelineResource: Input or Output of a Pipeline (for example a git repo or a tar file)</li>
+        </ul>
+
+        <p>We will use following two resources to define the execution of our Tasks and Pipeline:</p>
+
+        <ul>
+            <li>TaskRun: Defines the execution of a Task</li>
+            <li>PipelineRun: Defines the execution of a Pipeline</li>
+        </ul>
+
+        <p>For example,
+        if we write a Task and want to test it we can execute it with a TaskRun. The same applies for a Pipeline:
+        To execute a Pipeline we need to create a PipelineRun.</p>
+
+        <h2>Application Code</h2>
+
+        <p>
+        In our example Pipeline we're going to use a Go application
+        that simply prints the sum of two integers. You can find the application code, test and Dockerfile in the <code>src/</code> directory in <a href="https://github.com/arthurk/tekton-example">this repo</a>.
+        </p>
+
+        <h2>
+            Creating our first task
+        </h2>
+
+        <p>
+        Our first Task will run the application tests inside the cloned git repo.
+        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/task-test.yaml">task-test.yaml</a></code> with the following content:
+        </p>
+
+<pre>
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: test
+spec:
+  resources:
+    inputs:
+      - name: repo
+        type: git
+  steps:
+    - name: run-test
+      image: golang:1.14-alpine
+      workingDir: /workspace/repo/src
+      command: ["go"]
+      args: ["test"]
+</pre>
+
+        <p>
+        The <code>resources</code> block defines the inputs that our task needs to execute its steps.
+        Our step needs to cloned git repository as an input to run the <code>go test</code> command.
+        <p>
+        Tekton has a <code>git</code> resource type that will automatically clone the repo into the <code>/workspace/$input_name</code> directory.
+        Since our input is named <code>repo</code>, the code will be cloned to <code>/workspace/repo</code>.
+        </p>
+
+        <p>
+        </p>
+
+        <p>
+        The next block defines the step that executes the command to actually run the tests.
+        In our case we need to run the <code>go test</code> command inside the <code>src/</code>
+        directory of the cloned repo. Note that the command (go) and args (test) need to be defined separately
+        in the YAML file.
+        </p>
+
+        <p>Create the task with kubectl:</p>
+
+<pre>
+<span class="cmd">$</span> kubectl apply -f task-test.yaml
+</pre>
+
+        <h2>
+            Running our task
+        </h2>
+
+        <p>
+        To run our <code>Task</code> we have to create a <code>TaskRun</code> that references it and
+        provides all required inputs.
+        To use our git repository as an input we have to create a <code>PipelineResource</code> first.
+        </p>
+        <p>
+        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/pipelineresource.yaml">pipelineresource.yaml</a></code> with the following content and apply it:
+        </p>
+
+<pre>
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: arthurk-tekton-example
+spec:
+  type: git
+  params:
+    - name: url
+      value: https://github.com/arthurk/tekton-example
+    - name: revision
+      value: master
+</pre>
+<pre>
+<span class="cmd">$</span> kubectl apply -f pipelineresource.yaml
+</pre>
+
+        <p>
+        Now we can create the TaskRun. Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/taskrun.yaml">taskrun.yaml</a></code> with the following content:
+        </p>
+
+<pre>
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: testrun
+spec:
+  taskRef:
+    name: test
+  resources:
+    inputs:
+      - name: repo
+        resourceRef:
+          name: arthurk-tekton-example
+</pre>
+
+        <p>
+        This will take our Task (<code>taskRef</code> is a reference to our previously created task named <code>test</code>)
+        with our git repo as an input (<code>resourceRef</code> is a reference to our PipelineResource named <code>arthurk-tekton-example</code>)
+        and execute it.
+        </p>
+
+        <p>
+        Apply the file with kubectl and afterwards check the pods and taskrun:
+        </p>
+
+<pre>
+<span class="cmd">$</span> kubectl apply -f taskrun.yaml
+
+<span class="cmd">$</span> kubectl get pods
+NAME                READY   STATUS      RESTARTS   AGE
+testrun-pod-pds5z   0/2     Completed   0          4m27s
+
+<span class="cmd">$</span> kubectl get taskrun
+NAME      SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
+testrun   True        Succeeded   70s         57s
+</pre>
+
+
+        <p>To see the stdout of the containers we can run:</p>
+<pre>
+<span class="cmd">$</span> kubectl logs testrun-pod-pds5z --all-containers
+{"level":"info","ts":1587898529.358668,"caller":"git/git.go:105","msg":"Successfully cloned https://github.com/arthurk/tekton-example @ master in path /workspace/repo"}
+{"level":"warn","ts":1587898529.3588462,"caller":"git/git.go:152","msg":"Unexpected error: creating symlink: symlink /tekton/home/.ssh /root/.ssh: file exists"}
+{"level":"info","ts":1587898529.4190812,"caller":"git/git.go:133","msg":"Successfully initialized and updated submodules in path /workspace/repo"}
+PASS
+ok  	_/workspace/repo/src	0.003s
+</pre>
+        <p>Our tests passed and our task succeeded.</p>
+
+
+
+        <h2>Using the Tekton CLI to run a Task</h2>
+
+        <p>
+        The Tekton CLI provides a faster and more convenient way to run Tasks.
+        </p>
+
+        <p>Instead of manually
+        writing a <code>TaskRun</code> manifest we can run the following command
+        which takes our Task (<code>test</code>), generates a <code>TaskRun</code> (with a random name) and shows
+        its logs:
+        </p>
+
+<pre>
+<span class="cmd">$</span> tkn task start test --inputresource repo=arthurk-tekton-example --showlog
+
+Taskrun started: test-run-xlx57
+Waiting for logs to be available...
+[git-source-arthurk-tekton-example-4pxbh] {"level":"info","ts":1587899369.4304056,"caller":"git/git.go:105","msg":"Successfully cloned https://github.com/arthurk/tekton-example @ master in path /workspace/repo"}
+[git-source-arthurk-tekton-example-4pxbh] {"level":"warn","ts":1587899369.4305482,"caller":"git/git.go:152","msg":"Unexpected error: creating symlink: symlink /tekton/home/.ssh /root/.ssh: file exists"}
+[git-source-arthurk-tekton-example-4pxbh] {"level":"info","ts":1587899369.4896345,"caller":"git/git.go:133","msg":"Successfully initialized and updated submodules in path /workspace/repo"}
+
+[run-test] PASS
+[run-test] ok  	_/workspace/repo/src	0.004s
+</pre>
+
+        <h2>Conclusion</h2>
+        <p>
+            We have successfully installed Tekton on a local Kubernetes
+            cluster, defined a Task and tested it by creating a TaskRun via
+            YAML manifest and by using the Tekton CLI <code>tkn</code>.
+        </p>
+        <p>
+        In the next part we're going to create a task that will
+        use <a href="https://github.com/GoogleContainerTools/kaniko">Kaniko</a> to build a Docker image
+        for our application and then push it to DockerHub.
+        We will then create a Pipeline that runs both of our tasks sequentially (run application tests, build and push).
+        </p>
+
+    </article>
+  </body>
+</html>
