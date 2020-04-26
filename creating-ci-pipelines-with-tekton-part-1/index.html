@@ -72,13 +72,13 @@
         <time datetime="2020-04-26">April 26, 2020</time>
 
         <p>
-        In this blost post we're going to build a continuous integration (CI) pipeline with <a href="https://tekton.dev">Tekton</a>,
+        In this blog post we're going to build a continuous integration (CI) pipeline with <a href="https://tekton.dev">Tekton</a>,
         an open-source framework for creating CI/CD pipelines in Kubernetes.
         </p>
 
         <p>
         We're going to provision a local Kubernetes cluster via <a href="https://kind.sigs.k8s.io">kind</a> and install Tekton on it.
-        After that we'll create a pipeline consisting of two steps which will run application unit tests, build a Docker image
+        After that we'll create a pipeline consisting of two steps which will run application unit tests, build a Docker image,
         and push it to DockerHub.
         </p>
 
@@ -156,7 +156,7 @@ Pipeline version: v0.11.3
             <li>PipelineResource: Input or Output of a Pipeline (for example a git repo or a tar file)</li>
         </ul>
 
-        <p>We will use following two resources to define the execution of our Tasks and Pipeline:</p>
+        <p>We will use the following two resources to define the execution of our Tasks and Pipeline:</p>
 
         <ul>
             <li>TaskRun: Defines the execution of a Task</li>
@@ -171,7 +171,7 @@ Pipeline version: v0.11.3
 
         <p>
         In our example Pipeline we're going to use a Go application
-        that simply prints the sum of two integers. You can find the application code, test and Dockerfile in the <code>src/</code> directory in <a href="https://github.com/arthurk/tekton-example">this repo</a>.
+        that simply prints the sum of two integers. You can find the application code, test, and Dockerfile in the <code>src/</code> directory in <a href="https://github.com/arthurk/tekton-example">this repo</a>.
         </p>
 
         <h2>
@@ -213,7 +213,7 @@ spec:
         </p>
 
         <p>
-        The next block defines the step that executes the command to actually run the tests.
+        The next block defines the step that executes the command to run the tests.
         In our case we need to run the <code>go test</code> command inside the <code>src/</code>
         directory of the cloned repo. Note that the command (go) and args (test) need to be defined separately
         in the YAML file.
@@ -281,7 +281,7 @@ spec:
         </p>
 
         <p>
-        Apply the file with kubectl and afterwards check the pods and taskrun:
+        Apply the file with kubectl and afterward check the pods and taskrun resources:
         </p>
 
 <pre>
@@ -338,8 +338,8 @@ Waiting for logs to be available...
         <h2>Conclusion</h2>
         <p>
             We have successfully installed Tekton on a local Kubernetes
-            cluster, defined a Task and tested it by creating a TaskRun via
-            YAML manifest and by using the Tekton CLI <code>tkn</code>.
+            cluster, defined a Task, and tested it by creating a TaskRun via
+            YAML manifest as well as the Tekton CLI <code>tkn</code>.
         </p>
         <p>
         In the next part we're going to create a task that will
