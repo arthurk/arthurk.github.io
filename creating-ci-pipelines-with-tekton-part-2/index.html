@@ -75,26 +75,29 @@
             In this blog post we're going to continue
             creating a CI pipeline with <a href="https://tekton.dev">Tekton</a>. In <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-1/">Part 1</a> we
             installed Tekton on a local <a href="https://kind.sigs.k8s.io">kind</a> cluster and defined
-            our first Task which clones a GitHub repository and runs tests for a Go application (<a href="https://github.com/arthurk/tekton-example">repo</a>).
+            our first Task which clones a GitHub repository and runs application tests for a Go application (<a href="https://github.com/arthurk/tekton-example">repo</a>).
         </p>
 
         <p>
             In this part we're going to create a Task
             that will build a Docker image for our Go application
-            and push it to <a href="https://hub.docker.com">DockerHub</a>. Afterwards we will combine
-            our tasks into a Pipeline and test it by creating
-            a PipelineRun.
+            and push it to <a href="https://hub.docker.com">DockerHub</a>. Afterward we will combine
+            our tasks into a Pipeline.
         </p>
 
         <h2>Adding DockerHub Credentials</h2>
         <p>
-        To build and push our Docker image we use <a href="https://github.com/GoogleContainerTools/kaniko">Kaniko</a>.
-        For this step to work we need to authorize Tekton with DockerHub by creating a Kubernetes ServiceAccount with user credentials.
+        To build and push our Docker image we use <a href="https://github.com/GoogleContainerTools/kaniko">Kaniko</a>, which
+        can build Docker images inside a Kubernetes cluster without depending on a Docker daemon.
+        </p>
+        <p>
+        Kaniko will build and push the image in the same command. This means before running our task we need to set up
+        credentials for DockerHub so that the docker image can be pushed to the registry.
         </p>
 
         <p>
-        Create a file <code>secret.yaml</code> with the following content and replace
-        <code>myusername</code> and <code>mypassword</code> with your DockerHub credentials:
+        The credentials are saved in a Kubernetes Secret. Create a file named <code><a href="https://github.com/arthurk/tekton-example/blob/master/04-secret.yaml">secret.yaml</a></code> with
+        the following content and replace <code>myusername</code> and <code>mypassword</code> with your DockerHub credentials:
         </p>
 
 <pre>
@@ -111,13 +114,13 @@ stringData:
 </pre>
 
         <p>
-            Note the annotation in the metadata which tells Tekton which Docker registry these
-            credentials belong to.
+            Note the <code>tekton.dev/docker-0</code> annotation in the metadata
+            which tells Tekton the Docker registry these credentials belong to.
         </p>
 
         <p>
-        Next we create a <code>ServiceAccount</code> that uses the <code>Secret</code>. Create
-        a file named <code>serviceaccount.yaml</code> with the following content:
+        Next we create a <code>ServiceAccount</code> that uses the <code>basic-user-pass</code> Secret. Create
+        a file named <code><a href="https://github.com/arthurk/tekton-example/blob/master/05-serviceaccount.yaml">serviceaccount.yaml</a></code> with the following content:
         </p>
 
 <pre>
@@ -141,8 +144,8 @@ serviceaccount/build-bot created
 
         <p>
             We can now use this ServiceAccount (named <code>build-bot</code>) when
-            running tasks or pipelines. The steps in a Task will be able to
-            push to the registry or pull images from private repositories.
+            running Tekton tasks or pipelines by specifying a <code>serviceAccountName</code>.
+            We will see examples of this below.
         </p>
 
         <h2>
@@ -150,7 +153,11 @@ serviceaccount/build-bot created
         </h2>
 
         <p>
-            We create a file called <code>task-build-push.yaml</code> with
+            Now that the credentials are set up we can continue by creating
+            the Task that will build and push the Docker image.
+        </p>
+        <p>
+        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/06-task-build-push.yaml">task-build-push.yaml</a></code> with
             the following content:
         </p>
 
@@ -179,18 +186,23 @@ spec:
 
         <p>
             Similarly to the first task this task takes a git repo as an input (the input name is <code>repo</code>)
-            and consist of only one step since Kaniko can build and push the image in the same command.
+            and consists of only a single step since Kaniko builds and pushes the image in the same command.
         </p>
 
         <p>
             Make sure to create a DockerHub repository and replace <code>arthurk/tekton-test</code>
-            with your own one. It's possible to use parameters in Tekton to avoid hardcoding values
-            but to keep this tutorial simple I've decided to not use them.
+            with your repository name. In this example it will always tag and push the image
+            with the <code>latest</code> tag.
+        </p>
+        <p>
+            Tekton has support for
+            <a href="https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md#specifying-parameters">parameters</a>
+            to avoid hardcoding values like this.
+            However to keep this tutorial simple I've left them out.
         </p>
 
         <p>
-            You can also see that the <code>DOCKER_CONFIG</code> env var is set.
-            This is for Kaniko to be able to <a href="https://github.com/tektoncd/pipeline/pull/706">find the Docker credentials</a>.
+            The <code>DOCKER_CONFIG</code> env var is required for Kaniko to be able to <a href="https://github.com/tektoncd/pipeline/pull/706">find the Docker credentials</a>.
         </p>
 
         <p>Apply the file with kubectl:</p>
@@ -199,22 +211,26 @@ $ kubectl apply -f task-build-push.yaml
 task.tekton.dev/build-and-push created
 </pre>
 
+        <p>
+            There are two ways we can test this Task, either by manually creating a TaskRun
+            definition and then applying it with <code>kubectl</code> or by using the Tekton CLI (<code>tkn</code>).
+        </p>
+        <p>
+            In the following two sections I will show both methods.
+        </p>
+
         <h2>
             Run the Task with kubectl
         </h2>
 
         <p>
-            We can run the Task by either creating a TaskRun definition and then applying it
-            using <code>kubectl</code> or by using the Tekton CLI. I will show both ways.
+            To run the Task with <code>kubectl</code> we create a TaskRun that looks identical to the
+            <a href="https://github.com/arthurk/tekton-example/blob/master/03-taskrun.yaml">previous</a> with the
+            exception that we now specify a ServiceAccount (<code>serviceAccountName</code>) to use when executing the Task.
         </p>
 
         <p>
-            To run the Task with <code>kubectl</code> we create a TaskRun that looks identical to the
-            <a href="https://github.com/arthurk/tekton-example/blob/master/taskrun.yaml">previous one</a> with the
-            exception that we now specify a ServiceAccount (<code>serviceAccountName</code>) to use when executing the Task.
-        </p>
-        <p>
-            Create a file named <code>taskrun-build-push.yaml</code> with the following content:
+        Create a file named <code><a href="https://github.com/arthurk/tekton-example/blob/master/07-taskrun-build-push.yaml">taskrun-build-push.yaml</a></code> with the following content:
         </p>
 
 <pre>
@@ -233,7 +249,9 @@ spec:
           name: arthurk-tekton-example
 </pre>
 
-        <p>We apply the task and check the log of the Pod:</p>
+        <p>
+        Apply the task and check the log of the Pod by listing all Pods that start with the Task name <code>build-and-push</code>:
+        </p>
 
 <pre>
 $ kubectl apply -f taskrun-build-push.yaml
@@ -243,7 +261,7 @@ $ kubectl get pods | grep build-and-push
 build-and-push-pod-c698q   2/2     Running     0          4s
 
 $ kubectl logs --all-containers build-and-push-pod-c698q --follow
-{"level":"info","ts":1588478267.3476844,"caller":"creds-init/main.go:44","msg":"Credentials initialized."}
+{"level":"info","ts":1588478267.3476844,"caller":"creds-init/main.go:44", "msg":"Credentials initialized."}
 {"level":"info","ts":1588478279.2681644,"caller":"git/git.go:136","msg":"Successfully cloned https://github.com/arthurk/tekton-example @ 301aeaa8f7fa6ec01218ba6c5ddf9095b24d5d98 (grafted, HEAD, origin/master) in path /workspace/repo"}
 {"level":"info","ts":1588478279.3249557,"caller":"git/git.go:177","msg":"Successfully initialized and updated submodules in path /workspace/repo"}
 INFO[0004] Resolved base name golang:1.14-alpine to golang:1.14-alpine
@@ -255,11 +273,18 @@ INFO[0048] Resolving paths
 INFO[0050] CMD ["app"]
 </pre>
 
+        <p>The task executed without problems and we can now pull/run our Docker image:</p>
+
+<pre>
+$ docker run arthurk/tekton-test:latest
+hello world
+</pre>
+
         <h2>Run the Task with the Tekton CLI</h2>
 
         <p>
-            Running the Task with the Tekton CLI is easier. It can generate a TaskRun manifest from
-            the Task definition, apply it, and follow the logs with a single command:
+            Running the Task with the Tekton CLI is more convenient. With a single command
+            it generates a TaskRun manifest from the Task definition, applies it, and follows the logs.
         </p>
 
 <pre>
@@ -278,19 +303,23 @@ Waiting for logs to be available...
 [build-and-push] INFO[0051] CMD ["app"]
 
 </pre>
+        <p>
+            What happens in the background is similar to what we did with kubectl in the
+            previous section but this time we only have to run a single command.
+        </p>
 
         <h2>
             Creating a Pipeline
         </h2>
 
         <p>
-        Now that we have both of our Tasks ready (test, build-and-push) we create
-        a Pipleine that will run them sequentially: First it will run the application
-        tests. If they pass it will build the Docker image and push it to DockerHub.
+        Now that we have both of our Tasks ready (test, build-and-push) we can create
+        a Pipeline that will run them sequentially: First it will run the application
+        tests and if they pass it will build the Docker image and push it to DockerHub.
         </p>
 
         <p>
-        Create a file named <code>pipeline.yaml</code> with the following content:
+        Create a file named <code><a href="https://github.com/arthurk/tekton-example/blob/master/08-pipeline.yaml">pipeline.yaml</a></code> with the following content:
         </p>
 
 <pre>
@@ -309,8 +338,8 @@ spec:
         name: test
       resources:
         inputs:
-          - name: repo
-            resource: repo
+          - name: repo      # name of the Task input (see Task definition)
+            resource: repo  # name of the Pipeline resource
 
     # Build docker image and push to registry
     - name: build-and-push
@@ -320,21 +349,19 @@ spec:
         - test
       resources:
         inputs:
-          - name: repo
-            resource: repo
+          - name: repo      # name of the Task input (see Task definition)
+            resource: repo  # name of the Pipeline resource
 </pre>
 
         <p>
         The first thing we need to define is what resources our Pipeline requires. A resource
-        can be an Input or an Output. In our case we only have an Input: a git repo.
-        The resource is named <code>repo</code>.
+        can either be an input or an output. In our case we only have an input: the git repo with
+        our application source code. We name the resource <code>repo</code>.
         </p>
 
         <p>
-        Next we define our tasks. Each task has a <code>taskRef</code> (a reference to the Task)
-        and specifies the required resources. It might look a bit confusing that the input has
-        the name <code>repo</code> specified twice, but this is because our tasks require a git repo as an input
-        resource named <code>repo</code> and our Pipeline resource is named <code>repo</code> too.
+        Next we define our tasks. Each task has a <code>taskRef</code> (a reference to a Task)
+        and passes the tasks required inputs.
         </p>
 
         <p>Apply the file with kubectl:</p>
@@ -344,16 +371,21 @@ $ kubectl apply -f pipeline.yaml
 pipeline.tekton.dev/test-build-push created
 </pre>
 
-        <h2>
-            Run the Pipeline with kubectl
-        </h2>
-
         <p>
             Similar to how we can run as Task by creating a TaskRun, we can run
             a Pipeline by creating a PipelineRun.
         </p>
         <p>
-            Create a file named pipelinerun.yaml with the following content:
+            This can either be done with kubectl or the Tekton CLI. In the following
+            two sections I will show both ways.
+        </p>
+
+        <h2>
+            Run the Pipeline with kubectl
+        </h2>
+        <p>
+            To run the file with kubectl we have to create a PipelineRun.
+        Create a file named <code><a href="https://github.com/arthurk/tekton-example/blob/master/09-pipelinerun.yaml">pipelinerun.yaml</a></code> with the following content:
         </p>
 
 <pre>
@@ -373,7 +405,7 @@ spec:
 
         <p>
             Apply the file, get the Pods that are prefixed with the PiplelineRun name, and
-            view the logs:
+            view the logs to get the container output:
         </p>
 
 <pre>
@@ -404,7 +436,7 @@ INFO[0050] CMD ["app"]
         <p>
         When using the CLI we don't have to write a PipelineRun, it will be generated
         from the Pipeline manifest. By using the <code>--showlog</code> argument it will
-        also display the Task logs after starting.
+        also display the Task (container) logs:
         </p>
 
 <pre>
@@ -427,19 +459,18 @@ Waiting for logs to be available...
 ...
 </pre>
 
+        <h2>Summary</h2>
+
         <p>
-            The CLI will generate a PipelineRun from the Pipeline definition, run it and show the log
-            of all Tasks.
+            In <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-1/">Part 1</a> we installed Tekton on a local Kubernetes cluster, defined a Task, and tested it by creating a TaskRun via YAML manifest as well as the Tekton CLI tkn.
         </p>
-
-        <h2>Conclusion</h2>
-
         <p>
-            We have created our first Tektok Pipeline that consists of two tasks.
-            The first one clones a repo from GitHub, and runs application tests.
+            In this part we created our first Tektok Pipeline that consists of two tasks.
+            The first one clones a repo from GitHub and runs application tests.
             The second one builds a Docker image and pushes it to DockerHub.
-
-            As mentioned above all code examples are in this git repo.
+        </p>
+        <p>
+            All code examples are available <a href="https://github.com/arthurk/tekton-example">here</a>.
         </p>
 
     </article>
