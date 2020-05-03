@@ -83,7 +83,7 @@
         </p>
 
         <p>This is part 1 of 2 in which we will install Tekton and create a task that runs our application test.
-        The second part will be available next week.</p>
+        The second part is available <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-2/">here</a>.</p>
 
         <h2>
             Creating the k8s cluster
@@ -106,7 +106,7 @@
         </p>
 
 <pre>
-<span class="cmd">$</span> kubectl apply -f https://github.com/tektoncd/pipeline/releases/download/v0.11.3/release.yaml
+<span class="cmd">$</span> kubectl apply -f https://github.com/tektoncd/pipeline/releases/download/v0.12.0/release.yaml
 </pre>
 
         <p>
@@ -139,8 +139,8 @@ tekton-pipelines-webhook-6f764dc8bf-zq44s      1/1     Running   0          19s
 <span class="cmd">$</span> brew install tektoncd/tools/tektoncd-cli
 
 <span class="cmd">$</span> tkn version
-Client version: 0.8.0
-Pipeline version: v0.11.3
+Client version: 0.9.0
+Pipeline version: v0.12.0
 </pre>
 
         <h2>Concepts</h2>
@@ -180,7 +180,7 @@ Pipeline version: v0.11.3
 
         <p>
         Our first Task will run the application tests inside the cloned git repo.
-        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/task-test.yaml">task-test.yaml</a></code> with the following content:
+        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/01-task-test.yaml">task-test.yaml</a></code> with the following content:
         </p>
 
 <pre>
@@ -210,9 +210,6 @@ spec:
         </p>
 
         <p>
-        </p>
-
-        <p>
         The next block defines the step that executes the command to run the tests.
         In our case we need to run the <code>go test</code> command inside the <code>src/</code>
         directory of the cloned repo. Note that the command (go) and args (test) need to be defined separately
@@ -235,7 +232,7 @@ spec:
         To use our git repository as an input we have to create a <code>PipelineResource</code> first.
         </p>
         <p>
-        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/pipelineresource.yaml">pipelineresource.yaml</a></code> with the following content and apply it:
+        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/02-pipelineresource.yaml">pipelineresource.yaml</a></code> with the following content and apply it:
         </p>
 
 <pre>
@@ -256,7 +253,7 @@ spec:
 </pre>
 
         <p>
-        Now we can create the TaskRun. Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/taskrun.yaml">taskrun.yaml</a></code> with the following content:
+        Now we can create the TaskRun. Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/03-taskrun.yaml">taskrun.yaml</a></code> with the following content:
         </p>
 
 <pre>
@@ -296,19 +293,16 @@ NAME      SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
 testrun   True        Succeeded   70s         57s
 </pre>
 
-
         <p>To see the stdout of the containers we can run:</p>
 <pre>
 <span class="cmd">$</span> kubectl logs testrun-pod-pds5z --all-containers
-{"level":"info","ts":1587898529.358668,"caller":"git/git.go:105","msg":"Successfully cloned https://github.com/arthurk/tekton-example @ master in path /workspace/repo"}
-{"level":"warn","ts":1587898529.3588462,"caller":"git/git.go:152","msg":"Unexpected error: creating symlink: symlink /tekton/home/.ssh /root/.ssh: file exists"}
-{"level":"info","ts":1587898529.4190812,"caller":"git/git.go:133","msg":"Successfully initialized and updated submodules in path /workspace/repo"}
+{"level":"info","ts":1588477119.3692405,"caller":"git/git.go:136","msg":"Successfully cloned https://github.com/arthurk/tekton-example @ 301aeaa8f7fa6ec01218ba6c5ddf9095b24d5d98 (grafted, HEAD, origin/master) in path /workspace/repo"}
+{"level":"info","ts":1588477119.4230678,"caller":"git/git.go:177","msg":"Successfully initialized and updated submodules in path /workspace/repo"}
 PASS
 ok  	_/workspace/repo/src	0.003s
 </pre>
-        <p>Our tests passed and our task succeeded.</p>
-
-
+        <p>Our tests passed and our task succeeded. Next we will
+        use the Tekton CLI to run the same task.</p>
 
         <h2>Using the Tekton CLI to run a Task</h2>
 
@@ -318,21 +312,19 @@ ok  	_/workspace/repo/src	0.003s
 
         <p>Instead of manually
         writing a <code>TaskRun</code> manifest we can run the following command
-        which takes our Task (<code>test</code>), generates a <code>TaskRun</code> (with a random name) and shows
+        which takes our Task (named <code>test</code>), generates a <code>TaskRun</code> (with a random name) and shows
         its logs:
         </p>
 
 <pre>
 <span class="cmd">$</span> tkn task start test --inputresource repo=arthurk-tekton-example --showlog
-
-Taskrun started: test-run-xlx57
+Taskrun started: test-run-8t46m
 Waiting for logs to be available...
-[git-source-arthurk-tekton-example-4pxbh] {"level":"info","ts":1587899369.4304056,"caller":"git/git.go:105","msg":"Successfully cloned https://github.com/arthurk/tekton-example @ master in path /workspace/repo"}
-[git-source-arthurk-tekton-example-4pxbh] {"level":"warn","ts":1587899369.4305482,"caller":"git/git.go:152","msg":"Unexpected error: creating symlink: symlink /tekton/home/.ssh /root/.ssh: file exists"}
-[git-source-arthurk-tekton-example-4pxbh] {"level":"info","ts":1587899369.4896345,"caller":"git/git.go:133","msg":"Successfully initialized and updated submodules in path /workspace/repo"}
+[git-source-arthurk-tekton-example-dqjfb] {"level":"info","ts":1588477372.740875,"caller":"git/git.go:136","msg":"Successfully cloned https://github.com/arthurk/tekton-example @ 301aeaa8f7fa6ec01218ba6c5ddf9095b24d5d98 (grafted, HEAD, origin/master) in path /workspace/repo"}
+[git-source-arthurk-tekton-example-dqjfb] {"level":"info","ts":1588477372.7954974,"caller":"git/git.go:177","msg":"Successfully initialized and updated submodules in path /workspace/repo"}
 
 [run-test] PASS
-[run-test] ok  	_/workspace/repo/src	0.004s
+[run-test] ok  	_/workspace/repo/src	0.006s
 </pre>
 
         <h2>Conclusion</h2>
@@ -342,11 +334,16 @@ Waiting for logs to be available...
             YAML manifest as well as the Tekton CLI <code>tkn</code>.
         </p>
         <p>
+            All example code is available <a href="https://github.com/arthurk/tekton-example">here</a>.
+        </p>
+        <p>
         In the next part we're going to create a task that will
         use <a href="https://github.com/GoogleContainerTools/kaniko">Kaniko</a> to build a Docker image
         for our application and then push it to DockerHub.
         We will then create a Pipeline that runs both of our tasks sequentially (run application tests, build and push).
         </p>
+
+        <p>Part 2 is available <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-2/">here</a>.</p>
 
     </article>
   </body>
