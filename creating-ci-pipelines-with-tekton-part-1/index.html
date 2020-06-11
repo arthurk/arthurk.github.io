@@ -180,7 +180,7 @@ Pipeline version: v0.12.0
 
         <p>
         Our first Task will run the application tests inside the cloned git repo.
-        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/01-task-test.yaml">task-test.yaml</a></code> with the following content:
+        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/01-task-test.yaml">01-task-test.yaml</a></code> with the following content:
         </p>
 
 <pre>
@@ -202,38 +202,13 @@ spec:
 </pre>
 
         <p>
-        The <code>resources</code> block defines the inputs that our task needs to execute its steps.
-        Our step needs to cloned git repository as an input to run the <code>go test</code> command.
-        <p>
-        Tekton has a <code>git</code> resource type that will automatically clone the repo into the <code>/workspace/$input_name</code> directory.
-        Since our input is named <code>repo</code>, the code will be cloned to <code>/workspace/repo</code>.
-        </p>
+        The <code>resources:</code> block defines the inputs that our task needs to execute its steps.
+        Our step (named <code>run-test</code>) needs the cloned <a href="https://github.com/arthurk/tekton-example/">tekton-example</a> git repository as an input and we can create this input with a PipelineResource.</p>
 
         <p>
-        The next block defines the step that executes the command to run the tests.
-        In our case we need to run the <code>go test</code> command inside the <code>src/</code>
-        directory of the cloned repo. Note that the command (go) and args (test) need to be defined separately
-        in the YAML file.
+        Create a file called <a href="https://github.com/arthurk/tekton-example/blob/master/02-pipelineresource.yaml">02-pipelineresource.yaml</a>:
         </p>
 
-        <p>Create the task with kubectl:</p>
-
-<pre>
-<span class="cmd">$</span> kubectl apply -f task-test.yaml
-</pre>
-
-        <h2>
-            Running our task
-        </h2>
-
-        <p>
-        To run our <code>Task</code> we have to create a <code>TaskRun</code> that references it and
-        provides all required inputs.
-        To use our git repository as an input we have to create a <code>PipelineResource</code> first.
-        </p>
-        <p>
-        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/02-pipelineresource.yaml">pipelineresource.yaml</a></code> with the following content and apply it:
-        </p>
 
 <pre>
 apiVersion: tekton.dev/v1alpha1
@@ -248,12 +223,44 @@ spec:
     - name: revision
       value: master
 </pre>
-<pre>
-<span class="cmd">$</span> kubectl apply -f pipelineresource.yaml
-</pre>
 
         <p>
-        Now we can create the TaskRun. Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/03-taskrun.yaml">taskrun.yaml</a></code> with the following content:
+        The <code>git</code> resource type will use git to clone the repo into the <code>/workspace/$input_name</code> directory everytime the Task is run.
+        Since our input is named <code>repo</code> the code will be cloned to <code>/workspace/repo</code>. If our input would be named <code>foobar</code> it would be cloned into <code>/workspace/foobar</code>.
+        </p>
+
+        <p>
+        The next block in our Task (<code>steps:</code>) specifies the command to execute and the Docker image in which to run that command. We're going to use the <a href="https://hub.docker.com/_/golang">golang</a> Docker image as it already has Go installed.
+        </p>
+        <p>
+        For the <code>go test</code> command to run we need to change the directory. By default the command will run
+        in the <code>/workspace/repo</code> directory but in our <a href="https://github.com/arthurk/tekton-example">tekton-example</a> repo the Go application is in the <code>src</code> directory. We do this by setting <code>workingDir: /workspace/repo/src</code>.
+
+        <p>
+        Next we specify the command to run (<code>go test</code>) but note that the command (<code>go</code>) and args (<code>test</code>) need to be defined separately
+        in the YAML file.
+        </p>
+
+        <p>Apply the Task and the PipelineResource with kubectl:</p>
+
+<pre>
+<span class="cmd">$</span> kubectl apply -f 01-task-test.yaml
+task.tekton.dev/test created
+
+<span class="cmd">$</span> kubectl apply -f 02-pipelineresource.yaml
+pipelineresource.tekton.dev/arthurk-tekton-example created
+</pre>
+
+        <h2>
+            Running our task
+        </h2>
+
+        <p>
+        To run our <code>Task</code> we have to create a <code>TaskRun</code> that references the previously created <code>Task</code> and passes in all required inputs (<code>PipelineResource</code>).
+        </p>
+
+        <p>
+        Create a file called <code><a href="https://github.com/arthurk/tekton-example/blob/master/03-taskrun.yaml">03-taskrun.yaml</a></code> with the following content:
         </p>
 
 <pre>
@@ -273,16 +280,17 @@ spec:
 
         <p>
         This will take our Task (<code>taskRef</code> is a reference to our previously created task named <code>test</code>)
-        with our git repo as an input (<code>resourceRef</code> is a reference to our PipelineResource named <code>arthurk-tekton-example</code>)
+        with our <a href="https://github.com/arthurk/tekton-example">tekton-example</a> git repo as an input (<code>resourceRef</code> is a reference to our PipelineResource named <code>arthurk-tekton-example</code>)
         and execute it.
         </p>
 
         <p>
-        Apply the file with kubectl and afterward check the pods and taskrun resources:
+        Apply the file with kubectl and then check the Pods and TaskRun resources. The Pod will go through the <code>Init:0/2</code> and <code>PodInitializing</code> status and then succeed:
         </p>
 
 <pre>
-<span class="cmd">$</span> kubectl apply -f taskrun.yaml
+<span class="cmd">$</span> kubectl apply -f 03-taskrun.yaml
+pipelineresource.tekton.dev/arthurk-tekton-example created
 
 <span class="cmd">$</span> kubectl get pods
 NAME                READY   STATUS      RESTARTS   AGE
@@ -293,7 +301,7 @@ NAME      SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
 testrun   True        Succeeded   70s         57s
 </pre>
 
-        <p>To see the stdout of the containers we can run:</p>
+<p>To see the output of the containers we can run the following command. Make sure to replace <code>testrun-pod-pds5z</code> with the the Pod name from the output above (it will be different for each run).</p>
 <pre>
 <span class="cmd">$</span> kubectl logs testrun-pod-pds5z --all-containers
 {"level":"info","ts":1588477119.3692405,"caller":"git/git.go:136","msg":"Successfully cloned https://github.com/arthurk/tekton-example @ 301aeaa8f7fa6ec01218ba6c5ddf9095b24d5d98 (grafted, HEAD, origin/master) in path /workspace/repo"}
@@ -302,7 +310,7 @@ PASS
 ok  	_/workspace/repo/src	0.003s
 </pre>
         <p>Our tests passed and our task succeeded. Next we will
-        use the Tekton CLI to run the same task.</p>
+        use the Tekton CLI to see how we can make this whole process easier.</p>
 
         <h2>Using the Tekton CLI to run a Task</h2>
 
