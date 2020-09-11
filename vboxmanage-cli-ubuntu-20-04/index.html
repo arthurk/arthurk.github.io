@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Using the VBoxManage CLI to create a Ubuntu 20.04 VM</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.2em;
+            color: #D7D7D7;
+            background: #262626;
+            padding-bottom: 2em;
+        }
+
+        a { color: #D7D7AF; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #D7D7AF }
+        h2 { font-size: 1.25em; padding-top: 1em; color: #87AFD7; border-bottom: 1px dashed}
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: .9em;
+            color: #fff;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border-left: 5px solid gray;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 55%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Using the VBoxManage CLI to create a Ubuntu 20.04 VM</h1>
+        <time datetime="2020-09-08">September 8, 2020</time>
+
+	<p>This tutorial describes the installation of Ubuntu 20.04 in VirtualBox by using the <a href="https://www.virtualbox.org/manual/ch08.html">VBoxManage CLI</a>.</p>
+
+	<img src="ubuntu-desktop.png"/>
+
+	<p>I'm assuming that <a href="https://www.virtualbox.org/">VirtualBox 6.1</a> is installed, the VBoxManage CLI is ready to use and the <a href="https://ubuntu.com/download/desktop">Ubuntu 20.04 ISO</a> has been downloaded.</p>
+
+<p>I've tested this on an apple laptop with retina (HiDPI) display and included instructions to scale the display output. The scaling commands can be ignored for non-HiDPI displays.</p>
+
+<h2>Getting started</h2>
+
+<p>We first create the VM and increase the hardware resources. The default settings use 1 CPU core, 128MB RAM and 8MB VRAM which is not enough. We'll increase it to use 2 CPU cores, 4GB RAM and 128MB VRAM:</p>
+
+<pre>
+<span class="cmd">$</span> VBoxManage createvm --name "Ubuntu 20.04" --ostype Ubuntu_64 --register
+<span class="cmd">$</span> VBoxManage modifyvm "Ubuntu 20.04" --cpus 2 --memory 4096 --vram 128 --graphicscontroller vmsvga --usbohci on --mouse usbtablet
+</pre>
+
+<p>In the above command I've also enabled USB and set the Graphics Controller to VMSVGA which is the default controller when using the GUI but set to the legacy VBoxVGA when using the CLI.</p>
+
+<p>To see all available options run <code>VBoxManage modifyvm</code> which will output a list of all flags. The current values can be seen with <code>VBoxManage showvminfo "Ubuntu 20.04"</code>.</p>
+
+<h2>Storage Devices</h2>
+
+<p>Next we need to configure the storage devices. We create an empty 20GB hard drive that we can install Ubuntu on. A minimal Ubuntu installation takes about 5GB of space:</p>
+
+<pre>
+<span class="cmd">$</span> VBoxManage createhd --filename ~/VirtualBox\ VMs/Ubuntu\ 20.04/Ubuntu\ 20.04.vdi --size 20480 --variant Standard
+<span class="cmd">$</span> VBoxManage storagectl "Ubuntu 20.04" --name "SATA Controller" --add sata --bootable on
+<span class="cmd">$</span> VBoxManage storageattach "Ubuntu 20.04" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium ~/VirtualBox\ VMs/Ubuntu\ 20.04/Ubuntu\ 20.04.vdi 
+</pre>
+
+<p>We also create a dvd drive with the Ubuntu ISO mounted in it. The VM will boot from this drive first when starting:</p>
+
+<pre>
+<span class="cmd">$</span> VBoxManage storagectl "Ubuntu 20.04" --name "IDE Controller" --add ide
+<span class="cmd">$</span> VBoxManage storageattach "Ubuntu 20.04" --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium ~/Downloads/ubuntu-20.04.1-desktop-amd64.iso
+</pre>
+
+<h2>Display output scaling</h2>
+
+<p>The Ubuntu installer runs with a resolution of 800x600 and would look tiny on HiDPI screens if we wouldn't scale up the display output. The following command will scale up the display output by a factor of 2:</p>
+
+<pre>
+<span class="cmd">$</span> VBoxManage setextradata "Ubuntu 20.04" GUI/ScaleFactor 2
+</pre>
+
+<h2>Start the VM</h2>
+
+<p>Now we can start the VM which will load the Ubuntu GUI installer from the mounted ISO:</p>
+
+<pre><span class="cmd">$</span> VBoxManage startvm "Ubuntu 20.04"</pre>
+
+<p>After the installation is done the installer will prompt to remove the installation media. We can ignore this for now and press enter to reboot.</p>
+
+<p>When Ubuntu is booted up we install the VirtualBox Guest Additions to get the display drivers. This can be done by clicking on the menu bar and selecting "Devices", then  "Insert Guest Additions CD Image". The installer will start automatically.</p> 
+
+<h2>Finishing the installation</h2>
+
+<p>After the Guest Additions are installed we can let GNOME handle the display output scaling which has a better quality.</p>
+
+<p>In the Ubuntu terminal (right click on Desktop and select "Open in Terminal") enter:</p>
+
+<pre><span class="cmd">$</span> gsettings set org.gnome.desktop.interface scaling-factor 2</pre>
+
+<p>We can now shut down the VM to remove the installation media and disable the VirtualBox display scaling. On the Desktop click on the arrow in the top right corner and select "Power Off". Then run the following command on the host:</p>
+
+<pre>
+<span class="cmd">$</span> VBoxManage storageattach "Ubuntu 20.04" --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium emptydrive
+<span class="cmd">$</span> VBoxManage setextradata "Ubuntu 20.04" GUI/ScaleFactor 1
+</pre>
+
+<p>With that done the Ubuntu VM is ready to use.</p>
+
+<h2>Conclusion</h2>
+<p>
+We created a Ubuntu 20.04 VM by using the CLI instead of the GUI wizard. Personally I find this useful since I sometimes forget to set values in the GUI (such as increasing the VRAM). The Ubuntu Desktop installer has to run in a GUI, to automate this we'd need to use the Ubuntu Server ISO and install the GNOME desktop manually.</p>
+    </article>
+  </body>
+</html>
