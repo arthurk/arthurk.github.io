@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Using QEMU to create a Ubuntu 20.04 Desktop VM on macOS</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.3em;
+            color: #D7D7D7;
+            background: #262626;
+            padding-bottom: 2em;
+        }
+
+        a { color: #D7D7AF; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #D7D7AF }
+        h2 { font-size: 1.25em; padding-top: 1em; color: #87AFD7; border-bottom: 1px dashed}
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            color: #fff;
+	    background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border-left: 5px solid gray;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 55%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Using QEMU to create a Ubuntu 20.04 Desktop VM on macOS</h1>
+        <time datetime="2020-09-20">September 20, 2020</time>
+<p>In this blog post we’re going to create a Ubuntu 20.04 VM using <a href="https://www.qemu.org/">QEMU</a> on MacOS.</p>
+<p><img src="ubuntu-20-04-with-qemu.png" alt="A picture of the Ubuntu 20.04 Desktop" /></p>
+<p>QEMU is a hardware emulator which can make use of different accelerators when running VMs. The most popular accelerator is <a href="https://www.linux-kvm.org/page/Main_Page">KVM</a> which is built into the Linux kernel and allows Linux hosts to run VMs with native performance.</p>
+<p>Using QEMU on macOS used to be very slow as no accelerator was available. This changed 2 years ago when the project <a href="https://wiki.qemu.org/ChangeLog/2.12">added support</a> for the macOS native hypervisor with Hypervisor.framework (HVF) as an accelerator.</p>
+<p>Before we begin with the setup I assume that the <a href="https://releases.ubuntu.com/20.04/">Ubuntu 20.04 Desktop ISO</a> has been downloaded in the current working directory.</p>
+<h2 id="qemu-installation">QEMU Installation</h2>
+<p>We can use Homebrew to install QEMU. The version we’re using in this tutorial is 5.1.0:</p>
+<pre class="shell"><code>$ brew install qemu
+
+qemu-system-x86_64 --version
+QEMU emulator version 5.1.0
+Copyright (c) 2003-2020 Fabrice Bellard and the QEMU Project developers</code></pre>
+<p>It will pull in a few dependencies (the package depends on 14 other packages) and the installation can take a few minutes.</p>
+<h2 id="create-the-disk-image">Create the disk image</h2>
+<p>Once the installation is done, we can create the disk image that we’re going to install Ubuntu on.</p>
+<p>We’re using the QCOW2 format to create a 20GB image. This can be resized later on if needed. The Ubuntu installation took around 5GB of space when I installed it.</p>
+<pre class="shell"><code>qemu-img create -f qcow2 ubuntu-20.04.1-desktop-amd64.qcow2 20G</code></pre>
+<h2 id="boot-machine-with-ubuntu-iso-mounted">Boot machine with Ubuntu ISO mounted</h2>
+<p>We can now boot up the machine with the Ubuntu ISO attached as a</p>
+<p>In this step we boot up the machine with the Ubuntu ISO mounted in the CD drive:</p>
+<pre class="shell"><code>qemu-system-x86_64 \
+    -machine type=q35,accel=hvf \
+    -cpu host \
+    -smp 2 \
+    -hda ubuntu-20.04.1-desktop-amd64.qcow2 \
+    -cdrom ./ubuntu-20.04.1-desktop-amd64.iso \
+    -m 4G \
+    -vga virtio \
+    -usb \
+    -device usb-tablet \
+    -display default,show-cursor=on</code></pre>
+<p>The options are:</p>
+<ul>
+<li><code>-machine</code>: The emulated machine and the accelerator. q35 is the newest machine type and HVF is the macOS native hypervisor.</li>
+<li><code>-cpu</code>: The CPU architecture. The value <code>host</code> will use the HVF processor with all supported host features</li>
+<li><code>-smp</code>: Number of CPUs to use</li>
+<li><code>-m</code>: Amount of memory to use</li>
+<li><code>-hda</code>: Disk drive (the one we created earlier)</li>
+<li><code>-cdrom</code>: The ISO image to put into the CD drive</li>
+<li><code>-vga</code>: The graphic card to use. I found <code>virtio</code> (based on <a href="https://virgil3d.github.io/">Virgil</a> to have the best performance</li>
+<li><code>-usb</code>: Enable USB host controller</li>
+<li><code>-device</code> Adding a “usb-tablet” as an input device. I’m running this on a laptop and without this setting the mouse did not work.</li>
+<li><code>-display</code>: To show the mouse cursor (disabled by default)</li>
+</ul>
+<p>During testing I had problems with the Linux kernel as it would panic during the boot process. The issue was the <code>-cpu host</code> parameter. I fixed it by specifying the CPU architecture manually (see <code>qemu-system-x86_64 -cpu help</code> for a list of all available architectures).</p>
+<p>My machine has an IvyBridge processor (Core i7):</p>
+<pre class="shell"><code>$ sysctl -n machdep.cpu.brand_string
+
+Intel(R) Core(TM) i7-3740QM CPU @ 2.70GHz</code></pre>
+<p>And using <code>-cpu IvyBridge</code> would fail. However when using <code>-cpu Nehalem</code> (<a href="https://en.wikipedia.org/wiki/List_of_Intel_CPU_microarchitectures">also an i7 CPU</a>) everything worked well.</p>
+<p>Now after the machine is booted up the Ubuntu installer will run. Follow the installation steps and don’t restart the VM at the end of the installation, instead shut it down by stopping the qemu process with CTRL-C on the host.</p>
+<h2 id="boot-without-iso-mounted">Boot without ISO mounted</h2>
+<p>When running the VM we don’t need the Ubuntu ISO mounted and can remove it by leaving out the <code>-cdrom</code> option:</p>
+<pre class="shell"><code>qemu-system-x86_64 \
+    -machine type=q35,accel=hvf \
+    -cpu host \
+    -smp 2 \
+    -hda ubuntu-20.04.1-desktop-amd64.qcow2 \
+    -m 4G \
+    -vga virtio \
+    -usb \
+    -device usb-tablet \
+    -display default,show-cursor=on</code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>In my experience QEMU is faster, more responsive and uses less CPU/RAM than VirtualBox. I didn’t have to configure any display scaling for HiDPI screens as it worked out of the box. The only thing I’m missing are shared clipboards and drag-and-drop of files (which are available when installing the VirtualBox Guest Additions).</p>
+    </article>
+  </body>
+</html>

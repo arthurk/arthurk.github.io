@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>$title$</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.3em;
+            color: #D7D7D7;
+            background: #262626;
+            padding-bottom: 2em;
+        }
+
+        a { color: #D7D7AF; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #D7D7AF }
+        h2 { font-size: 1.25em; padding-top: 1em; color: #87AFD7; border-bottom: 1px dashed}
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            color: #fff;
+	    background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border-left: 5px solid gray;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 55%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>$title$</h1>
+        <time datetime="$date-meta$">$date$</time>
+$body$
+    </article>
+  </body>
+</html>
