@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Smartyao LY092 Keyboard Review</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.3em;
+            color: #D7D7D7;
+            background: #262626;
+            padding-bottom: 2em;
+        }
+
+        a { color: #D7D7AF; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #D7D7AF }
+        h2 { font-size: 1.25em; padding-top: 1em; color: #87AFD7; border-bottom: 1px dashed}
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            color: #fff;
+	    background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border-left: 5px solid gray;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 55%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Smartyao LY092 Keyboard Review</h1>
+        <time datetime="2020-11-24">November 24, 2020</time>
+<p>This blog post is a review of the <a href="http://www.smartyao.com/?_l=en">Smartyao</a> LY092 Split-Keyboard which I’ve been using for the past 7 months.</p>
+<p><img src="keyboard.jpg" title="Smartyao LY092 Keyboard" alt="Smartyao L092 Keyboard" /></p>
+<p>I bought this split-keyboard to improve ergonomics since it allows typing at shoulder width rather than having to hunch over the keyboard.</p>
+<p>This is my first mechanical keyboard in over 10 years and also my first split keyboard. I wasn’t sure if I’d like split keyboards and didn’t want to spend $350 on an ErgoDox, so I decided to try this one out.</p>
+<p>I bought it on <a href="http://shop114100401.taobao.com/?spm=2013.1.1000126.2.MloYHY&amp;v=1">Taobao</a> in China for 458 RMB (around $70 USD). There’s a rebranded version (Koolertron) available on <a href="https://www.amazon.com/Koolertron-Programmable-Mechanical-Keyboard-Ergonomic/dp/B081GX5CY1">Amazon</a> although it costs more than double the original price.</p>
+<h2 id="hardware">Hardware</h2>
+<p>The keyboard has 43 keys on the left half and 45 keys on the right half. It can be ordered with either Cherry MX (Brown or Red) or Gateron (Blue or Black) switches. I’ve picked the Cherry MX Brown. Extra key caps with Numpad labels are included in the package and the existing keys can be swapped out.</p>
+<p>The letters and numbers on the key caps are engraved so there’s no need to worry about them wearing off. The letters are see-through which is nice with the background lighting. Each side of the keyboard has 2 Micro USB connections. The middle ones are for connecting the two halves with each other. The left side or right side can be connected to the computer USB port with the included Micro USB to USB adapter.</p>
+<p>The background light is white and can be turned on/off by pressing the top right key on the left side and top left key on the right side (each side has to be turned off separately). The key for turning the light on/off can be programmed in the configuration software.</p>
+<h2 id="configuration-software">Configuration Software</h2>
+<p>The keyboard is programmable which means that each key can be assigned a different value or alternatively use of one of the built-in functions. I’ve described some of those functions below. For a full reference of what the keyboard is capable to do check the <a href="https://dme657285d3.pic11.websiteonline.cn/upload/Thumbkeyboard_User_Manual_V5.pdf">User Manual</a>.</p>
+<h3 id="installation">Installation</h3>
+<p>The software can be downloaded from the <a href="http://www.smartyao.com/page91?_l=en">manufacturer’s website</a>. It’s only available for Windows but I was able to run it without problems on macOS via VirtualBox. I used the <a href="https://developer.microsoft.com/en-us/microsoft-edge/tools/vms/">MSEdge on Win10 trial</a> version of Windows 10.</p>
+<p>VirtualBox disables all USB connections by default. The keyboard needs to be connected via the menu before it can be used. It shows up under <code>Devices -&gt; USB</code> as <code>LingYao ShangHai Thumb Keyboard</code>:</p>
+<p><img src="keyboard-vbox-menu.png" alt="VirtualBox USB menu showing the keyboard device" /></p>
+<p>Each keyboard-side has to be programmed separately. It has to be put into a configuration mode by holding down the top-left key (for example <code>ESC</code> on the left side) while connecting it to the USB port. The LEDs will start blinking to indicate that it is now in config mode. On launch the configuration software will automatically load the default profile.</p>
+<h3 id="overview">Overview</h3>
+<p>The following picture shows the default view after loading the left side of the keyboard into the config software:</p>
+<p><img src="overview-left.png" title="Configuration Software" alt="Overview of the left keyboard side in the configuration software" /></p>
+<p>Each key can be programmed individually by clicking on it and selecting a new value with the virtual keyboard:</p>
+<p><img src="virtual-keyboard.png" title="Virtual Keyboard" alt="Picture of the Virtual Keyboard in the editor" /></p>
+<h2 id="functions">Functions</h2>
+<p>Besides assigning a new char to a key there are also a few functions that can be used:</p>
+<ul>
+<li><strong>3-Layer Keymap</strong>: Use a different char for a key when <code>FN1</code> or <code>FN2</code> is pressed. For example <code>FN1+H</code> can be mapped to <code>Left Arrow</code>.</li>
+<li><strong>Hotkey</strong>: Use one key press to send a shortcut such as <code>Ctrl+C</code>, another key to send <code>Ctrl+V</code>. This is a useful function to implement copy/paste/cut/undo/redo with a single key press</li>
+<li><strong>Burst</strong>: Send up to 3 chars with a single click. Useful to output a pair of braces <code>[]</code> with a single press</li>
+<li><strong>Mouse</strong>: Control (move, click, …) the mouse with the keyboard. For example a key press can move the mouse by 200px to the left</li>
+<li><strong>Round-Robin</strong>: Output a different char on every key press. Up to 3 chars can be chosen</li>
+<li><strong>Continue</strong>: Simulates a key-hold when a key is pressed the first time and a key-release when it’s pressed again. Gaming-feature to make it easier to walk around without continuously holding down the key</li>
+<li><strong>Jitter</strong>: One key press to continuously output up to 3 chars. Like the Burst function but will continue doing so until the key is pressed again</li>
+</ul>
+<p>There are also special functions to turn the Backlights ON/OFF, Switch Profiles and execute Macros.</p>
+<h2 id="macros">Macros</h2>
+<p>Macros are scripts that can be programmed to do a series of key presses or mouse movements with a short delay between them:</p>
+<p><img src="macro-editor.png" title="Macro Editor" alt="Macro Editor window" /></p>
+<p>Each keyboard can save 8 macros saved with each Macro being able to press up to 32 keys.</p>
+<h2 id="twokeyclick">TwoKeyClick</h2>
+<p>The TwoKeyClick function enables sending up to 6 characters when two keys are pressed simultaneously. For example pressing <code>A+S</code> at the same time can send <code>Enter</code> or pressing <code>J+K</code> can send <code>ESC</code>.</p>
+<p><img src="twokeyclick-editor.png" title="TwoKeyClick Editor" alt="TwoKeyClick Editor window" /></p>
+<p>During my testing I found this hard to trigger since the keys have to be pressed at exactly the same time. There’s a workaround by using the Burst Function to send two chars with a single key press and then using those same two chars to run the TwoKeyClick function.</p>
+<h2 id="profiles">Profiles</h2>
+<p>A profile is a mapping of keys. For example the <code>A</code> key could output a different char (or run a function) in each profile. Each side of the keyboard has 4 profiles (Default Profile and Profile 1-3).</p>
+<p>The LEDs on the left side of the keyboard show which profile is currently active. On the right side of the keyboard the background light of the F11 and F12 keys shows the currently active profile.</p>
+<p><img src="layer-2-active.jpg" title="Keyboard Profile 1 is active" alt="Keyboard LED when Profile 1 is active" /></p>
+<p>I found this function useful to try out different keyboard layouts such as Dvorak, Colemak and Workman.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Overall I’m happy with the keyboard. I’ve been using it daily for the past 7 months. For a split keyboard it’s cheap (compared to ErgoDox) and built very well. I’m sure it will last a long time. The software is easy to use and allows each key to be assigned a different char (for example to use a different keyboard layout) or use one of the built-in functions to enable extra keys or shortcuts.</p>
+<p>Pros:</p>
+<ul>
+<li>Good price for a split-keyboard</li>
+<li>Great build quality</li>
+<li>Easily programmable with many functions to choose from</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Software is only available for Windows</li>
+<li>Each side has to be connected separately to be programmed</li>
+<li>Can’t assign a symbol such as <code>_</code> or <code>{</code> to a key (always requires holding down the shift key)</li>
+<li>Can’t switch to another profile temporarily when holding down a key</li>
+<li>Media Keys don’t work (play/pause/next/prev)</li>
+</ul>
+<p>The cons are only minor issues for me and I’ll keep using the keyboard in the future.</p>
+    </article>
+  </body>
+</html>
