@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-pandoc -s index.md -fmarkdown-implicit_figures --template=../template.html -o index.html
+pandoc -s "$PWD/$1" \
+	-f markdown-implicit_figures \
+	--template `dirname "$0"`/template.html
