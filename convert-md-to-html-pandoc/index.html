@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Convert Markdown to HTML with Pandoc</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.3em;
+            color: #D7D7D7;
+            background: #262626;
+            padding-bottom: 2em;
+        }
+
+        a { color: #D7D7AF; }
+
+        p, li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        img { max-width: 100% }
+
+        /* Headers */
+        h1, h2 { color: #fff; padding-bottom: 2px}
+        h1 { font-size: 1.5em; color: #D7D7AF }
+        h2 { font-size: 1.25em; padding-top: 1em; color: #87AFD7; border-bottom: 1px dashed}
+
+        /* Lists */
+        li::marker { color:#CD5C5C }
+        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5; }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 1em;
+            color: #fff;
+	    background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border-left: 5px solid gray;
+        }
+
+        span.comment { color: darkgrey }
+        span.out { color: lightgreen }
+        span.cmd { color: #CD5C5C }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 55%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">Home</a></nav>
+    <article>
+        <h1>Convert Markdown to HTML with Pandoc</h1>
+        <time datetime="2020-11-29">November 29, 2020</time>
+<p>In this post I’ll describe how to use <a href="">Pandoc</a> to convert Markdown to a full HTML page (including header/footer).</p>
+<p>The Pandoc version used for the examples below is 2.11.2.</p>
+<h2 id="what-is-pandoc">What is Pandoc?</h2>
+<p>Pandoc is an open-source document converter that is written in Haskell. It was initially released in 2006 and has been under active development since then.</p>
+<p>The goal of Pandoc is to convert a document from one markup format to another. It distinguishes between input formats and output formats. As of writing this it supports <a href="https://pandoc.org/MANUAL.html#input-formats">38 input formats</a> and <a href="https://pandoc.org/MANUAL.html#output-formats">59 output formats</a>.</p>
+<p>In this post we’ll use Markdown as an input format and HTML as an output format.</p>
+<h2 id="preparing-the-html-template">Preparing the HTML template</h2>
+<p>To generate a full HTML page we have to use Pandoc’s standalone mode which will use a <a href="https://pandoc.org/MANUAL.html#templates">template</a> to add header and footer.</p>
+<p>Pandoc ships with a default template, if you wish to use that skip this section and omit the <code>--template</code> argument.</p>
+<p>The template we’ll use is this (save it to <code>template.html</code>):</p>
+<pre><code>&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+    &lt;meta name=&quot;date&quot; content=&#39;$date-meta$&#39;&gt;
+    &lt;title&gt;$title$&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;Date: $date$&lt;/p&gt;
+$body$
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>Pandoc’s template variables can have <a href="https://pandoc.org/MANUAL.html#interpolated-variables">different formats</a>, the one we’re using here start and end with a dollar sign:</p>
+<ul>
+<li><code>$date$</code>: A date in a parsable format. See the <a href="https://pandoc.org/MANUAL.html#variables-set-automatically">date-meta docs</a> for a list of recognized formats for the <code>date</code> variable. We use this to show when the document was created</li>
+<li><code>$date-meta$</code>: The <code>date</code> parsed to ISO 8601 format. This is automatically done</li>
+<li><code>$title$</code>: The document title</li>
+<li><code>$body$</code>: The document body in HTML (the converted Markdown)</li>
+</ul>
+<p>We only need to set the <code>date</code> and <code>title</code> in the Markdown document via a metadata block.</p>
+<h2 id="writing-the-markdown-file">Writing the Markdown file</h2>
+<p>Create a Markdown file <code>doc.md</code> with the following content:</p>
+<pre><code>---
+title: My Document
+date: September 22, 2020
+---
+
+## Test
+some text</code></pre>
+<p>The beginning of the document is the metadata block with required <code>date</code> and <code>title</code> variables mentioned above.</p>
+<p>Several Markdown variants are <a href="https://pandoc.org/MANUAL.html#Markdown-variants">supported</a> such as GitHub-Flavored markdown. This example uses <a href="https://pandoc.org/MANUAL.html#pandocs-markdown">Pandoc’s extended markdown</a> which is the default input for files with the <code>md</code> extension.</p>
+<h2 id="converting-the-document">Converting the document</h2>
+<p>Run the following command to generate the HTML page:</p>
+<pre><code>pandoc --standalone --template template.html doc.md</code></pre>
+<p>Pandoc will try to guess the input format from the file extension (<code>.md</code> will use the Markdown input format) and output it to HTML (the default output format).</p>
+<p>The output will be printed to the terminal:</p>
+<pre><code>&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+    &lt;meta name=&quot;date&quot; content=&#39;2020-09-22&#39;&gt;
+    &lt;title&gt;My Document&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;Date: September 22, 2020&lt;/p&gt;
+&lt;h2 id=&quot;test&quot;&gt;Test&lt;/h2&gt;
+&lt;p&gt;some text&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>To save the document to a file we can either redirect stdout or use the <code>-o</code> argument:</p>
+<pre><code>pandoc --standalone --template template.html doc.md -o doc.html</code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this example we’ve converted Markdown to a standalone HTML page that is using a custom template.</p>
+<p>This was just a simple example of what Pandoc is capable to do. The standalone mode coupled with the bundled default templates makes it easy to generate a wide variety of outputs such as HTML presentations, Jupyter notebooks or PDF documents.</p>
+    </article>
+  </body>
+</html>
