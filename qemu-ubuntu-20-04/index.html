@@ -41,7 +41,7 @@
         /* Code blocks */
         code, pre {
             font-family: Consolas, monaco, monospace;
-            font-size: 1em;
+            font-size: 0.9em;
             color: #fff;
 	    background-color: #111;
         }
@@ -70,6 +70,7 @@
         <h1>Using QEMU to create a Ubuntu 20.04 Desktop VM on macOS</h1>
         <time datetime="2020-09-20">September 20, 2020</time>
 <p>In this blog post we’re going to create a Ubuntu 20.04 VM using <a href="https://www.qemu.org/">QEMU</a> on MacOS.</p>
+<p>Note for users on macOS 11.0: follow <a href="https://www.arthurkoziel.com/qemu-on-macos-big-sur/">this post</a> first to get qemu to run.</p>
 <p><img src="ubuntu-20-04-with-qemu.png" alt="A picture of the Ubuntu 20.04 Desktop" /></p>
 <p>QEMU is a hardware emulator which can make use of different accelerators when running VMs. The most popular accelerator is <a href="https://www.linux-kvm.org/page/Main_Page">KVM</a> which is built into the Linux kernel and allows Linux hosts to run VMs with native performance.</p>
 <p>Using QEMU on macOS used to be very slow as no accelerator was available. This changed 2 years ago when the project <a href="https://wiki.qemu.org/ChangeLog/2.12">added support</a> for the macOS native hypervisor with Hypervisor.framework (HVF) as an accelerator.</p>
@@ -91,7 +92,6 @@ Copyright (c) 2003-2020 Fabrice Bellard and the QEMU Project developers</code></
 <p>In this step we boot up the machine with the Ubuntu ISO mounted in the CD drive:</p>
 <pre class="shell"><code>qemu-system-x86_64 \
     -machine type=q35,accel=hvf \
-    -cpu host \
     -smp 2 \
     -hda ubuntu-20.04.1-desktop-amd64.qcow2 \
     -cdrom ./ubuntu-20.04.1-desktop-amd64.iso \
@@ -103,7 +103,6 @@ Copyright (c) 2003-2020 Fabrice Bellard and the QEMU Project developers</code></
 <p>The options are:</p>
 <ul>
 <li><code>-machine</code>: The emulated machine and the accelerator. q35 is the newest machine type and HVF is the macOS native hypervisor.</li>
-<li><code>-cpu</code>: The CPU architecture. The value <code>host</code> will use the HVF processor with all supported host features</li>
 <li><code>-smp</code>: Number of CPUs to use</li>
 <li><code>-m</code>: Amount of memory to use</li>
 <li><code>-hda</code>: Disk drive (the one we created earlier)</li>
@@ -113,7 +112,7 @@ Copyright (c) 2003-2020 Fabrice Bellard and the QEMU Project developers</code></
 <li><code>-device</code> Adding a “usb-tablet” as an input device. I’m running this on a laptop and without this setting the mouse did not work.</li>
 <li><code>-display</code>: To show the mouse cursor (disabled by default)</li>
 </ul>
-<p>During testing I had problems with the Linux kernel as it would panic during the boot process. The issue was the <code>-cpu host</code> parameter. I fixed it by specifying the CPU architecture manually (see <code>qemu-system-x86_64 -cpu help</code> for a list of all available architectures).</p>
+<p>During testing I had problems with the Linux kernel as it would panic during the boot process. The issue was the <code>-cpu</code> parameter. I fixed it by specifying the CPU architecture manually (see <code>qemu-system-x86_64 -cpu help</code> for a list of all available architectures).</p>
 <p>My machine has an IvyBridge processor (Core i7):</p>
 <pre class="shell"><code>$ sysctl -n machdep.cpu.brand_string
 
@@ -124,7 +123,6 @@ Intel(R) Core(TM) i7-3740QM CPU @ 2.70GHz</code></pre>
 <p>When running the VM we don’t need the Ubuntu ISO mounted and can remove it by leaving out the <code>-cdrom</code> option:</p>
 <pre class="shell"><code>qemu-system-x86_64 \
     -machine type=q35,accel=hvf \
-    -cpu host \
     -smp 2 \
     -hda ubuntu-20.04.1-desktop-amd64.qcow2 \
     -m 4G \
