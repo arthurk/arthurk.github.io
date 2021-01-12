@@ -11,32 +11,30 @@
             margin: 1.5em auto;
             width: 90%;
             font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
-            font-size: 1.3em;
-            color: #D7D7D7;
-            background: #262626;
+            font-size: 1.1em;
+            color: rgb(190, 184, 176);
+            background: rgb(24, 25, 26);
             padding-bottom: 2em;
         }
 
-        a { color: #D7D7AF; }
-
-        p, li { line-height: 1.45em}
+        a { color: #87afd7; text-decoration: none }
+        img { max-width: 100% }
+        li { line-height: 1.45em}
         p { line-height: 1.55em}
 
-        img { max-width: 100% }
-
         /* Headers */
-        h1, h2 { color: #fff; padding-bottom: 2px}
-        h1 { font-size: 1.5em; color: #D7D7AF }
-        h2 { font-size: 1.25em; padding-top: 1em; color: #87AFD7; border-bottom: 1px dashed}
+        h1, h2 { color: rgb(212, 208, 202) }
+        h1 { font-size: 1.6em }
+	h2 { font-size: 1.4em; }
 
         /* Lists */
-        li::marker { color:#CD5C5C }
-        li { padding-bottom: 0.75em; padding-left: 0.25em }
+        li::marker { color:rgb(213, 106, 106) }
+        li { padding-bottom: 0.5em; padding-left: 0.25em }
         li:last-child { padding-bottom: 0 }
         ol { margin-left: 1em }
         ol li { padding-left: 0 }
 
-        time { font-style: italic; opacity: 0.5; }
+        time { font-style: italic; opacity: 0.5 }
 
         /* Code blocks */
         code, pre {
@@ -51,24 +49,26 @@
             padding: 1em;
             white-space: pre-wrap;
             word-break: keep-all;
-            border-left: 5px solid gray;
+            border: 1px solid gray;
         }
 
-        span.comment { color: darkgrey }
-        span.out { color: lightgreen }
-        span.cmd { color: #CD5C5C }
+	blockquote {
+		border-width: 2px 0;
+		border-style: solid;
+		margin: 1.5em 2em;
+	}
 
         /* Desktop/Laptop screens */
         @media only screen and (min-width : 1200px) {
-            body { width: 55%; }
+            body { width: 50%; }
         }
     </style>
   </head>
   <body>
-    <nav><a href="/">Home</a></nav>
+    <nav><a href="/">home</a></nav>
     <article>
         <h1>$title$</h1>
-        <time datetime="$date-meta$">$date$</time>
+	<time datetime="$date-meta$">$date$</time>
 $body$
     </article>
   </body>
