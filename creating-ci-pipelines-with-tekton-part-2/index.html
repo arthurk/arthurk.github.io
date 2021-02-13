@@ -69,7 +69,8 @@
     <nav><a href="/">Home</a></nav>
     <article>
         <h1>Creating CI Pipelines with Tekton (Part 2/2)</h1>
-        <time datetime="2020-05-03">May 3, 2020</time>
+        <time datetime="2020-05-03">May 3, 2020</time>,
+        Updated <time datetime="2021-02-13">February 3, 2021</time>
 
         <p>
             In this blog post we're going to continue
@@ -173,7 +174,7 @@ spec:
         type: git
   steps:
     - name: build-and-push
-      image: gcr.io/kaniko-project/executor:v0.19.0
+      image: gcr.io/kaniko-project/executor:v1.3.0
       env:
         - name: DOCKER_CONFIG
           value: /tekton/home/.docker

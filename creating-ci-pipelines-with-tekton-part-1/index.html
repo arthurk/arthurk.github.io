@@ -69,7 +69,8 @@
     <nav><a href="/">Home</a></nav>
     <article>
         <h1>Creating CI Pipelines with Tekton (Part 1/2)</h1>
-        <time datetime="2020-04-26">April 26, 2020</time>
+        <time datetime="2020-04-26">April 26, 2020</time>,
+        Updated <time datetime="2021-02-13">February 13, 2021</time>
 
         <p>
         In this blog post we're going to build a continuous integration (CI) pipeline with <a href="https://tekton.dev">Tekton</a>,
@@ -106,7 +107,7 @@
         </p>
 
 <pre>
-<span class="cmd">$</span> kubectl apply -f https://github.com/tektoncd/pipeline/releases/download/v0.12.0/release.yaml
+<span class="cmd">$</span> kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.20.1/release.yaml
 </pre>
 
         <p>
@@ -139,8 +140,8 @@ tekton-pipelines-webhook-6f764dc8bf-zq44s      1/1     Running   0          19s
 <span class="cmd">$</span> brew install tektoncd/tools/tektoncd-cli
 
 <span class="cmd">$</span> tkn version
-Client version: 0.9.0
-Pipeline version: v0.12.0
+Client version: 0.16.0
+Pipeline version: v0.20.1
 </pre>
 
         <h2>Concepts</h2>
