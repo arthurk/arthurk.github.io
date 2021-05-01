@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Tutorial: Tekton Triggers with GitHub integration</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.1em;
+            color: rgb(190, 184, 176);
+            background: rgb(24, 25, 26);
+            padding-bottom: 2em;
+        }
+
+        a { color: #87afd7; text-decoration: none }
+        img { max-width: 100% }
+        li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        /* Headers */
+        h1, h2 { color: rgb(212, 208, 202) }
+        h1 { font-size: 1.6em }
+        h2 { font-size: 1.4em; }
+
+        /* Lists */
+        li::marker { color:rgb(213, 106, 106) }
+        li { padding-bottom: 0.5em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5 }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 0.9em;
+            color: #fff;
+            background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border: 1px solid gray;
+        }
+
+        blockquote {
+          border-width: 2px 0;
+          border-style: solid;
+          margin: 1.5em 2em;
+        }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">home</a></nav>
+    <article>
+        <h1>Tutorial: Tekton Triggers with GitHub integration</h1>
+        <time datetime="2021-05-01">May 1, 2021</time>
+<p>In a <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-1/">previous blog post</a> we’ve used <a href="https://github.com/tektoncd/pipeline">Tekton Pipelines</a> to set up a simple pipeline that runs tests, builds a docker image and pushes it to a registry.</p>
+<p>In this blog post we’re going to take a look at <a href="https://github.com/tektoncd/triggers">Tekton Triggers</a> and integrate it with GitHub. We’re going to setup a GitHub webhook that will automatically run our pipeline when a GitHub PR is opened or new commits are pushed to an existing PR branch.</p>
+<p>All code examples in this blog post are available in a <a href="https://github.com/arthurk/tekton-triggers-example">GitHub repo</a>.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#requirements">Requirements</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#creating-a-pipeline">Creating a Pipeline</a></li>
+<li><a href="#creating-resources-for-tekton-triggers">Creating Resources for Tekton Triggers</a>
+<ul>
+<li><a href="#eventlistener">EventListener</a></li>
+<li><a href="#github-interceptor">GitHub Interceptor</a></li>
+<li><a href="#cel-interceptor">CEL Interceptor</a></li>
+<li><a href="#triggerbinding">TriggerBinding</a></li>
+<li><a href="#triggertemplate">TriggerTemplate</a></li>
+<li><a href="#ingress">Ingress</a></li>
+</ul></li>
+<li><a href="#adding-the-webhook-to-github">Adding the webhook to Github</a></li>
+<li><a href="#creating-a-pr-and-testing-our-trigger">Creating a PR and testing our trigger</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul>
+<h2 id="requirements">Requirements</h2>
+<p>For this tutorial we need a Kubernetes cluster with an ingress-controller installed that can give us an external IP.</p>
+<p>We also need a GitHub repository where we can add the webhook.</p>
+<h2 id="installation">Installation</h2>
+<p>Tekton Triggers requires Tekton Pipelines to be installed. We also need to install the core interceptors (GitHub, GitLab, BitBucket, and CEL) manifests as we’ll use them later on.</p>
+<p>By default all resources will be installed in the <code>tekton-pipelines</code> namespace.</p>
+<pre><code># Tekton Pipelines
+kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.23.0/release.yaml
+
+# Tekton Triggers + Interceptors
+kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/v0.13.0/release.yaml
+kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/v0.13.0/interceptors.yaml</code></pre>
+<p>Configure RBAC for our Tekton Triggers service account:</p>
+<pre><code>kubectl apply -f https://raw.githubusercontent.com/arthurk/tekton-triggers-example/master/01-rbac.yaml</code></pre>
+<h2 id="creating-a-pipeline">Creating a Pipeline</h2>
+<p>We’re going to use a simple pipeline that clones a Git repo with a Go application in it and runs the tests. The example application can be found at <a href="https://github.com/arthurk/go-example-app">GitHub</a>.</p>
+<p><strong><a href="https://github.com/arthurk/tekton-triggers-example/blob/master/02-pipeline.yaml">pipeline.yaml</a></strong>:</p>
+<pre><code>apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: github-pr-pipeline
+spec:
+  resources:
+    - name: source
+      type: git
+  tasks:
+    - name: test
+      taskRef:
+        name: test
+      resources:
+        inputs:
+          - name: source
+            resource: source
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: test
+spec:
+  resources:
+    inputs:
+      - name: source
+        type: git
+  steps:
+    - name: run-test
+      image: golang:1.16.3-alpine3.13
+      workingDir: /workspace/source
+      command: [&quot;go&quot;]
+      args: [&quot;test&quot;]</code></pre>
+<h2 id="creating-resources-for-tekton-triggers">Creating Resources for Tekton Triggers</h2>
+<p>For our project we need to create the following resources:</p>
+<ul>
+<li><code>EventListener</code>: A Kubernetes Service that listens for incoming HTTP requests and executes a Trigger.</li>
+<li><code>Trigger</code>: Decides what to do with the received event. Sets a TriggerBinding, TriggerTemplate and Interceptor to run.</li>
+<li><code>TriggerBinding</code>: Specifies the data to be extracted from the request and saved as parameters. This data will be passed to the TriggerTemplate.</li>
+<li><code>TriggerTemplate</code>: A template of a resource (TaskRun/PipelineRun) to be created when an event is received.</li>
+<li><code>Interceptor</code>: Processes an event to do custom validation or filtering</li>
+</ul>
+<h3 id="eventlistener">EventListener</h3>
+<p>An <code>EventListener</code> processes an incoming request and executes a <code>Trigger</code>. Our EventListener looks like this:</p>
+<p><strong><a href="https://github.com/arthurk/tekton-triggers-example/blob/master/03-eventlistener.yaml">eventlistener.yaml</a></strong>:</p>
+<pre><code>apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: github-pr
+spec:
+  serviceAccountName: tekton-triggers-example-sa
+  triggers:
+    - name: github-listener
+      interceptors:
+        - ref:
+            name: &quot;github&quot;
+          params:
+            - name: &quot;secretRef&quot;
+              value:
+                secretName: github-interceptor-secret
+                secretKey: secretToken
+            - name: &quot;eventTypes&quot;
+              value: [&quot;pull_request&quot;]
+        - ref:
+            name: &quot;cel&quot;
+          params:
+            - name: &quot;filter&quot;
+              value: &quot;body.action in [&#39;opened&#39;, &#39;synchronize&#39;, &#39;reopened&#39;]&quot;
+      bindings:
+        - ref: github-pr-binding
+      template:
+        ref: github-pr-pipeline-template</code></pre>
+<p>After receiving the incoming request it will execute the <code>github-listener</code> Trigger. In this case the Trigger is embedded into the EventListener resource rather than specified in a separate resource.</p>
+<p>Our github-listener trigger will then make use of <code>Interceptor</code>’s. An Interceptor let’s us validate or modify incoming requests before they trigger a pipeline run. We embed the Interceptor resource rather than putting it into a separate resource manifest.</p>
+<h3 id="github-interceptor">GitHub Interceptor</h3>
+<p>The first interceptor we’re running is called <code>github</code>. It’s part of the core interceptors that we installed above. It makes sure that the request:</p>
+<ul>
+<li>has a valid format for GitHub webhooks</li>
+<li>matches a pre-defined secret (that we’ll set later)</li>
+<li>matches the <code>pull_request</code> event type</li>
+</ul>
+<p>The github interceptor requires a secret token. This token is set when creating the webhook in GitHub and will be validated by the github interceptor when the request arrives:</p>
+<p><strong><a href="https://github.com/arthurk/tekton-triggers-example/blob/master/04-secret.yaml">secret.yaml</a>:</strong></p>
+<pre><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: github-interceptor-secret
+type: Opaque
+stringData:
+  secretToken: &quot;1234567&quot;</code></pre>
+<h3 id="cel-interceptor">CEL Interceptor</h3>
+<p>The second interceptor we’re using is called <code>cel</code> and is also included in the core interceptor manifests that we installed above. Interceptors are executed in the order they’re specified. The cel interceptor will run after the github interceptor.</p>
+<p>It let’s us specify a <a href="https://github.com/google/cel-go">CEL</a> filter expression that will be applied to requests.</p>
+<p>We’ll apply this filter expression because GitHub <code>pull_request</code> events are sent for every action performed on a pull request (<code>assigned</code>, <code>unassigned</code>, <code>converted_to_draft</code>, …).</p>
+<p>For this tutorial we only need to know when a PR was <code>opened</code>, <code>reopened</code> or <code>synchronized</code> (commits pushed to the PR branch). The CEL filter checks the webhook request <code>body.action</code> and filters our any events that don’t match those actions.</p>
+<h3 id="triggerbinding">TriggerBinding</h3>
+<p>After the event listener is done validating and modifying the incoming request, we need to extract values from it and bind them to variables that we can later use in our Pipeline. This is what a <code>TriggerBinding</code> is used for.</p>
+<p>Our TriggerBinding looks like this:</p>
+<p><strong><a href="https://github.com/arthurk/tekton-triggers-example/blob/master/05-triggerbinding.yaml">triggerbinding.yaml</a></strong>:</p>
+<pre><code>apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: github-pr-binding
+spec:
+  params:
+    - name: gitrepositoryurl
+      value: $(body.repository.clone_url)
+    - name: gitrevision
+      value: $(body.pull_request.head.sha)</code></pre>
+<p>We’re only interested in the followinw two fields which are necessary to clone the repo at a specific revision:</p>
+<ul>
+<li>gitrepositoryurl: the url of the repo to clone (https://…)</li>
+<li>gitrevision: the commit SHA to check out</li>
+</ul>
+<p>The parameters are passed to a <code>TriggerTemplate</code>.</p>
+<h3 id="triggertemplate">TriggerTemplate</h3>
+<p>A TriggerTemplate is responsible for dynamically generating a resource. In our case it’s a <code>PipelineRun</code>.</p>
+<p>The TriggerTemplate receives the two variables from the previously created TriggerBinding and makes them available under <code>spec.resourcetemplates</code>.</p>
+<p><strong><a href="https://github.com/arthurk/tekton-triggers-example/blob/master/06-triggertemplate.yaml">triggertemplate.yaml</a></strong>:</p>
+<pre><code>apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: github-pr-pipeline-template
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision (SHA)
+      default: master
+    - name: gitrepositoryurl
+      description: The git repository url (&quot;https://github.com/foo/bar.git&quot;)
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: github-pr-pipeline-run-
+      spec:
+        pipelineRef:
+          name: github-pr-pipeline
+        resources:
+          - name: source
+            resourceSpec:
+              type: git
+              params:
+                - name: revision
+                  value: $(tt.params.gitrevision)
+                - name: url
+                  value: $(tt.params.gitrepositoryurl)</code></pre>
+<p>Note that to access variables from a triggertemplate inside a resourcetemplate they need to be prefixed with <code>$tt</code>.</p>
+<h3 id="ingress">Ingress</h3>
+<p>For GitHub to be able to send a request to our event listener we need to expose it by creating an Ingress resource and pointing it to our event listener service:</p>
+<p><strong><a href="https://github.com/arthurk/tekton-triggers-example/blob/master/07-ingress.yaml">ingress.yaml</a></strong>:</p>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-resource
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: &quot;false&quot;
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /hooks
+            pathType: Exact
+            backend:
+              service:
+                name: el-github-pr
+                port:
+                  number: 8080</code></pre>
+<p>An EventListener will create a service with the <code>el-</code> prefix followed by the name of the event-listener. Our event-listener is named <code>github-pr</code>, so the EventListener Service is named <code>el-github-pr</code>. EventListener services will always use port 8080.</p>
+<p>Make sure to note the external IP address of your ingress. In this example it’s <code>123.123.1.1</code>:</p>
+<pre><code>kubectl get ingress
+NAME               CLASS    HOSTS   ADDRESS        PORTS   AGE
+ingress-resource   &lt;none&gt;   *       123.123.1.1    80      26d</code></pre>
+<p>We can now send GitHub webhook requests to <code>http://123.123.1.1/hooks</code> and automatically trigger a PipelineRun.</p>
+<h2 id="adding-the-webhook-to-github">Adding the webhook to Github</h2>
+<p>In your GitHub repo go to <code>Settings -&gt; Webhooks</code> and click <code>Add Webhook</code>. The fields we need to set are:</p>
+<ul>
+<li>Payload URL: Your external IP Address from the Ingress with <code>/hooks</code> path</li>
+<li>Content type: <code>application/json</code></li>
+<li>Secret: <code>1234567</code></li>
+</ul>
+<p>Under events select <code>Let me select individual events</code>. Uncheck <code>Pushes</code> and check <code>Pull requests</code>.</p>
+<p><img src="add-webhook.png" alt="Picture of GitHub Webhook settings" /></p>
+<p>After saving the webhook, GitHub will send a ping event. It will be filtered out by our Interceptor which only allows <code>pull_request</code> events, but we can check the EventListener Pod logs to verify it:</p>
+<pre><code>kubectl get pods | grep el-github-pr
+el-github-pr-7df7f66d57-kqd6k     1/1     Running   0          13s
+
+kubectl logs el-github-pr-7df7f66d57-kqd6k
+...
+{
+  &quot;level&quot;: &quot;info&quot;,
+  &quot;ts&quot;: &quot;2021-05-01T08:48:59.461Z&quot;,
+  &quot;logger&quot;: &quot;eventlistener&quot;,
+  &quot;caller&quot;: &quot;sink/sink.go:240&quot;,
+  &quot;msg&quot;: &quot;interceptor stopped trigger processing: rpc error: code = FailedPrecondition desc = event type ping is not allowed&quot;,
+  &quot;knative.dev/controller&quot;: &quot;eventlistener&quot;,
+  &quot;/triggers-eventid&quot;: &quot;f43a88c2-a462-47c9-a6cd-f98de681da40&quot;,
+  &quot;/trigger&quot;: &quot;github-listener&quot;
+}</code></pre>
+<h2 id="creating-a-pr-and-testing-our-trigger">Creating a PR and testing our trigger</h2>
+<p>Let’s test that everything works by creating a PR, either manually or using the <a href="https://github.com/cli/cli/">GitHub CLI</a>:</p>
+<pre><code>git switch -c webhook-test
+git commit --allow-empty -m &quot;trigger webhook&quot;
+gh pr create -f</code></pre>
+<p>And checking for a PipelineRun to get created:</p>
+<pre><code>kubectl get pr
+NAME                           SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
+github-pr-pipeline-run-qfvsx   True        Succeeded   73s         44s</code></pre>
+<p>We can see that everything worked. The pipeline was triggered and the run succeeded.</p>
+<h2 id="summary">Summary</h2>
+<p>In this tutorial we used Tekton Pipelines and Tekton Triggers to automatically trigger a pipeline run when a GitHub PR is created or commits have been pushed to its branch.</p>
+<p>We setup a GitHub webhook that will send a Pull Request event to our Kubernetes Ingress controller where it is passed on to the EventListener Service. The service will use Interceptors to validate and filter the webhook payload. The validated payload is passed to the TriggerBinding which will extract data from the webhook request and map it to parameters. Lastly the TriggerTemplate will populate a PipelineRun manifest with those parameters and create the resource, which will then be picked up by Tekton Pipelines and processed.</p>
+<p>To improve our pipeline futher we could send the status of the pipeline (pending, running, failed) back to github, which will then display it in the web UI. There’s a Task for that in the <a href="https://github.com/tektoncd/catalog/tree/main/task/github-set-status/0.2">Tekton Catalog</a> which is easy to integrate. Or maybe we could <a href="https://github.com/tektoncd/catalog/tree/main/task/github-add-comment">add a comment</a> to the PR with more detailed information.</p>
+<p>Tekton Triggers is still in alpha phase and things change very frequently. You can keep up with the development of the project by checking the the <a href="https://github.com/tektoncd/triggers/">Triggers</a> repo for code changes and the <a href="https://github.com/tektoncd/community">Community</a> repo for feature proposals and discussion around them.</p>
+<p>If you spot any mistakes in this blog post please let me know via email.</p>
+    </article>
+  </body>
+</html>
