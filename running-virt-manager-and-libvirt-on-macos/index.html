@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Running virt-manager and libvirt on macOS</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.1em;
+            color: rgb(190, 184, 176);
+            background: rgb(24, 25, 26);
+            padding-bottom: 2em;
+        }
+
+        a { color: #87afd7; text-decoration: none }
+        img { max-width: 100% }
+        li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        /* Headers */
+        h1, h2 { color: rgb(212, 208, 202) }
+        h1 { font-size: 1.6em }
+        h2 { font-size: 1.4em; }
+
+        /* Lists */
+        li::marker { color:rgb(213, 106, 106) }
+        li { padding-bottom: 0.5em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5 }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 0.9em;
+            color: #fff;
+            background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border: 1px solid gray;
+        }
+
+        blockquote {
+          border-width: 2px 0;
+          border-style: solid;
+          margin: 1.5em 2em;
+        }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">home</a></nav>
+    <article>
+        <h1>Running virt-manager and libvirt on macOS</h1>
+        <time datetime="2021-05-12">May 12, 2021</time>
+<p>I’ve previously written about <a href="https://www.arthurkoziel.com/qemu-ubuntu-20-04/">using QEMU on macOS to create an Ubuntu VM</a> via CLI. In this blog post I’m going to describe how to install <a href="https://libvirt.org/">libvirt</a> and <a href="https://virt-manager.org/">virt-manager</a> on macOS to create an <a href="https://ubuntu.com/">Ubuntu</a> VM via <a href="https://www.qemu.org/">QEMU</a> from the virt-manager GUI.</p>
+<p>What’s described in this blog post was more of an experiment to see if it would work. Running libvirt locally is very slow and not usable due to the missing support for the HVF <a href="https://developer.apple.com/documentation/hypervisor">Hypervisor.Framework</a>.</p>
+<p>If you’re only interested in running virt-manager on macOS (and connect to remote machines) you can skip the steps after the virt-manager installation.</p>
+<p><img src="img/ubuntu-desktop.png" alt="Ubuntu Desktop" /></p>
+<h2 id="description">Description</h2>
+<p>Libvirt uses a hypervisor (such as QEMU) to run a VM and provides an API to manage it. API Clients are available for many languages such as Python, Go or Rust.</p>
+<p>Virt-manager is a Python application that provides a GUI to manage VMs though the libvirt API.</p>
+<h2 id="installation">Installation</h2>
+<p>Libvirt is available in Homebrew and the installation can be done with a single command:</p>
+<pre><code>brew install libvirt</code></pre>
+<p>Virt-manager is not available in Homebrew but there’s a <a href="https://github.com/jeffreywildman/homebrew-virt-manager">custom formula</a> available that makes it convenient to install it. However, this formula is outdated and fails to run on macOS Catalina and Big Sur.</p>
+<p>To fix this I’ve <a href="https://github.com/arthurk/homebrew-virt-manager">created a fork</a> with updated dependencies. It can be installed via a custom tap:</p>
+<pre><code>brew tap arthurk/homebrew-virt-manager
+brew install virt-manager virt-viewer</code></pre>
+<p>The installation might take a few minutes due to many dependencies.</p>
+<h2 id="usage">Usage</h2>
+<p>When the installation has finished we can test it by starting the libvirtd daemon:</p>
+<pre><code>brew services start libvirt</code></pre>
+<p>and then virt-manager with a connection to it:</p>
+<pre><code>virt-manager -c &quot;qemu:///session&quot; --no-fork</code></pre>
+<p>The original Homebrew formula had a custom patch applied that made <code>--no-fork</code> the default behaviour (launching it in the foreground). To make it easier to maintain the formula I’ve removed the patch. If the process should run in the foreground the <code>--no-fork</code> argument needs to be specified or else it will run in the background.</p>
+<p>Note that the virt-manager window will be hidden after starting. It will show up in the Dock (the icon is a rocket) and clicking on it will bring it into the foreground.</p>
+<h2 id="creating-a-vm">Creating a VM</h2>
+<p>As an example I’m creating a Ubuntu 20.10 VM.</p>
+<p>Virt-manager assumes that <a href="https://www.spice-space.org/">SPICE</a> is available and will add it to the default settings. However, it’s is not supported on macOS and therefore we need to change a the default values to remove all SPICE related settings:</p>
+<p>Make sure to check the customize box before starting the VM:</p>
+<p><img src="img/customize.png" alt="virt-manager window before creating the VM, showing the customize checkbox" /></p>
+<p>In the customization window we need to remove all hardware related to SPICE (Right-Click -&gt; Remove Hardware):</p>
+<ul>
+<li>Channel spice</li>
+<li>USB Redirector 1</li>
+<li>USB Redirector 2</li>
+</ul>
+<p><img src="img/settings-remove-hardware.png" alt="virt-manager settings with annotation about which hardware to remove" /></p>
+<p>In the <strong>Display</strong> section set the type to VNC server:</p>
+<p><img src="img/settings-display.png" alt="virt-manager settings showing the display section" /></p>
+<p>In the <strong>Video</strong> section set the model to Virtio:</p>
+<p><img src="img/settings-video.png" alt="virt-manager settings showing the video section" /></p>
+<p>Apply these changes and click on <em>Begin Installation</em> in the top left corner. It will open a window that boots into the Ubuntu installer. From there on we can follow the installer. The default settings are usually fine.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>As mentioned above this was an experiment. The VM runs very slow due to the missing support for HVF (Hypervisor.Framework). The focus of libvirt is on KVM/Linux hosts. I wouldn’t use it on a daily basis on macOS and instead stick to the QEMU CLI with HVF set as the accelerator. You can check my <a href="https://www.arthurkoziel.com/qemu-ubuntu-20-04/">previous blog post</a> on how to do that.</p>
+    </article>
+  </body>
+</html>
