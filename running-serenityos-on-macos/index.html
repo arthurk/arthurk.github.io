@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Running SerenityOS on macOS</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.1em;
+            color: rgb(190, 184, 176);
+            background: rgb(24, 25, 26);
+            padding-bottom: 2em;
+        }
+
+        a { color: #87afd7; text-decoration: none }
+        img { max-width: 100% }
+        li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        /* Headers */
+        h1, h2 { color: rgb(212, 208, 202) }
+        h1 { font-size: 1.6em }
+        h2 { font-size: 1.4em; }
+
+        /* Lists */
+        li::marker { color:rgb(213, 106, 106) }
+        li { padding-bottom: 0.5em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5 }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 0.9em;
+            color: #fff;
+            background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border: 1px solid gray;
+        }
+
+        blockquote {
+          border-width: 2px 0;
+          border-style: solid;
+          margin: 1.5em 2em;
+        }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">home</a></nav>
+    <article>
+        <h1>Running SerenityOS on macOS</h1>
+        <time datetime="2021-06-04">June 4, 2021</time>
+<p>In this blog post, I’ll describe how to build and run <a href="https://serenityos.org/">SerenityOS</a> on macOS (via QEMU).</p>
+<p>SerenityOS is an operating system that combines UNIX with the GUI of Windows 9x/NT. It’s still early in development but being improved daily with many contributors working on it.</p>
+<p><img src="serenity-os.png" alt="SerenityOS Desktop" /></p>
+<p>The tips mentioned here can also be found in the <a href="https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md">wiki</a>. This tutorial is a step-by-step guide specifically for macOS. It will work on Catalina but to run this on macOS Big Sur you’ll need to grant QEMU the permission to use the macOS hypervisor via entitlements. See my <a href="https://www.arthurkoziel.com/qemu-on-macos-big-sur/">previous blog post</a> about how to do this.</p>
+<h2 id="installing-xcode">Installing Xcode</h2>
+<p>We need to have a full <a href="https://developer.apple.com/xcode/">Xcode</a> installation on our system to compile SerenityOS. The Command Line Tools are not enough.</p>
+<p>Xcode can be downloaded from the <a href="https://developer.apple.com/download/more/">Apple Developer page</a>. To access it you’ll need an iCloud account and accept the Developer Agreement that will show up when opening the link.</p>
+<p>Note that Xcode 12.4 is the last version compatible with macOS Catalina.</p>
+<p>After the download is done, move the app to your <code>Applications</code>.</p>
+<p>If you previously had the Command Line Tools installed, you’ll need to change the active developer directory and point it to the new Xcode installation:</p>
+<pre><code>sudo xcode-select -s /Applications/Xcode.app/Contents/Developer</code></pre>
+<h2 id="installing-dependencies">Installing Dependencies</h2>
+<p>Most dependencies can be installed via Homebrew. The only exception is <a href="https://github.com/alperakcan/fuse-ext2">fuse-ext2</a>, which doesn’t have a Homebrew Formula and has to installed manually.</p>
+<p>First we install the dependencies from Homebrew:</p>
+<pre><code>brew install coreutils qemu bash gcc@10 ninja cmake macfuse</code></pre>
+<p>Once the installation is done, you’ll need to reboot your machine for macfuse to work.</p>
+<p>After the reboot we need to install fuse-ext2. The SerenityOS developers provide a bash script in the git repository:</p>
+<pre><code>git clone https://github.com/SerenityOS/serenity.git
+cd serenity/Toolchain
+./BuildFuseExt2.sh</code></pre>
+<h2 id="building-serenityos">Building SerenityOS</h2>
+<p>Now that we have all dependencies installed, we need to compile the SerenityOS toolchain. The toolchain includes a GCC cross-compiler that is needed to compile SerenityOS itself:</p>
+<pre><code>./BuildIt.sh</code></pre>
+<p>As the “gcc” that is shipped with Xcode is just an alias for <code>clang</code> we need to change the binary that is used by CMake:</p>
+<pre><code>cd ../Build/i686
+rm -rf Root/
+cmake ../.. -G Ninja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10</code></pre>
+<p>Finally, we can compile SerenityOS, build a disk image and run it:</p>
+<pre><code>ninja install
+ninja image
+ninja run</code></pre>
+<p>The QEMU window will show up and boot right into the SerenityOS desktop where we can play around with it.</p>
+    </article>
+  </body>
+</html>
