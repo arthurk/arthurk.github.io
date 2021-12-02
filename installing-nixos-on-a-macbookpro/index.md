@@ -22,7 +22,7 @@ Wifi:	Broadcom BCM4331
 The setup will dual-boot macOS and NixOS. This guide will show how to install
 the base system (without GUI) with a working wifi connection.
 
-# Creating a custom installation ISO
+## Creating a custom installation ISO
 
 The NixOS installation CD doesn't ship with any proprietary software, and is
 therefore missing the driver for the Broadcom BCM4331 wifi card. 
@@ -31,7 +31,7 @@ To solve this problem, I decided to build a custom installation CD
 that is based on the NixOS minimal installation CD but with the required
 Broadcom drivers included.
 
-## VirtualBox
+### VirtualBox
 
 Building the custom image can't be done on macOS, so we have to download the
 [NixOS VirtualBox image](https://nixos.org/download.html#nixos-virtualbox)
@@ -51,7 +51,7 @@ Settings -> Display and Monitor and setting the Global Scale to 200%.
 To enable shared clipboard in VirtualBox, go to the menu bar and click on Devices
 -> Shared Clipboard -> Bidirectional.
 
-## Installation CD Nix configuration
+### Installation CD Nix configuration
 
 Open the terminal (Konsole) and create a file called `iso.nix` with
 the following content:
@@ -93,7 +93,7 @@ After the build process is finished, the ISO can be found in the `result/iso/` d
 result/iso/nixos-21.11.333823.96b4157790f-x86_64-linux.iso
 ```
 
-# Flashing the ISO to a USB drive
+## Flashing the ISO to a USB drive
 
 Insert a FAT32 formatted USB drive and enable VirtualBox USB forwarding by
 clicking in the VirtualBox menubar under Devices -> USB -> Generic Mass Storage.
@@ -130,7 +130,7 @@ eject /dev/sdb
 poweroff
 ```
 
-# Creating partitions
+## Creating partitions
 
 I used `Disk Utility` to shrink the macOS partition, and left one
 quarter of the available disk space for the NixOS system:
@@ -199,7 +199,7 @@ Remember the device name and the partition numbers, we'll need them later during
 the NixOS installation when creating the file system. In my case, the root
 file system is at `/dev/sda3` and swap is at `/dev/sda4`.
 
-# Installing rEFInd
+## Installing rEFInd
 
 To dual-boot macOS and NixOS, I'm using rEFInd as the EFI bootloader.
 
@@ -222,7 +222,7 @@ Installing driver for ext4 (ext4_x64.efi)
 Copied rEFInd binary files
 ```
 
-# Boot into USB drive
+## Boot into USB drive
 
 To boot into the NixOS installation image, plug in the USB drive and restart the
 computer, then select the USB drive in the boot menu.
@@ -234,7 +234,7 @@ We can make it larger with:
 setfont ter-v32n
 ```
 
-# Formatting and mounting partitions
+## Formatting and mounting partitions
 
 Next we need to format our partitions and mount them. I chose ext4 as a
 file system and used LUKS to encrypt the disk: 
@@ -260,7 +260,7 @@ mkswap -L nixosswap /dev/sda4
 swapon /dev/disk/by-label/nixosswap
 ```
 
-# Enable Wifi Networking
+## Enable Wifi Networking
 
 We enable wifi networking since NixOS needs internet access for the installation.
 
@@ -279,7 +279,7 @@ wpa_supplicant -B -i wlp4s0 -c <(wpa_passphrase "myssid" "mypassword")
 This will start `wpa_supplicant` as a background process. After we've installed
 the system we will set it up as a daemon.
 
-# NixOS installation
+## NixOS installation
 
 We generate a NixOS configuration file template:
 
@@ -314,7 +314,7 @@ nixos-install
 After the installation is done, we can reboot the system and select the new NixOS
 installation from the boot menu.
 
-# Wifi setup
+## Wifi setup
 
 After we've booted into our new system. we need to setup the wifi connection
 (again).
@@ -330,7 +330,7 @@ wpa_supplicant -i wlp4s0 -c <(wpa_passphrase "myssid" "mypassword") >
 systemctl restart wpa_supplicant.service
 ```
 
-# Conclusion
+## Conclusion
 
 Installing NixOS on the MacBook Pro was a great learning experience and
 fairly easy to do.
@@ -340,7 +340,7 @@ lower battery life and louder fans due to higher (~15C) CPU idle temperatures
 and not being able to switch GPUs on-demand (Nvidia GPU is always active).
 These problems are not specific to NixOS, I've experienced the same issues in other major distributions on this laptop.
 
-# Links
+## Links
 
 The following sites were very helpful when trying to install NixOS:
 
