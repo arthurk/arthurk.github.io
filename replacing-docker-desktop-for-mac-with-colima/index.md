@@ -8,11 +8,11 @@ probably the most commonly used solution to run Docker on macOS. It runs the
 daemon in a VM, handles port-forwarding, shared folders and sets up the Docker
 CLI. It's a quick and easy way to get Docker running on macOS.
 
-Although technically it works fine the following reasons made me look for a
+Although technically it works fine, the following reasons made me look for a
 replacement:
 
 - Closed-source
-- Popup's asking me how likely I am to recommend Docker Desktop to a co-worker
+- Pop-ups asking me how likely I am to recommend Docker Desktop to a co-worker
 - Weekly tips and anonymous reporting are enabled by default
 - It makes a request to `desktop.docker.com` every time the settings are opened,
   even with anonymous reporting turned off
@@ -26,7 +26,7 @@ I was looking for a drop-in replacement with minimal or no configuration.
 on [Lima](https://github.com/lima-vm/lima) which creates a QEMU VM with HVF
 accelerator and handles the port-forwarding and folder sharing. Lima comes with
 [containerd](https://github.com/containerd/containerd) and
-[nerdctl](https://github.com/containerd/nerdctl) installed but for a drop-in
+[nerdctl](https://github.com/containerd/nerdctl) installed, but for a drop-in
 replacement the Docker container runtime is required which is what Colima is
 for.
 
@@ -48,8 +48,8 @@ To start the VM we run:
 colima start
 ```
 
-It will start the docker daemon in the VM and configure the docker cli on the
-host. The usage in macOS is no different than with Docker Desktop and all
+It will start the docker daemon in the VM and configure the docker CLI on the
+host. The usage in macOS is no different from Docker Desktop, and all
 `docker` commands should work as before.
 
 ## Performance
@@ -84,14 +84,14 @@ Bandwidth: 11.4MB/s
 
 We can see that Colima is around 80% faster for both IOPS and bandwidth metrics.
 
-For comparison the native speed on macOS was 28.6k IOPS and 117MB/s bandwidth.
+For comparison, the native speed on macOS was 28.6k IOPS and 117MB/s bandwidth.
 
 ## Conclusion
 
 After testing [Colima](https://github.com/abiosoft/colima/) I found it to be a
 great drop-in replacement for Docker Desktop. It even has faster performance for
-shared folders which is another good argument to switch.
+shared folders, which is another good argument to switch.
 
 I did not notice any difference when running docker containers and all `docker`
-commands worked the same as before which is great since none of my build-scripts
+commands worked the same as before, which is great since none of my build-scripts
 had to be changed.
