@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Replacing Docker Desktop for Mac with Colima</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.1em;
+            color: rgb(190, 184, 176);
+            background: rgb(24, 25, 26);
+            padding-bottom: 2em;
+        }
+
+        a { color: #87afd7; text-decoration: none }
+        img { max-width: 100% }
+        li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        /* Headers */
+        h1, h2 { color: rgb(212, 208, 202) }
+        h1 { font-size: 1.6em }
+        h2 { font-size: 1.4em; }
+
+        /* Lists */
+        li::marker { color:rgb(213, 106, 106) }
+        li { padding-bottom: 0.5em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5 }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 0.9em;
+            color: #fff;
+            background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border: 1px solid gray;
+        }
+
+        blockquote {
+          border-width: 2px 0;
+          border-style: solid;
+          margin: 1.5em 2em;
+        }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">home</a></nav>
+    <article>
+        <h1>Replacing Docker Desktop for Mac with Colima</h1>
+        <time datetime="2021-12-21">December 21, 2021</time>
+<p><a href="https://www.docker.com/products/docker-desktop">Docker Desktop for Mac</a> is probably the most commonly used solution to run Docker on macOS. It runs the daemon in a VM, handles port-forwarding, shared folders and sets up the Docker CLI. It’s a quick and easy way to get Docker running on macOS.</p>
+<p>Although technically it works fine the following reasons made me look for a replacement:</p>
+<ul>
+<li>Closed-source</li>
+<li>Popup’s asking me how likely I am to recommend Docker Desktop to a co-worker</li>
+<li>Weekly tips and anonymous reporting are enabled by default</li>
+<li>It makes a request to <code>desktop.docker.com</code> every time the settings are opened, even with anonymous reporting turned off</li>
+</ul>
+<p>While there is the option to run something like <a href="https://multipass.run/">Multipass</a> or <a href="https://www.virtualbox.org/">VirtualBox</a> with a custom provisioning script for Docker and then configure shared folders, I was looking for a drop-in replacement with minimal or no configuration.</p>
+<p><a href="https://github.com/abiosoft/colima/">Colima</a> fits the criteria well. It’s based on <a href="https://github.com/lima-vm/lima">Lima</a> which creates a QEMU VM with HVF accelerator and handles the port-forwarding and folder sharing. Lima comes with <a href="https://github.com/containerd/containerd">containerd</a> and <a href="https://github.com/containerd/nerdctl">nerdctl</a> installed but for a drop-in replacement the Docker container runtime is required which is what Colima is for.</p>
+<p>Colima provisions the Docker container runtime in a Lima VM, configures the <code>docker</code> CLI on macOS and handles port-forwarding and volume mounts. This makes Docker easily usable on macOS without any configuration, similar to Docker Desktop.</p>
+<h2 id="installation-and-usage">Installation and Usage</h2>
+<p>Installation is easy and can be done through Homebrew:</p>
+<pre><code>brew install colima</code></pre>
+<p>To start the VM we run:</p>
+<pre><code>colima start</code></pre>
+<p>It will start the docker daemon in the VM and configure the docker cli on the host. The usage in macOS is no different than with Docker Desktop and all <code>docker</code> commands should work as before.</p>
+<h2 id="performance">Performance</h2>
+<p>Since both solutions are based on the macOS HVF I don’t think there is much difference in terms of CPU and memory performance. However, shared folder performance has always been a <a href="https://github.com/docker/roadmap/issues/7">bottleneck</a> for Docker on macOS.</p>
+<p>I think it’s worth to test the differences in performance since Docker Desktop uses gRPC FUSE while Colima/Lima uses sshfs to share folders.</p>
+<p>I’ve used <a href="https://github.com/axboe/fio">fio</a> to run a quick benchmark in Docker desktop for mac (v4.3.1) and colima (v0.2.2) that performs random 4K writes on a shared volume:</p>
+<pre><code>fio --name=random-write --ioengine=libaio --rw=randwrite --direct=1 --bs=4k --size=4g --numjobs=1 --iodepth=16 --runtime=60 --time_based --end_fsync=1 --filename=/app/testfile</code></pre>
+<p>The results:</p>
+<pre><code># Docker Desktop for Mac
+IOPS: 1545
+Bandwidth: 6.3MB/s
+
+# Colima
+IOPS: 2786
+Bandwidth: 11.4MB/s</code></pre>
+<p>We can see that Colima is around 80% faster for both IOPS and bandwidth metrics.</p>
+<p>For comparison the native speed on macOS was 28.6k IOPS and 117MB/s bandwidth.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>After testing <a href="https://github.com/abiosoft/colima/">Colima</a> I found it to be a great drop-in replacement for Docker Desktop. It even has faster performance for shared folders which is another good argument to switch.</p>
+<p>I did not notice any difference when running docker containers and all <code>docker</code> commands worked the same as before which is great since none of my build-scripts had to be changed.</p>
+    </article>
+  </body>
+</html>
