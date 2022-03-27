@@ -359,4 +359,6 @@ We've created a root application that uses the [app-of-apps](https://argo-cd.rea
 
 Applications can be added, updated or removed with Git. As an example we've installed Prometheus in our cluster.
 
+All files mentioned in this blog post are available in a [Git repository on GitHub](https://github.com/arthurk/argocd-example-install/).
+
 More details about Argo CD can be found on the [project page](https://argo-cd.readthedocs.io/en/stable/) and the [GitHub repository](https://github.com/argoproj/argo-cd/).

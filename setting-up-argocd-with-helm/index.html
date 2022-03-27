@@ -71,7 +71,7 @@
         <time datetime="2021-01-05">January 5, 2021</time>
 <p><em>(Updated March 27, 2022 for Argo CD v2.3)</em></p>
 <p>In this blog post we’re going to setup <a href="https://argo-cd.readthedocs.io/en/stable/">Argo CD</a> on a Kubernetes cluster. We’ll install it with Helm, create an application to use the <a href="https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#app-of-apps">app-of-apps</a> pattern, set Argo CD up so that it can update itself, and install Prometheus via Argo CD as an example.</p>
-<p><img src="images/11-argo-app-details.png" alt="A picture of the Argo CD web UI showing the details view of an application" /></p>
+<p><img src="images/1-argo-app-details.png" alt="A picture of the Argo CD web UI showing the details view of an application" /></p>
 <p>All files mentioned in this blog post are available in a <a href="https://github.com/arthurk/argocd-example-install/">Git repository on GitHub</a>.</p>
 <h2 id="what-is-argo-cd">What is Argo CD?</h2>
 <p><a href="https://argoproj.github.io/argo-cd/">Argo CD</a> is a <a href="https://www.gitops.tech/">GitOps</a> tool to automatically synchronize the cluster to the desired state defined in a Git repository. Each workload is defined declarative through a resource manifest in a YAML file. Argo CD checks if the state defined in the Git repository matches what is running on the cluster and synchronizes it if changes were detected.</p>
@@ -286,6 +286,7 @@ git push</code></pre>
 <p>In this tutorial we’ve installed Argo CD with Helm and set it up so that it can manage itself. Updates to Argo CD can be done by modifying the manifest inside the Git repository and don’t require any manual steps.</p>
 <p>We’ve created a root application that uses the <a href="https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#app-of-apps">app-of-apps</a> pattern to manage our applications in a declarative way.</p>
 <p>Applications can be added, updated or removed with Git. As an example we’ve installed Prometheus in our cluster.</p>
+<p>All files mentioned in this blog post are available in a <a href="https://github.com/arthurk/argocd-example-install/">Git repository on GitHub</a>.</p>
 <p>More details about Argo CD can be found on the <a href="https://argo-cd.readthedocs.io/en/stable/">project page</a> and the <a href="https://github.com/argoproj/argo-cd/">GitHub repository</a>.</p>
     </article>
   </body>
