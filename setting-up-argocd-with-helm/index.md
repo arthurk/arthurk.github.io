@@ -6,7 +6,7 @@ date: January 5, 2021
 
 In this blog post we're going to setup [Argo CD](https://argo-cd.readthedocs.io/en/stable/) on a Kubernetes cluster. We'll install it with Helm, create an application to use the [app-of-apps](https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#app-of-apps) pattern, set Argo CD up so that it can update itself, and install Prometheus  via Argo CD as an example.
 
-![A picture of the Argo CD web UI showing the details view of an application](images/11-argo-app-details.png)
+![A picture of the Argo CD web UI showing the details view of an application](images/1-argo-app-details.png)
 
 All files mentioned in this blog post are available in a [Git repository on GitHub](https://github.com/arthurk/argocd-example-install/).
 
