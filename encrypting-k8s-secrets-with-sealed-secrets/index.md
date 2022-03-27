@@ -16,9 +16,11 @@ The main difference is:
 - Sealed Secrets decrypts the secret *server-side*
 - Helm-secrets decrypts the secret *client-side*
 
-Client-side decryption with helm-secrets can be a security risk since the client (such as a CI/CD system) needs to have access to the encryption key to perform the deployment.
+Client-side decryption with helm-secrets can be a security risk since the client (such as a CI/CD system) needs to have access to the encryption key to perform the deployment. Note that this is not a problem if you use GitOps tools such as Argo CD or Flux.
 
 With Sealed Secrets and server-side decryption we can avoid this security risk. The encryption key only exists in the Kubernetes cluster and is never exposed.
+
+Sealed Secrets is not able to use cloud KMS solutions such as AWS KMS. If this is a requirement then go with sops/helm-secrets.
 
 ## Installation via Helm chart
 
@@ -192,5 +194,3 @@ This will delete the `SealedSecret` resource from the cluster as well as the cor
 Sealed Secrets is a secure way to manage Kubernetes secrets in version control. The encryption key is stored and secrets are decrypted in the cluster. The client doesn't have access to the encryption key.
 
 The client uses the `kubeseal` CLI tool to generate `SealedSecret` manifests that hold encrypted data. After applying the file the server-side controller will recognize a new sealed secret resource and decrypt it to create a `Secret` resource.
-
-Overall I'd recommend to use Sealed Secrets for improved security.

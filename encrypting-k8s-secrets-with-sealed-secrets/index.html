@@ -25,7 +25,7 @@
         /* Headers */
         h1, h2 { color: rgb(212, 208, 202) }
         h1 { font-size: 1.6em }
-	h2 { font-size: 1.4em; }
+        h2 { font-size: 1.4em; }
 
         /* Lists */
         li::marker { color:rgb(213, 106, 106) }
@@ -41,7 +41,7 @@
             font-family: Consolas, monaco, monospace;
             font-size: 0.9em;
             color: #fff;
-	    background-color: #111;
+            background-color: #111;
         }
 
         pre {
@@ -52,11 +52,11 @@
             border: 1px solid gray;
         }
 
-	blockquote {
-		border-width: 2px 0;
-		border-style: solid;
-		margin: 1.5em 2em;
-	}
+        blockquote {
+          border-width: 2px 0;
+          border-style: solid;
+          margin: 1.5em 2em;
+        }
 
         /* Desktop/Laptop screens */
         @media only screen and (min-width : 1200px) {
@@ -68,7 +68,7 @@
     <nav><a href="/">home</a></nav>
     <article>
         <h1>Tutorial: Encrypting Kubernetes Secrets with Sealed Secrets</h1>
-	<time datetime="2021-01-12">January 12, 2021</time>
+        <time datetime="2021-01-12">January 12, 2021</time>
 <p><a href="https://github.com/bitnami-labs/sealed-secrets/">Sealed Secrets</a> is a solution to store encrypted <a href="https://kubernetes.io/">Kubernetes</a> secrets in version control.</p>
 <p>In this blog post we’ll learn how to install and use it.</p>
 <h2 id="comparison-with-helm-secrets-and-sops">Comparison with helm-secrets and sops</h2>
@@ -78,8 +78,9 @@
 <li>Sealed Secrets decrypts the secret <em>server-side</em></li>
 <li>Helm-secrets decrypts the secret <em>client-side</em></li>
 </ul>
-<p>Client-side decryption with helm-secrets can be a security risk since the client (such as a CI/CD system) needs to have access to the encryption key to perform the deployment.</p>
+<p>Client-side decryption with helm-secrets can be a security risk since the client (such as a CI/CD system) needs to have access to the encryption key to perform the deployment. Note that this is not a problem if you use GitOps tools such as Argo CD or Flux.</p>
 <p>With Sealed Secrets and server-side decryption we can avoid this security risk. The encryption key only exists in the Kubernetes cluster and is never exposed.</p>
+<p>Sealed Secrets is not able to use cloud KMS solutions such as AWS KMS. If this is a requirement then go with sops/helm-secrets.</p>
 <h2 id="installation-via-helm-chart">Installation via Helm chart</h2>
 <p>Sealed Secrets consists of two components:</p>
 <ul>
@@ -184,7 +185,6 @@ kubectl apply -f sealed-secret.yaml</code></pre>
 <h2 id="conclusion">Conclusion</h2>
 <p>Sealed Secrets is a secure way to manage Kubernetes secrets in version control. The encryption key is stored and secrets are decrypted in the cluster. The client doesn’t have access to the encryption key.</p>
 <p>The client uses the <code>kubeseal</code> CLI tool to generate <code>SealedSecret</code> manifests that hold encrypted data. After applying the file the server-side controller will recognize a new sealed secret resource and decrypt it to create a <code>Secret</code> resource.</p>
-<p>Overall I’d recommend to use Sealed Secrets for improved security.</p>
     </article>
   </body>
 </html>

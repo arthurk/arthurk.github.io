@@ -7,10 +7,12 @@ I've previously written about [using QEMU on macOS to create an Ubuntu VM](https
 CLI. In this blog post I'm going to describe how to install [libvirt](https://libvirt.org/) and
 [virt-manager](https://virt-manager.org/) on macOS to create an [Ubuntu](https://ubuntu.com/) VM via [QEMU](https://www.qemu.org/) from the virt-manager GUI.
 
-What's described in this blog post was more of an experiment to see if it would
+What's described in this blog post was an experiment to see if it would
 work. Running libvirt locally is very slow and not usable due to the missing
 support for the HVF
-[Hypervisor.Framework](https://developer.apple.com/documentation/hypervisor). 
+[Hypervisor.Framework](https://developer.apple.com/documentation/hypervisor).
+The developers of virt-manager (Red Hat) are not testing on macOS and
+it will break on major updates.
 
 If you're only interested in running virt-manager on macOS (and connect to remote machines) you can skip the steps after the virt-manager installation.
 
