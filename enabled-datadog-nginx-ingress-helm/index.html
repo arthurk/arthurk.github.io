@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Arthur Koziel">
+    <title>Enabling Datadog integration for nginx-ingress Helm chart</title>
+    <link href=data:, rel=icon>
+    <style>
+        body {
+            margin: 1.5em auto;
+            width: 90%;
+            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+            font-size: 1.1em;
+            color: rgb(190, 184, 176);
+            background: rgb(24, 25, 26);
+            padding-bottom: 2em;
+        }
+
+        a { color: #87afd7; text-decoration: none }
+        img { max-width: 100% }
+        li { line-height: 1.45em}
+        p { line-height: 1.55em}
+
+        /* Headers */
+        h1, h2 { color: rgb(212, 208, 202) }
+        h1 { font-size: 1.6em }
+        h2 { font-size: 1.4em; }
+
+        /* Lists */
+        li::marker { color:rgb(213, 106, 106) }
+        li { padding-bottom: 0.5em; padding-left: 0.25em }
+        li:last-child { padding-bottom: 0 }
+        ol { margin-left: 1em }
+        ol li { padding-left: 0 }
+
+        time { font-style: italic; opacity: 0.5 }
+
+        /* Code blocks */
+        code, pre {
+            font-family: Consolas, monaco, monospace;
+            font-size: 0.9em;
+            color: #fff;
+            background-color: #111;
+        }
+
+        pre {
+            display: block;
+            padding: 1em;
+            white-space: pre-wrap;
+            word-break: keep-all;
+            border: 1px solid gray;
+        }
+
+        blockquote {
+          border-width: 2px 0;
+          border-style: solid;
+          margin: 1.5em 2em;
+        }
+
+        /* Desktop/Laptop screens */
+        @media only screen and (min-width : 1200px) {
+            body { width: 50%; }
+        }
+    </style>
+  </head>
+  <body>
+    <nav><a href="/">home</a></nav>
+    <article>
+        <h1>Enabling Datadog integration for nginx-ingress Helm chart</h1>
+        <time datetime="2022-08-21">August 21, 2022</time>
+<p>This is a guide on how to enable the Datadog <a href="https://github.com/DataDog/integrations-core/tree/master/nginx">nginx</a> and <a href="https://github.com/DataDog/integrations-core/tree/master/nginx_ingress_controller">nginx_ingress_controller</a> integrations when using the <a href="https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx">ingress-nginx Helm chart</a>.</p>
+<h2 id="available-integrations-in-datadog">Available Integrations in Datadog</h2>
+<p>In Datadog, there are two NGINX-related integrations available:</p>
+<ul>
+<li><code>nginx</code>: Metrics reported by NGINX status page. The required <code>ngx_http_stub_status_module</code> is enabled by default in the ingress-nginx Helm chart. Access to the status page is restricted, and we need to whitelist the Datadog agent’s IP. The list of metrics can be found in the <a href="https://nginx.org/en/docs/http/ngx_http_stub_status_module.html">nginx documentation</a>.</li>
+<li><code>nginx_ingress_controller</code>: Metrics reported by the NGINX Ingress controller. It exposes metrics in the Prometheus format. The list of metrics can be found in a <a href="https://github.com/kubernetes/ingress-nginx/issues/2924">GitHub PR</a>.</li>
+</ul>
+<p>In this guide, we will enable both integrations.</p>
+<h1 id="enabling-metrics-endpoint-and-status-page">Enabling metrics endpoint and status page</h1>
+<p>Metrics for the NGINX Ingress controller are disabled by default. We have to enable the Prometheus metrics endpoint:</p>
+<pre><code>controller:
+  metrics:
+    enabled: true</code></pre>
+<p>For NGINX, we have to whitelist the IP of the Datadog agent to allow access to the status page. In the following example, I’ve simply whitelisted all IPs in the Kubernetes VPC so that any Pod can access it:</p>
+<pre><code>controller:
+  config:
+    nginx-status-ipv4-whitelist: &quot;10.1.0.0/16&quot;</code></pre>
+<h1 id="agent-check-configuration">Agent check configuration</h1>
+<p>The Datadog agent looks for a <code>ad.datadoghq.com/&lt;CONTAINER_IDENTIFIER&gt;.checks</code> annotation on Pods to check for integration configurations.</p>
+<p>The <code>CONTAINER_IDENTIFIER</code> is the name of the container that the integration applies to. By default, the container name of the NGINX Ingress controller is <code>controller</code> so our annotation is named <code>ad.datadoghq.com/controller.checks</code>.</p>
+<p>For the Datadog <code>nginx</code> integration, we have to set the <code>nginx_status_url</code>. The path is always <code>/nginx_status</code>.</p>
+<p>For the <code>nginx_ingress_controller</code> integration, we have to set the URL of the Prometheus metrics endpoint. By default, they are exposed on port <code>10254</code>. The path is always <code>/metrics</code>.</p>
+<pre><code>controller:
+  podAnnotations:
+    ad.datadoghq.com/controller.checks: |
+      {
+        &quot;nginx&quot;: {
+          &quot;instances&quot;: [{&quot;nginx_status_url&quot;: &quot;http://%%host%%/nginx_status&quot;}]
+        },
+        &quot;nginx_ingress_controller&quot; : {
+          &quot;instances&quot;: [{&quot;prometheus_url&quot;: &quot;http://%%host%%:10254/metrics&quot;}]
+        }
+      }</code></pre>
+<p>The <code>%%host%%</code> part is a <a href="https://docs.datadoghq.com/agent/guide/template_variables/">template variable</a> that will be replaced automatically with the agent’s host service IP. This will only work if the agent is running on every host.</p>
+<h1 id="check-if-everything-works">Check if everything works</h1>
+<p>We can check if the metrics collection works by running the <code>agent status</code> command in an agent container. If everything is working, it will report a successful execution date:</p>
+<pre><code>Last Execution Date : 2022-07-27 03:43:24 UTC (1658893404000)
+Last Successful Execution Date : 2022-07-27 03:43:24 UTC (1658893404000)</code></pre>
+<p>Finally, we should enable the integrations in the Datadog Web UI. Go to “Integrations”, select nginx/nginx-ingress-controller and click on “Enable”. Doing this will also create 3 default dashboards.</p>
+    </article>
+  </body>
+</html>
