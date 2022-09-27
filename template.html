@@ -1,75 +1,64 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Arthur Koziel">
-    <title>$title$</title>
-    <link href=data:, rel=icon>
-    <style>
-        body {
-            margin: 1.5em auto;
-            width: 90%;
-            font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
-            font-size: 1.1em;
-            color: rgb(190, 184, 176);
-            background: rgb(24, 25, 26);
-            padding-bottom: 2em;
-        }
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <link href=data:, rel=icon>
+  <title>$pagetitle$</title>
+  <style>
+    $styles.html()$
+  </style>
+$for(css)$
+  <link rel="stylesheet" href="$css$">
+$endfor$
+$for(header-includes)$
+  $header-includes$
+$endfor$
+</head>
+<body>
+$for(include-before)$
+$include-before$
+$endfor$
 
-        a { color: #87afd7; text-decoration: none }
-        img { max-width: 100% }
-        li { line-height: 1.45em}
-        p { line-height: 1.55em}
+<nav><p><a href="/">Home</a></p></nav>
 
-        /* Headers */
-        h1, h2 { color: rgb(212, 208, 202) }
-        h1 { font-size: 1.6em }
-        h2 { font-size: 1.4em; }
+$if(title)$
+<header id="title-block-header">
+<h1 class="title">$title$</h1>
+$if(subtitle)$
+<p class="subtitle">$subtitle$</p>
+$endif$
+$for(author)$
+<p class="author">$author$</p>
+$endfor$
+$if(date)$
+<time class="date" datetime="$date-meta$">$date$</time>
+$endif$
+$if(abstract)$
+<div class="abstract">
+<div class="abstract-title">$abstract-title$</div>
+$abstract$
+</div>
+$endif$
+</header>
+$endif$
 
-        /* Lists */
-        li::marker { color:rgb(213, 106, 106) }
-        li { padding-bottom: 0.5em; padding-left: 0.25em }
-        li:last-child { padding-bottom: 0 }
-        ol { margin-left: 1em }
-        ol li { padding-left: 0 }
+$if(toc)$
+<nav id="$idprefix$TOC" role="doc-toc">
+$if(toc-title)$
+<h2 id="$idprefix$toc-title">$toc-title$</h2>
+$endif$
+$table-of-contents$
+</nav>
+$endif$
 
-        time { font-style: italic; opacity: 0.5 }
-
-        /* Code blocks */
-        code, pre {
-            font-family: Consolas, monaco, monospace;
-            font-size: 0.9em;
-            color: #fff;
-            background-color: #111;
-        }
-
-        pre {
-            display: block;
-            padding: 1em;
-            white-space: pre-wrap;
-            word-break: keep-all;
-            border: 1px solid gray;
-        }
-
-        blockquote {
-          border-width: 2px 0;
-          border-style: solid;
-          margin: 1.5em 2em;
-        }
-
-        /* Desktop/Laptop screens */
-        @media only screen and (min-width : 1200px) {
-            body { width: 50%; }
-        }
-    </style>
-  </head>
-  <body>
-    <nav><a href="/">home</a></nav>
-    <article>
-        <h1>$title$</h1>
-        <time datetime="$date-meta$">$date$</time>
+<main>
 $body$
-    </article>
-  </body>
+</main>
+
+$for(include-after)$
+$include-after$
+$endfor$
+</body>
 </html>

@@ -1,0 +1,3 @@
+```
+make -f ../Makefile build
+```
