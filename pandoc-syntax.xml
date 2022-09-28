@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<language name="shell" section="Util" mimetype="" version="5" kateversion="2.4">
+  <highlighting>
+    <contexts>
+      <context attribute="Output" name="Output" lineEndContext="#stay" >
+        <DetectChar attribute="command" context="Command" char="$" />
+      </context>
+      <context attribute="Command" name="Command" lineEndContext="#stay">
+        <DetectChar char="#" attribute="Comment" context="Comment"/>
+        <RegExpr String="^[^ ]" context="Output" lookAhead="true"/>
+        <LineContinue context="Command"/>
+      </context>
+      <context attribute="Comment" name="Comment" lineEndContext="#pop"/>
+    </contexts>
+    <itemDatas>
+      <itemData name="Command" defStyleNum="dsOthers"/>
+      <itemData name="Output" defStyleNum="dsNormal"/>
+      <itemData name="Comment" defStyleNum="dsComment"/>
+    </itemDatas>
+  </highlighting>
+</language>

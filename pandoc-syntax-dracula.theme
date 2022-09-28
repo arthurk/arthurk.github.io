@@ -14,7 +14,7 @@
         "Other": {
             "text-color": "#f8f8f2",
             "background-color": null,
-            "bold": false,
+            "bold": true,
             "italic": false,
             "underline": false
         },
