@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <link href="data:," rel="icon">
+  <title>Fixing Argo CD “Too long must have at most 262144 bytes” error</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #6272a4;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #6272a4;  padding-left: 4px; }
+    div.sourceCode
+      { color: #f8f8f2; background-color: #242630; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #f8f8f2; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #f1fa8c; font-weight: bold; } /* Annotation */
+    code span.at { color: #f1fa8c; } /* Attribute */
+    code span.bn { color: #bd93f9; } /* BaseN */
+    code span.bu { color: #50fa7b; } /* BuiltIn */
+    code span.cf { color: #ff79c6; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #f1fa8c; } /* Char */
+    code span.cn { color: #bd93f9; } /* Constant */
+    code span.co { color: #6272a4; } /* Comment */
+    code span.cv { color: #ff79c6; font-weight: bold; } /* CommentVar */
+    code span.do { color: #f8f8f2; } /* Documentation */
+    code span.dt { color: #8be9fd; } /* DataType */
+    code span.dv { color: #bd93f9; } /* DecVal */
+    code span.er { color: #ff5555; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #bd93f9; } /* Float */
+    code span.fu { color: #50fa7b; } /* Function */
+    code span.im { color: #ff79c6; font-weight: bold; } /* Import */
+    code span.in { color: #f8f8f2; font-weight: bold; } /* Information */
+    code span.kw { color: #ff79c6; font-weight: bold; } /* Keyword */
+    code span.op { color: #f8f8f2; } /* Operator */
+    code span.ot { color: #f8f8f2; font-weight: bold; } /* Other */
+    code span.pp { color: #ff79c6; } /* Preprocessor */
+    code span.sc { color: #f1fa8c; } /* SpecialChar */
+    code span.ss { color: #f1fa8c; } /* SpecialString */
+    code span.st { color: #f1fa8c; } /* String */
+    code span.va { color: #f8f8f2; } /* Variable */
+    code span.vs { color: #f1fa8c; } /* VerbatimString */
+    code span.wa { color: #ffb86c; font-weight: bold; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <style type="text/css">body {
+max-width: 750px;
+margin: 40px auto;
+padding: 0 10px;
+font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+color: #bdc1c6;
+background-color: #202124;
+}
+a { color: #8ab4f8; text-decoration: none }
+h1, h2, h3 {
+line-height: 1.2;
+color: #e8eaed;
+}
+h1 {
+font-size: 2em;
+}
+time { font-style: italic }
+img { max-width: 100% }
+div.sourceCode {
+padding: .4rem .7rem;
+font-size: 90%;
+}
+</style>
+</head>
+<body>
+
+<nav><p><a href="/">Home</a></p></nav>
+
+
+<article>
+<h1 class="title">Fixing Argo CD “Too long must have at most 262144
+bytes” error</h1>
+<time class="date" datetime="2022-10-28">October 28, 2022</time>
+<p>In this post, I’ll explain how to fix the
+<code>&quot;Too long: must have at most 262144 bytes&quot;</code> error in <a href="https://github.com/argoproj/argo-cd">Argo CD</a>. It often appears
+when trying to sync a Helm chart that includes large CRDs such as <a href="https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack">kube-prometheus-stack</a>.</p>
+<h2 id="problem">Problem</h2>
+<p>Kubernetes objects have a fixed size limit of 256kb for annotations.
+When using <code>kubectl apply</code> to update resources (which Argo CD
+does) it tries to set a <code>last-applied-configuration</code>
+annotation that contains the JSON representation of the last applied
+object configuration.</p>
+<p>For example, if we have a Deployment object that we update with
+<code>kubectl apply</code>, the <code>last-applied-configuration</code>
+annotation will contain the JSON serialized format of the whole
+Deployment object:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> apps/v1</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Deployment</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">annotations</span><span class="kw">:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">    kubectl.kubernetes.io/last-applied-configuration</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      {&quot;apiVersion&quot;:&quot;apps/v1&quot;,&quot;kind&quot;:&quot;Deployment&quot;, &quot;metadata&quot;:{}, ...}</span></code></pre></div>
+<p>This is not a problem for most resources, but there are objects which
+go over the 256kb limit, such as the <a href="https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/crds/crd-prometheuses.yaml">Prometheus
+CRD</a> from the <a href="https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack">kube-prometheus-stack</a>
+Helm chart, which is 500kb in size.</p>
+<p>Syncing the <code>Prometheus</code> CRD in Argo CD will run
+<code>kubectl apply</code> and try to add the 500kb JSON representation
+of it as an annotation. This will then result in the
+<code>&quot;Too long: must have at most 262144 bytes&quot;</code> error as it goes
+over the Kubernetes annotations size limit of 256kb (or, 262144
+bytes).</p>
+<h2 id="solution">Solution</h2>
+<p>The solution is to stop using Client Side Apply (the current default
+when running <code>kubectl apply</code>) and instead use <a href="https://kubernetes.io/docs/reference/using-api/server-side-apply/">Server
+Side Apply</a> which will not add the
+<code>last-applied-configuration</code> annotation to objects.</p>
+<p>Server Side Apply is planned to be the default apply method in future
+Kubernetes and Argo CD versions, but for now we have to explicitly
+enable it.</p>
+<p>Support for Server Side Apply was added in Argo CD v2.5 and can be
+enabled by setting it in the sync options for an Application
+resource:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">apiVersion</span><span class="kw">:</span><span class="at"> argoproj.io/v1alpha1</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">kind</span><span class="kw">:</span><span class="at"> Application</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">spec</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">syncPolicy</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">syncOptions</span><span class="kw">:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> ServerSideApply=true</span></span></code></pre></div>
+<p>Argo CD versions lower than v2.5 don’t have support for Server Side
+Apply. In these cases, we can fall back to using
+<code>kubectl replace</code> to update the object. We can do this by
+setting the <code>Replace=true</code> sync option. But be aware that
+replace can lead to unexpected results when you have multiple clients
+modifying an object.</p>
+</article>
+
+</body>
+</html>
