@@ -33,9 +33,9 @@ number shows what I've used for this tutorial:
 Our application manifests are stored in a Git repository.
 For this tutorial I'm using a public Github repo:
 
-```
-gh repo create argotest --public --clone
-cd argotest
+```shell
+$ gh repo create argotest --public --clone
+$ cd argotest
 ```
 
 ## Creating an umbrella Helm chart
@@ -46,13 +46,13 @@ Using this approach we have the possibility to bundle extra resources with the c
 
 To create the umbrella chart we make a directory in our Git repository and place two files in it:
 
-```
-mkdir -p charts/argo-cd
+```shell
+$ mkdir -p charts/argo-cd
 ```
 
 [charts/argo-cd/Chart.yaml](https://github.com/arthurk/argocd-example-install/blob/master/charts/argo-cd/Chart.yaml)
 
-```
+```yaml
 apiVersion: v2
 name: argo-cd
 version: 1.0.0
@@ -64,7 +64,7 @@ dependencies:
 
 [charts/argo-cd/values.yaml](https://github.com/arthurk/argocd-example-install/blob/master/charts/argo-cd/values.yaml)
 
-```
+```yaml
 argo-cd:
   dex:
     enabled: false
@@ -89,9 +89,9 @@ For this tutorial we override the following values:
 
 Before we install the chart we need to generate a `Chart.lock` file:
 
-```
-helm repo add argo-cd https://argoproj.github.io/argo-helm
-helm dep update charts/argo-cd/
+```shell
+$ helm repo add argo-cd https://argoproj.github.io/argo-helm
+$ helm dep update charts/argo-cd/
 ```
 
 This will generate two files: 
@@ -103,40 +103,40 @@ The `tgz` file is the downloaded dependency and not required in our Git reposito
 
 We exclude it by creating a `.gitignore` file in the chart directory:
 
-```
-echo "charts/" > charts/argo-cd/.gitignore
+```shell
+$ echo "charts/" > charts/argo-cd/.gitignore
 ```
 
 The chart is now ready to push to our Git repository:
 
-```
-git add charts/argo-cd
-git commit -m 'add argo-cd chart'
-git push
+```shell
+$ git add charts/argo-cd
+$ git commit -m 'add argo-cd chart'
+$ git push
 ```
 
 ## Installing our Argo CD Helm chart
 
 We install Argo CD manually via the Helm CLI:
 
-```
-helm install argo-cd charts/argo-cd/
+```shell
+$ helm install argo-cd charts/argo-cd/
 ```
 
 ## Accessing the Web UI
 
 The Helm chart doesn't install an Ingress by default, to access the Web UI we have to port-forward to the `argocd-server` service:
 
-```
-kubectl port-forward svc/argo-cd-argocd-server 8080:443
+```shell
+$ kubectl port-forward svc/argo-cd-argocd-server 8080:443
 ```
 
 We can then visit [http://localhost:8080](http://localhost:8080) to access it. 
 
 The default username is `admin`. The password is auto-generated and we can get it with:
 
-```
-kubectl get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```shell
+$ kubectl get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
 After logging in we'll see the following screen:
@@ -165,14 +165,14 @@ For the root application we'll use Helm and create a Helm chart that has `Applic
 
 We create it in an `apps/` directory and put a `Chart.yaml` file and an empty `values.yaml` file in it. In our git repo we run:
 
-```
-mkdir -p apps/templates
-touch apps/values.yaml
+```shell
+$ mkdir -p apps/templates
+$ touch apps/values.yaml
 ```
 
 [apps/Chart.yaml](https://github.com/arthurk/argocd-example-install/blob/master/apps/Chart.yaml)
 
-```
+```yaml
 apiVersion: v2
 name: root
 version: 1.0.0
@@ -182,7 +182,7 @@ We create the `Application` manifest for our root application in `apps/templates
 
 [apps/templates/root.yaml](https://github.com/arthurk/argocd-example-install/blob/master/apps/templates/root.yaml):
 
-```
+```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -212,12 +212,12 @@ How does Argo CD know our application is a Helm chart? It looks for a `Chart.yam
 
 To deploy our root application we need to push the files to our Git repository and apply the manifest:
 
-```
-git add apps
-git commit -m 'add root app'
-git push
+```shell
+$ git add apps
+$ git commit -m 'add root app'
+$ git push
 
-helm template apps/ | kubectl apply -f -
+$ helm template apps/ | kubectl apply -f -
 ```
 
 In the Web UI we can now see that the root application was created successfully:
@@ -234,7 +234,7 @@ We put the application manifest in `apps/templates/argo-cd.yaml`:
 
 [apps/templates/argo-cd.yaml](https://github.com/arthurk/argocd-example-install/blob/master/apps/templates/argo-cd.yaml):
 
-```
+```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -259,10 +259,10 @@ spec:
 
 Then push the file to our Git repository:
 
-```
-git add apps/templates/argo-cd.yaml
-git commit -m 'add argo-cd application'
-git push
+```shell
+$ git add apps/templates/argo-cd.yaml
+$ git commit -m 'add argo-cd application'
+$ git push
 ```
 
 In the Web UI we should now see the root application being `OutOfSync` and `Syncing`. 
@@ -273,13 +273,13 @@ If it doesn't show the application immediately, click the "Refresh" button on th
 
 Once the Argo CD application is synced it can now manage itself and we can delete the previously manually installed (via `helm install`) installation. The following command will not delete Argo CD from the cluster, only let Helm know that it is not managing Argo CD anymore:
 
-```
-kubectl delete secret -l owner=helm,name=argo-cd
+```shell
+$ kubectl delete secret -l owner=helm,name=argo-cd
 ```
 
 When listing helm releases it should now show an empty list:
 
-```
+```shell
 $ helm list
 
 NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSIONCE	REVISION
@@ -293,7 +293,7 @@ First we create an `Application` manifest in `apps/templates/prometheus.yaml` th
 
 [apps/templates/prometheus.yaml](https://github.com/arthurk/argocd-example-install/blob/master/apps/templates/prometheus.yaml)
 
-```
+```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -329,10 +329,10 @@ Compared to our previously created Argo CD umbrella chart, the differences are:
 
 To deploy the application all we have to do is push the manifest to our Git repository:
 
-```
-git add apps/templates/prometheus.yaml
-git commit -m 'add prometheus'
-git push
+```shell
+$ git add apps/templates/prometheus.yaml
+$ git commit -m 'add prometheus'
+$ git push
 ```
 
 Prometheus should show up in the Web UI after the next refresh. 
@@ -343,10 +343,10 @@ Prometheus should show up in the Web UI after the next refresh.
 
 To uninstall Prometheus we just have to delete the previously added `prometheus.yaml` file from out Git repo:
 
-```
-git rm apps/templates/prometheus.yaml
-git commit -m 'remove prometheus'
-git push
+```shell
+$ git rm apps/templates/prometheus.yaml
+$ git commit -m 'remove prometheus'
+$ git push
 ```
 
 The application will be removed from the cluster after the next refresh.
