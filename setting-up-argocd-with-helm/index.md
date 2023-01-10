@@ -58,7 +58,7 @@ name: argo-cd
 version: 1.0.0
 dependencies:
   - name: argo-cd
-    version: 2.11.0
+    version: 4.2.2
     repository: https://argoproj.github.io/argo-helm
 ```
 
@@ -214,7 +214,7 @@ To deploy our root application we need to push the files to our Git repository a
 
 ```
 git add apps
-git ci -m 'add root app'
+git commit -m 'add root app'
 git push
 
 helm template apps/ | kubectl apply -f -
@@ -261,7 +261,7 @@ Then push the file to our Git repository:
 
 ```
 git add apps/templates/argo-cd.yaml
-git ci -m 'add argo-cd application'
+git commit -m 'add argo-cd application'
 git push
 ```
 
@@ -331,7 +331,7 @@ To deploy the application all we have to do is push the manifest to our Git repo
 
 ```
 git add apps/templates/prometheus.yaml
-git ci -m 'add prometheus'
+git commit -m 'add prometheus'
 git push
 ```
 
@@ -345,7 +345,7 @@ To uninstall Prometheus we just have to delete the previously added `prometheus.
 
 ```
 git rm apps/templates/prometheus.yaml
-git ci -m 'remove prometheus'
+git commit -m 'remove prometheus'
 git push
 ```
 
