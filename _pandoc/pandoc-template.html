@@ -4,14 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="author" content="Arthur Koziel">
-  <link href=data:, rel=icon>
+  <link href="data:", rel="icon">
   <title>$pagetitle$</title>
   <style>
+    body {
+      max-width: 750px;
+      margin: 40px auto;
+      padding: 0 10px;
+      font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      color: #bdc1c6;
+      background-color: #202124;
+    }
+
+    a { color: #8ab4f8; text-decoration: none }
+
+    h1, h2, h3 {
+      line-height: 1.2;
+      color: #e8eaed;
+    }
+    h1 {
+        font-size: 2em;
+    }
+
+    time { font-style: italic }
+
+    img { max-width: 100% }
+
+    div.sourceCode {
+        padding: .4rem .7rem;
+        font-size: 90%;
+    }
+
     $styles.html()$
   </style>
-$for(css)$
-  <link rel="stylesheet" href="$css$">
-$endfor$
 $for(header-includes)$
   $header-includes$
 $endfor$
