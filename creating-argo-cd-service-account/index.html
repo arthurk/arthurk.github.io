@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <link href=data:, rel=icon>
+  <title>Creating an Argo CD service account</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #6272a4;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #6272a4;  padding-left: 4px; }
+    div.sourceCode
+      { color: #f8f8f2; background-color: #242630; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #f8f8f2; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #f1fa8c; font-weight: bold; } /* Annotation */
+    code span.at { color: #f1fa8c; } /* Attribute */
+    code span.bn { color: #bd93f9; } /* BaseN */
+    code span.bu { color: #50fa7b; } /* BuiltIn */
+    code span.cf { color: #ff79c6; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #f1fa8c; } /* Char */
+    code span.cn { color: #bd93f9; } /* Constant */
+    code span.co { color: #6272a4; } /* Comment */
+    code span.cv { color: #ff79c6; font-weight: bold; } /* CommentVar */
+    code span.do { color: #f8f8f2; } /* Documentation */
+    code span.dt { color: #8be9fd; } /* DataType */
+    code span.dv { color: #bd93f9; } /* DecVal */
+    code span.er { color: #ff5555; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #bd93f9; } /* Float */
+    code span.fu { color: #50fa7b; } /* Function */
+    code span.im { color: #ff79c6; font-weight: bold; } /* Import */
+    code span.in { color: #f8f8f2; font-weight: bold; } /* Information */
+    code span.kw { color: #ff79c6; font-weight: bold; } /* Keyword */
+    code span.op { color: #f8f8f2; } /* Operator */
+    code span.ot { color: #f8f8f2; font-weight: bold; } /* Other */
+    code span.pp { color: #ff79c6; } /* Preprocessor */
+    code span.sc { color: #f1fa8c; } /* SpecialChar */
+    code span.ss { color: #f1fa8c; } /* SpecialString */
+    code span.st { color: #f1fa8c; } /* String */
+    code span.va { color: #f8f8f2; } /* Variable */
+    code span.vs { color: #f1fa8c; } /* VerbatimString */
+    code span.wa { color: #ffb86c; font-weight: bold; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../_pandoc/pandoc-style.css">
+</head>
+<body>
+
+<nav><p><a href="/">Home</a></p></nav>
+
+
+<article>
+<h1 class="title">Creating an Argo CD service account</h1>
+<time class="date" datetime="2023-01-30">January 30, 2023</time>
+<p>This blog post shows how to create an Argo CD service account. The
+account will only be able to authenticate via API and not the Web
+UI.</p>
+<p>Having an account like this is useful in CI environments or other
+automated programs that need to interact with the Argo CD Server
+API.</p>
+<p>The versions used are Argo CD v2.5.9 and the <a
+href="https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd">Argo
+CD Helm Chart</a> v5.17.0.</p>
+<h2 id="create-user-account">Create User Account</h2>
+<p>The first thing we do is to create an account in Argo CD. In the Helm
+chart <code>values.yaml</code> we do this by setting the following
+values:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">argo-cd</span><span class="kw">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">configs</span><span class="kw">:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cm</span><span class="kw">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">accounts.gh_actions</span><span class="kw">:</span><span class="at"> apiKey</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">rbac</span><span class="kw">:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">      policy.csv</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        p, gh_actions, applications, get, */*, allow</span></code></pre></div>
+<p>The name of the account can be specified by setting
+<code>accounts.&lt;name&gt;</code>. For this example post, we name the
+account <code>gh_actions</code> and grant it permissions to get all
+applications.</p>
+<p>However, we cannot use this account yet. To do this, we need to
+create a token for the account. The token can then be used to
+authenticate with the API.</p>
+<p>Make sure to sync the Helm chart deployment. After that, we can check
+that the account was created and generate a token by using the Argo CD
+CLI.</p>
+<p>First we log in with our <code>admin</code> account:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode shell"><code class="sourceCode pandocsyntax"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>$<span class="ot"> kubectl run --rm -it --image=argoproj/argocd:v2.5.9 sh</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>$<span class="ot"> argocd login --insecure argocd-server.argocd.svc.cluster.local</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>WARNING: server is not configured with TLS. Proceed (y/n)? y</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>Username: admin</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>Password: </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>&#39;admin:login&#39; logged in successfully</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>Context &#39;argocd-server.argocd.svc.cluster.local&#39; updated</span></code></pre></div>
+<p>Then we can check if the user was created:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode shell"><code class="sourceCode pandocsyntax"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>$<span class="ot"> argocd account get --account gh_actions</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>Name:               gh_actions</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>Enabled:            true</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>Capabilities:       apiKey</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>Tokens:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>NONE</span></code></pre></div>
+<p>Next, we create a token for the user account:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode shell"><code class="sourceCode pandocsyntax"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>$<span class="ot"> argocd account generate-token --account gh_actions</span></span></code></pre></div>
+<p>The command will output the token that is used to authenticate with
+the API. Make sure to save it somewhere, as it can’t be displayed
+again.</p>
+<p>Logout from the <code>admin</code> account. When using API tokens, we
+don’t have to use the login anymore and can provide the token via CLI
+argument.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode shell"><code class="sourceCode pandocsyntax"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>$<span class="ot"> argocd logout argocd-server.argocd.svc.cluster.local</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Logged out from &#39;argocd-server.argocd.svc.cluster.local&#39;</span></code></pre></div>
+<h2 id="testing-the-api-token">Testing the API token</h2>
+<p>To test that the token works, we can run the following command to
+list all Applications in the cluster. Replace
+<code>&lt;mytoken&gt;</code> with the real token from above:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode shell"><code class="sourceCode pandocsyntax"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>$<span class="ot"> argocd --server argocd-server.argocd.svc.cluster.local --plaintext --auth-token &lt;mytoken&gt; app list</span></span></code></pre></div>
+<p>If your Argo CD server is behind an HTTP proxy with TLS, you need to
+use <code>--grpc-web</code> instead of <code>--plaintext</code>.</p>
+</article>
+
+</body>
+</html>
