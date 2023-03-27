@@ -57,7 +57,7 @@ For the `nginx_ingress_controller` integration, we have to set the URL of the
 Prometheus metrics endpoint. By default, they are exposed on port `10254`. The path is always `/metrics`.
 
 ```
-controller:
+clusterAgent:
   podAnnotations:
     ad.datadoghq.com/controller.checks: |
       {
