@@ -1,0 +1,14 @@
+base_url = "https://www.arthurkoziel.com"
+
+title = "Arthur Koziel"
+description = "Recent Blog Posts"
+
+generate_feed = true
+feed_filename = "feed.xml"
+
+[markdown]
+highlight_code = true
+highlight_theme = "dracula"
+
+[link_checker]
+internal_level = "warn"
