@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Blog Posts{% endblock title %}
+
+{% block content %}
+<h2>Blog Posts</h2>
+<p><a href="{{ get_url(path="feed.xml", trailing_slash=false) }}">Subscribe to RSS Feed</a></p>
+<table>
+  <tbody>
+    {# new blog posts from blog section #}
+
+    {% for page in section.pages %}
+    <tr>
+      <td><time datetime="{{ page.date | date(format="%Y-%m-%d") }}">{{ page.date | date(format="%B %d, %Y") }}</time></td>
+      <td><a href="{{ page.permalink | safe }}">{{ page.title }}</a></td>
+    </tr>
+    {% endfor %}
+
+    {# old blog posts from root section #}
+
+    {% set section = get_section(path="_index.md") %}
+    {% for page in section.pages %}
+    <tr>
+      <td><time datetime="{{ page.date | date(format="%Y-%m-%d") }}">{{ page.date | date(format="%B %d, %Y") }}</time></td>
+      <td><a href="{{ page.permalink | safe }}">{{ page.title }}</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

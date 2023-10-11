@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>{% block title %}Arthur Koziel{% endblock title %}</title>
+  <link href="data:", rel="icon">
+  <link rel="alternate" type="application/rss+xml" title="Blog RSS" href="{{ get_url(path="feed.xml", trailing_slash=false) }}">
+  <style type="text/css">
+  body {
+      max-width: 750px;
+      margin: 40px auto;
+      padding: 0 10px;
+      font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      color: #bdc1c6;
+      background-color: #202124;
+  }
+
+  a {
+      color: #8ab4f8;
+      text-decoration: none
+  }
+
+  h1,
+  h2,
+  h3 {
+      line-height: 1.2;
+      color: #e8eaed;
+  }
+
+  h1 {
+      font-size: 2em;
+  }
+
+  time {
+      font-style: italic
+  }
+
+  img {
+      max-width: 100%
+  }
+
+  pre {
+      padding: 1rem;
+      overflow: auto;
+  }
+
+  pre[data-linenos] {
+      padding: 1rem 0;
+  }
+
+  pre table td {
+      padding: 0;
+  }
+
+  pre table td:nth-of-type(1) {
+      text-align: center;
+      user-select: none;
+  }
+
+  pre mark {
+      display: block;
+      background-color: rgba(254, 252, 232, 0.9);
+  }
+
+  pre table {
+      width: 100%;
+      border-collapse: collapse;
+  }
+
+  /* table */
+  table {
+      border-collapse: collapse;
+  }
+
+  table tr {
+      vertical-align: top;
+  }
+
+  table td {
+      border-bottom: 1px solid #666;
+      padding: .5em 0;
+  }
+
+  table td:nth-child(1) {
+      width: 25%;
+      padding-right: 1em
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="{{ get_url(path='@/_index.md') }}">Home</a> | 
+    <a href="{{ get_url(path='@/blog/_index.md') }}">Blog</a>
+  </p>
+</nav>
+
+{% block content %}{% endblock %}
+
+</body>
+</html>
