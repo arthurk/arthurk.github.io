@@ -4,6 +4,8 @@ date = "2021-01-05"
 updated = "2022-03-27"
 +++
 
+![title](title.jpeg)
+
 In this blog post we're going to setup [Argo CD](https://argo-cd.readthedocs.io/en/stable/) on a Kubernetes cluster. We'll install it with Helm, create an application to use the [app-of-apps](https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#app-of-apps) pattern, set Argo CD up so that it can update itself, and install Prometheus  via Argo CD as an example.
 
 ![A picture of the Argo CD web UI showing the details view of an application](1-argo-app-details.png)
