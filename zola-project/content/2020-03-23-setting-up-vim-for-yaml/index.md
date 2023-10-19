@@ -124,7 +124,7 @@ Here's a summary of the plugins, applications and config modifications:
 *   [vim-yaml-folds](https://github.com/pedrohdz/vim-yaml-folds)
 *   [ALE](https://github.com/dense-analysis/ale)
 
-### Applicatins
+### Applications
 
 *   [yamllint](https://github.com/adrienverge/yamllint)
 

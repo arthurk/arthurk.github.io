@@ -1,1 +1,8 @@
+# zola output
 public/
+
+# vim
+*.swp
+
+# macos
+.DS_Store

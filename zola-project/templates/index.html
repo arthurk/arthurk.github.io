@@ -1,35 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>Welcome</h2>
-    <p>I'm Arthur and I work as a Site Reliability Engineer</p>
+<h2>Contact</h2>
+<p>
+  <address>Email <a href="mailto:arthur@arthurkoziel.com">arthur@arthurkoziel.com</a></address>
+</p>
 
-    <h2>Contact</h2>
-    <address>Email: <a href="mailto:arthur@arthurkoziel.com">arthur@arthurkoziel.com</a></address>
+<h2>Recent Blog Posts</h2>
+<ul id="blog-archive">
+  {# new blog posts from blog section #}
+  {% set section = get_section(path="blog/_index.md") %}
+  {% for page in section.pages | slice(end=1) %}
+  <li>
+    <a href="{{ page.permalink | safe }}">{{ page.title }}</a>
+    <p>
+      Published: <time datetime="{{ page.date | date(format="%Y-%m-%d") }}">{{ page.date | date(format="%B %d, %Y") }}</time>
+      {% if page.updated %}
+      , Updated: <time class="date" datetime="{{ page.updated | date(format="%Y-%m-%d") }}">{{ page.updated | date(format="%B %d, %Y") }}</time>
+      {% endif %}
+    </p>
+  </li>
+  {% endfor %}
 
-    <h2>
-        Recent Blog Posts
-        <a style="font-size: 0.9rem" href="{{ get_url(path="@/blog/_index.md") }}">Show all</a>
-    </h2>
-    <table>
-      <tbody>
-        {# new blog posts from blog section #}
-        {% set section = get_section(path="blog/_index.md") %}
-        {% for page in section.pages | slice(end=1) %}
-        <tr>
-          <td><time datetime="{{ page.date | date(format="%Y-%m-%d") }}">{{ page.date | date(format="%B %d, %Y") }}</time></td>
-          <td><a href="{{ page.permalink | safe }}">{{ page.title }}</a></td>
-        </tr>
-        {% endfor %}
-
-        {# old blog posts from root section #}
-        {% set section = get_section(path="_index.md") %}
-        {% for page in section.pages | slice(end=5) %}
-        <tr>
-          <td><time datetime="{{ page.date | date(format="%Y-%m-%d") }}">{{ page.date | date(format="%B %d, %Y") }}</time></td>
-          <td><a href="{{ page.permalink | safe }}">{{ page.title }}</a></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  {# old blog posts from root section #}
+  {% set section = get_section(path="_index.md") %}
+  {% for page in section.pages | slice(end=5) %}
+  <li>
+    <a href="{{ page.permalink | safe }}">{{ page.title }}</a>
+    <p>
+      Published: <time datetime="{{ page.date | date(format="%Y-%m-%d") }}">{{ page.date | date(format="%B %d, %Y") }}</time>
+      {% if page.updated %}
+      , Updated: <time class="date" datetime="{{ page.updated | date(format="%Y-%m-%d") }}">{{ page.updated | date(format="%B %d, %Y") }}</time>
+      {% endif %}
+    </p>
+  </li>
+  {% endfor %}
+</ul>
 {% endblock content %}

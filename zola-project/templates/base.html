@@ -6,86 +6,220 @@
   <meta name="author" content="Arthur Koziel">
   <title>{% block title %}Arthur Koziel{% endblock title %}</title>
   <link href="data:", rel="icon">
-  <link rel="alternate" type="application/rss+xml" title="Blog RSS" href="{{ get_url(path="feed.xml", trailing_slash=false) }}">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ get_url(path="feed.xml", trailing_slash=false) }}">
   <style type="text/css">
+  /* base css is light theme for mobile screens,
+     dark theme and laptop/desktop size overrides at bottom */
   body {
-      max-width: 750px;
-      margin: 40px auto;
-      padding: 0 10px;
-      font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-      color: #bdc1c6;
-      background-color: #202124;
+    font-family: helvetica, arial, sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
   }
 
-  a {
-      color: #8ab4f8;
-      text-decoration: none
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
   }
 
-  h1,
-  h2,
-  h3 {
-      line-height: 1.2;
-      color: #e8eaed;
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
   }
 
   h1 {
-      font-size: 2em;
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
   }
 
-  time {
-      font-style: italic
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
   }
 
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
   img {
-      max-width: 100%
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
   }
 
   pre {
-      padding: 1rem;
-      overflow: auto;
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
   }
 
-  pre[data-linenos] {
-      padding: 1rem 0;
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
   }
 
-  pre table td {
-      padding: 0;
-  }
+  /* tables */
 
-  pre table td:nth-of-type(1) {
-      text-align: center;
-      user-select: none;
-  }
-
-  pre mark {
-      display: block;
-      background-color: rgba(254, 252, 232, 0.9);
-  }
-
-  pre table {
-      width: 100%;
-      border-collapse: collapse;
-  }
-
-  /* table */
   table {
-      border-collapse: collapse;
+    border-collapse: collapse;
+    margin: 18px 0;
   }
 
   table tr {
-      vertical-align: top;
+    vertical-align: top;
   }
 
   table td {
-      border-bottom: 1px solid #666;
-      padding: .5em 0;
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
   }
 
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
   table td:nth-child(1) {
-      width: 25%;
-      padding-right: 1em
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+              font-size: 1rem;
+        line-height: 1.5
+
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date { color: #bdc1c6 }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+    table td:nth-child(1) { color: #bdc1c6 }
   }
 </style>
 </head>

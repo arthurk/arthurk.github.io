@@ -9,6 +9,7 @@ feed_filename = "feed.xml"
 [markdown]
 highlight_code = true
 highlight_theme = "dracula"
+extra_syntaxes_and_themes = ["syntaxes"]
 
 [link_checker]
 internal_level = "warn"
