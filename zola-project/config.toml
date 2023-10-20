@@ -3,6 +3,7 @@ base_url = "https://www.arthurkoziel.com"
 title = "Arthur Koziel"
 description = "Recent Blog Posts"
 
+author = "Arthur Koziel"
 generate_feed = true
 feed_filename = "feed.xml"
 
