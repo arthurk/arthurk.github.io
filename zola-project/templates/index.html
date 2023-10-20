@@ -2,17 +2,19 @@
 
 {% block content %}
 <h2>Consulting</h2>
+
 <p>
 My name is Arthur Koziel and I help businesses lower operational costs, automate and monitor their infrastructures better and speed up product development.
 </p>
+
 <p style="color: #ff3800">
   <strong>I'm available for consulting. If you are interested, contact me at <a href="mailto:arthur@arthurkoziel.com">arthur@arthurkoziel.com</a>.</strong>
 </p>
+
 <h3>Skills and experience</h3>
-<p>
 <ul>
 <li>Create and maintain CI/CD pipelines for building, testing, and deploying code.</li>
-<li>Architect, test, deploy and manage cloud infrastructure and scale it in load & region aware fashion.</li>
+<li>Architect, test, deploy and manage cloud infrastructure and scale it in load &amp; region aware fashion.</li>
 <li>Implement and maintain alerting, monitoring and logging systems.</li>
 <li>Set up and manage Kubernetes clusters and ensure they are properly configured for high availability and scalability.</li>
 <li>Automate the deployment of software with GitOps principles using tools in the Cloud Native landscape.</li>
@@ -20,25 +22,9 @@ My name is Arthur Koziel and I help businesses lower operational costs, automate
 <li>Work with development teams to ensure that code is properly instrumented for monitoring and logging.</li>
 <li>Ensure systems are safe and secure against cybersecurity threats</li>
 </ul>
-</p>
 
 <h2>Recent Blog Posts</h2>
 <ul id="blog-archive">
-  {# new blog posts from blog section #}
-  {% set section = get_section(path="blog/_index.md") %}
-  {% for page in section.pages | slice(end=1) %}
-  <li>
-    <a href="{{ page.permalink | safe }}">{{ page.title }}</a>
-    <p>
-      Published: <time datetime="{{ page.date | date(format="%Y-%m-%d") }}">{{ page.date | date(format="%B %d, %Y") }}</time>
-      {% if page.updated %}
-      , Updated: <time class="date" datetime="{{ page.updated | date(format="%Y-%m-%d") }}">{{ page.updated | date(format="%B %d, %Y") }}</time>
-      {% endif %}
-    </p>
-  </li>
-  {% endfor %}
-
-  {# old blog posts from root section #}
   {% set section = get_section(path="_index.md") %}
   {% for page in section.pages | slice(end=5) %}
   <li>
