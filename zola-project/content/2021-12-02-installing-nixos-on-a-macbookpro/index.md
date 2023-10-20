@@ -134,7 +134,7 @@ poweroff
 I used `Disk Utility` to shrink the macOS partition, and left one
 quarter of the available disk space for the NixOS system:
 
-![Disk Utility showing partitions](partitions.png)
+![Disk Utility showing partitions](partitions.jpg)
 
 I then used `gdisk` (install with `brew install gptfdisk`) to create a root partition and a
 4 GB swap partition for NixOS.

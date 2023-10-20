@@ -1,6 +1,5 @@
 +++
 title = "Managing Kubernetes resources in Terraform: Kubernetes provider"
-date = "2023-10-20"
 +++
 
 ![title](title.jpeg)
