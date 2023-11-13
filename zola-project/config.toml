@@ -7,6 +7,9 @@ author = "Arthur Koziel"
 generate_feed = true
 feed_filename = "feed.xml"
 
+# files/dirs which shouldn't be copied to public directory
+ignored_content = ["**/testenv/*"]
+
 [markdown]
 highlight_code = true
 highlight_theme = "dracula"

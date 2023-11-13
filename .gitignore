@@ -1,3 +1,14 @@
 .DS_Store
-.idea
-_drafts
+.direnv/
+
+# zola output
+public/
+
+# vim
+*.swp
+
+# terraform
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+.terraform/
