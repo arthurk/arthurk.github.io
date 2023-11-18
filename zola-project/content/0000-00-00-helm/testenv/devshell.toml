@@ -1,0 +1,10 @@
+# https://numtide.github.io/devshell
+
+[devshell]
+packages = [
+  "kubectl",
+  "terraform",
+  "kind",
+  "k9s",
+  "kubernetes-helm",
+]
