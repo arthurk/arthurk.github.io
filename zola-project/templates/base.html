@@ -7,8 +7,8 @@
   <title>{% block title %}Arthur Koziel{% endblock title %}</title>
   <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ get_url(path="feed.xml", trailing_slash=false) }}">
   <style>
-  /* base css is light theme for mobile screens,
-     dark theme and laptop/desktop size overrides at bottom */
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
   body {
     font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
     font-weight: 400;
@@ -89,6 +89,7 @@
   /* inline code */
   article > p > code, article > ul > li > code {
     font-weight: 700;
+    color: #F8F8F2;
   }
 
   /* tables */

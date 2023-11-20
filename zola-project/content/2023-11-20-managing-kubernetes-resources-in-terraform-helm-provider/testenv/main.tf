@@ -7,6 +7,30 @@ provider "helm" {
   # }
 }
 
+resource "helm_release" "istio_base" {
+  name             = "istio-base"
+  repository       = "https://istio-release.storage.googleapis.com/charts"
+  chart            = "base"
+  namespace        = "istio-system"
+  create_namespace = true
+  version          = "1.20.0"
+}
+
+resource "helm_release" "istiod" {
+  name             = "istiod"
+  repository       = "https://istio-release.storage.googleapis.com/charts"
+  chart            = "istiod"
+  namespace        = "istio-system"
+  create_namespace = true
+  version          = "1.20.0"
+
+  set { name  = "pilot.resources.requests.memory", value = "100Mi" }
+
+
+  # to install the CRDs first
+  depends_on = [helm_release.istio_base]
+}
+
 # resource "helm_release" "grafana" {
 #   name             = "grafana"
 #   repository       = "https://grafana.github.io/helm-charts"
