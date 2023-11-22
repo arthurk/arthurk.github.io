@@ -14,6 +14,7 @@
           buildInputs = with pkgs; [
             zola
             nil
+            just
           ];
         };
       }
