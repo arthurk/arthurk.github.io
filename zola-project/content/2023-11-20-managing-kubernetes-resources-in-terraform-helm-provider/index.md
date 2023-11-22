@@ -8,7 +8,7 @@ In the [previous blog post](@/2023-10-20-managing-kubernetes-resources-in-terraf
 
 With the Terraform provider the most time-consuming tasks were the conversion from YAML to HCL, and the need to manually split CRDs. With the Helm provider we don't need to do these tasks.
 
-### The basics
+## The basics
 
 The Helm provider only has one resource called `helm_release`. As an example we can configure and use it to install Grafana like this:
 
@@ -42,7 +42,7 @@ NAME                       READY   STATUS    RESTARTS   AGE
 grafana-5b67f46b65-pq25z   1/1     Running   0          76s
 ```
 
-### Installing Istio
+## Installing Istio
 
 In the [previous post](@/2023-10-20-managing-kubernetes-resources-in-terraform-kubernetes-provider/index.md) we installed Istio using the Kubernetes provider. To show the differences between both providers, we'll reinstall Istio, this time using the Helm provider.
 
@@ -94,7 +94,7 @@ istiod-7d4885fc54-qgk54   1/1     Running   0          37s
 
 Compared to using the Kubernetes provider, this was much easier and faster. We didn't have to convert YAML to HCL, and then split the CRDs manually into a different file.
 
-### Chart values
+## Chart values
 
 There are 3 options to set custom chart values:
 
@@ -104,7 +104,7 @@ There are 3 options to set custom chart values:
 
 We'll look at each of them and see how they can be used and what the pros and cons of each method are.
 
-### HCL set blocks
+## HCL set blocks
 
 As an example here's how to set custom values using `set` with the same Istio chart from above:
 
@@ -152,7 +152,7 @@ arguments, use the multi-line block syntax with one argument definition per line
 
 This means that setting 3 custom values for a Helm chart requires adding 12 lines to the Terraform file. This can quickly add up for larger charts and make it difficult to get a good overview of the changes.
 
-### HCL set_sensitive blocks
+## HCL set_sensitive blocks
 
 For sensitive values (secrets) which should not be displayed as clear text in the plan output, we have to use the HCL `set_sensitive` block.
 
@@ -238,7 +238,7 @@ On the first apply the sensitive value will not be shown, but if we change any a
 
 You can see the `very-secret` value being leaked as clear text in the output.
 
-### YAML in values attribute
+## YAML in values attribute
 
 As an alternative to using HCL `set` blocks, we can specify values in YAML or JSON by setting the `values` argument. In the examples below I'll focus on YAML.
 
@@ -305,7 +305,7 @@ grafana.ini:
 
 The drawback is that we now have to manage two files and coordinate changes between the HCL configuration file and the associated YAML file, which can increase the likelihood of errors.
 
-### HCL objects instead of text
+## HCL objects instead of text
 
 Another way to set values is to use HCL objects and encode them using [jsonencode](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [yamlencode](https://developer.hashicorp.com/terraform/language/functions/yamlencode). It's less verbose than `set` blocks, but slightly more verbose than YAML. The benefit is that it lets us keep everything in one file, allows for substitutions and have editor language support.
 
@@ -331,7 +331,7 @@ values = [
 
 The drawbacks are the same as for the other HCL blocks. The biggest issue is that we have to convert YAML code from the documentation or examples into HCL objects. This additional step can slow down the development speed and also lead to errors when doing the conversion.
 
-### Diff output
+## Diff output
 
 The most notable difference between the above methods for setting values, is the diff output when running a terraform plan.
 
@@ -377,7 +377,7 @@ When reviewing code, this makes it difficult to see what the actual change was. 
 
 These are all the ways to set custom values (that I could find). Below I'll go into two issues that I've found when using the provider.
 
-### Viewing rendered Kubernetes resources
+## Viewing rendered Kubernetes resources
 
 It's not possible to see the manifests of the generated Kubernetes resources. The provider has an experimental flag to show them, but in my testing it didn't work for any chart and broke the deployments.
 
@@ -417,7 +417,7 @@ The issue happened with all Helm charts I tested.
 
 Seeing the generated Kubernetes resources is important, especially for security. Without this feature we can only hope/trust that the Helm chart authors won't include any Kubernetes resources that could be a security risk (such as an RBAC Role with too many permissions).
 
-### Fixing issues when client aborts
+## Fixing issues when client aborts
 
 When a client has to abort an apply (for example due to a lost network connection) the resource will be in `pending-upgrade` state and not allow to re-run an apply.
 
@@ -467,7 +467,7 @@ $ kubectl delete secret sh.helm.release.v1.argocd.v3
 
 After that the apply process will work again. A similar error is `Error: cannot re-use a name that is still in use` which can be fixed in the same way.
 
-### Conclusion
+## Conclusion
 
 In this blog post we've seen how to use the Terraform Helm provider. We covered the basics on how to use it and showed how to set custom Helm chart values in different ways.
 
