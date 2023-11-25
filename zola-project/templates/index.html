@@ -7,10 +7,6 @@
 My name is Arthur Koziel and I help businesses with their DevOps processes.
 </p>
 
-<p style="color: #ff3800">
-  <strong>If you are interested in hiring me as a consultant, please contact me at <a href="mailto:consulting@arthurkoziel.com">consulting@arthurkoziel.com</a>.</strong>
-</p>
-
 <h3>Skills and experience</h3>
 <ul>
 <li>Create and maintain CI/CD pipelines for building, testing, and deploying code.</li>
@@ -23,8 +19,11 @@ My name is Arthur Koziel and I help businesses with their DevOps processes.
 <li>Ensure systems are safe and secure against cybersecurity threats</li>
 </ul>
 
+<p>
+  If you are interested in hiring me as a consultant, please contact me at <a href="mailto:consulting@arthurkoziel.com">consulting@arthurkoziel.com</a>.
+</p>
+
 <h2>Recent Blog Posts</h2>
-<p>If you have any questions for my blog posts, please email me at: blog@arthurkoziel.com</p>
 <ul id="blog-archive">
   {% set section = get_section(path="_index.md") %}
   {% for page in section.pages | slice(end=5) %}
@@ -39,4 +38,6 @@ My name is Arthur Koziel and I help businesses with their DevOps processes.
   </li>
   {% endfor %}
 </ul>
+
+<p>If you have any questions for my blog posts, please email me at <a href="mailto:blog@arthurkoziel.com">blog@arthurkoziel.com</a></p>
 {% endblock content %}
