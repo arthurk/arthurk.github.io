@@ -271,24 +271,12 @@ The backup finished successfully. Since this is the first run and the restic rep
 
 ## Testing Backup Restore
 
-To test that we can restore backups we have to use the restic CLI. We can run a nix shell with the restic package:
+To test that we can restore backups we use the restic CLI. Since NixOS 23.11, the restic service creates wrapper scripts for each job. The script is name `restic-$job`, which is `restic-daily` in our case. It will automatically load the environment variables, repository name and password from the service definition.
+
+To list snapshots we run:
 
 ```
-$ nix-shell -p restic
-```
-
-To access B2 from restic we need to set two environment variables that have the account key ID and the account key itself. Thes eare the same ones we saved in `secrets/restic/env.age`):
-
-```
-$ export B2_ACCOUNT_ID="my-id"
-$ export B2_ACCOUNT_KEY="my-key"
-```
-
-Now we can list our snapshots. Since we've manually run the backup job before, it should show that we have one snapshot:
-
-```
-$ restic -r b2:my-bucket-name snapshots
-enter password for repository:
+$ sudo restic-daily snapshots
 repository c6622116 opened (version 2, compression level auto)
 ID        Time                 Host        Tags        Paths
 -----------------------------------------------------------------------------
@@ -299,10 +287,10 @@ ID        Time                 Host        Tags        Paths
 To restore it into the `restore-backup` directory we run:
 
 ```
-$ restic -r b2:my-bucket-name restore --target restore-backup latest
+$ sudo restic-daily restore --target restore-backup latest
 ```
 
-The restored files should now be available.
+The files should be restored from the latest backup.
 
 ## Desktop notifications for failures
 
