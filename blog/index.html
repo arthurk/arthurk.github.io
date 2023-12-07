@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Blog Posts</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<h2>Blog Posts</h2>
+<p>
+  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" class="gem-c-subscription-links__icon" focusable="false" fill="currentColor" aria-hidden="true"><path d="M1.996 11A2 2 0 0 0 0 12.993c0 1.101.895 1.99 1.996 1.99 1.106 0 2-.889 2-1.99a2 2 0 0 0-2-1.993zM.002 5.097V7.97c1.872 0 3.632.733 4.958 2.059A6.984 6.984 0 0 1 7.015 15h2.888c0-5.461-4.443-9.903-9.9-9.903zM.006 0v2.876c6.676 0 12.11 5.44 12.11 12.124H15C15 6.731 8.273 0 .006 0z"></path></svg>
+  <a href="https://www.arthurkoziel.com/feed.xml">Subscribe to RSS feed</a>
+</p>
+
+<ul id="blog-archive">
+  
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/json-schemas-in-neovim/">JSON Schemas in Neovim</a>
+    <p>
+      Published: <time datetime="2023-12-07">December 07, 2023</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/restic-backups-b2-nixos/">Restic Backups on Backblaze B2 with NixOS</a>
+    <p>
+      Published: <time datetime="2023-11-29">November 29, 2023</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/managing-kubernetes-resources-in-terraform-helm-provider/">Managing Kubernetes resources in Terraform: Helm provider</a>
+    <p>
+      Published: <time datetime="2023-11-20">November 20, 2023</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/managing-kubernetes-resources-in-terraform-kubernetes-provider/">Managing Kubernetes resources in Terraform: Kubernetes provider</a>
+    <p>
+      Published: <time datetime="2023-10-20">October 20, 2023</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/creating-argo-cd-service-account/">Creating an Argo CD service account</a>
+    <p>
+      Published: <time datetime="2023-01-30">January 30, 2023</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/fixing-argocd-crd-too-long-error/">Fixing Argo CD &quot;Too long must have at most 262144 bytes&quot; error</a>
+    <p>
+      Published: <time datetime="2022-10-28">October 28, 2022</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/sync-aws-secrets-manager-to-k8s-secrets/">Sync AWS Secrets Manager to Kubernetes Secrets</a>
+    <p>
+      Published: <time datetime="2022-09-28">September 28, 2022</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/enabled-datadog-nginx-ingress-helm/">Enabling Datadog integration for ingress-nginx Helm chart</a>
+    <p>
+      Published: <time datetime="2022-08-21">August 21, 2022</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/replacing-docker-desktop-for-mac-with-colima/">Replacing Docker Desktop for Mac with Colima</a>
+    <p>
+      Published: <time datetime="2021-12-21">December 21, 2021</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/installing-nixos-on-a-macbookpro/">Installing NixOS on a MacBook Pro</a>
+    <p>
+      Published: <time datetime="2021-12-02">December 02, 2021</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/running-serenityos-on-macos/">Running SerenityOS on macOS</a>
+    <p>
+      Published: <time datetime="2021-06-04">June 04, 2021</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/running-virt-manager-and-libvirt-on-macos/">Running virt-manager and libvirt on macOS</a>
+    <p>
+      Published: <time datetime="2021-05-12">May 12, 2021</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/tutorial-tekton-triggers-with-github-integration/">Tutorial: Tekton Triggers with GitHub integration</a>
+    <p>
+      Published: <time datetime="2021-05-01">May 01, 2021</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/encrypting-k8s-secrets-with-sealed-secrets/">Tutorial: Encrypting Kubernetes Secrets with Sealed Secrets</a>
+    <p>
+      Published: <time datetime="2021-01-12">January 12, 2021</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/setting-up-argocd-with-helm/">Setting up Argo CD with Helm</a>
+    <p>
+      Published: <time datetime="2021-01-05">January 05, 2021</time>
+      
+      , Updated: <time class="date" datetime="2023-10-27">October 27, 2023</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/qemu-on-macos-big-sur/">Run QEMU on macOS 11.0 Big Sur</a>
+    <p>
+      Published: <time datetime="2020-12-18">December 18, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/convert-md-to-html-pandoc/">Convert Markdown to HTML with Pandoc</a>
+    <p>
+      Published: <time datetime="2020-11-29">November 29, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/keyboard-review-smartyao-ly092/">Smartyao LY092 Keyboard Review</a>
+    <p>
+      Published: <time datetime="2020-11-24">November 24, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/qemu-ubuntu-20-04/">Using QEMU to create a Ubuntu 20.04 Desktop VM on macOS</a>
+    <p>
+      Published: <time datetime="2020-09-20">September 20, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/vboxmanage-cli-ubuntu-20-04/">Using the VBoxManage CLI to create a Ubuntu 20.04 VM</a>
+    <p>
+      Published: <time datetime="2020-09-11">September 11, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/listing-images-and-tags-in-gcr/">Listing Images and Tags in GCR</a>
+    <p>
+      Published: <time datetime="2020-06-02">June 02, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/dockerhub-registry-api/">DockerHub Docker Registry API Examples</a>
+    <p>
+      Published: <time datetime="2020-05-10">May 10, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-2/">Creating CI Pipelines with Tekton (Part 2&#x2F;2)</a>
+    <p>
+      Published: <time datetime="2020-05-03">May 03, 2020</time>
+      
+      , Updated: <time class="date" datetime="2021-02-13">February 13, 2021</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-1/">Creating CI Pipelines with Tekton (Part 1&#x2F;2)</a>
+    <p>
+      Published: <time datetime="2020-04-26">April 26, 2020</time>
+      
+      , Updated: <time class="date" datetime="2021-02-13">February 13, 2021</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/running-knative-with-istio-in-kind/">Running Knative with Istio in a Kind Cluster</a>
+    <p>
+      Published: <time datetime="2020-04-19">April 19, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/writing-tar-gz-files-in-go/">Writing tar.gz files in Go</a>
+    <p>
+      Published: <time datetime="2020-04-12">April 12, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/notes-about-google-cloudsql-for-postgres/">Notes about Google CloudSQL for Postgres</a>
+    <p>
+      Published: <time datetime="2020-04-05">April 05, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/managing-helm-charts-with-helmfile/">Managing Helm Charts with Helmfile</a>
+    <p>
+      Published: <time datetime="2020-03-29">March 29, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/setting-up-vim-for-yaml/">Setting up Vim for YAML editing</a>
+    <p>
+      Published: <time datetime="2020-03-23">March 23, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/private-helm-repo-with-gcs-and-github-actions/">Private Helm Repo with GCS and GitHub Actions</a>
+    <p>
+      Published: <time datetime="2020-03-08">March 08, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/writing-reusable-helm-charts/">Writing Reusable Helm Charts</a>
+    <p>
+      Published: <time datetime="2020-03-01">March 01, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/pre-installed-daemons-on-google-compute-engine/">Pre-Installed Daemons on Google Compute Engine</a>
+    <p>
+      Published: <time datetime="2020-02-23">February 23, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/generating-ethereum-addresses-in-python/">Generating Ethereum Addresses in Python</a>
+    <p>
+      Published: <time datetime="2020-02-16">February 16, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/validate-helm-chart-values-with-json-schemas/">Validating Helm Chart Values with JSON Schemas</a>
+    <p>
+      Published: <time datetime="2020-02-08">February 08, 2020</time>
+      
+    </p>
+  </li>
+  
+  <li>
+    <a href="https://www.arthurkoziel.com/automl-invoice-data-extraction/">Extracting Data from Invoices with Google AutoML Natural Language</a>
+    <p>
+      Published: <time datetime="2020-02-02">February 02, 2020</time>
+      
+    </p>
+  </li>
+  
+</ul>
+
+
+</body>
+</html>

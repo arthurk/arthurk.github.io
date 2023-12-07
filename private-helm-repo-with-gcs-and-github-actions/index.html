@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Private Helm Repo with GCS and GitHub Actions</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Private Helm Repo with GCS and GitHub Actions</h1>
+    <div id="date">
+      <time class="date" datetime="2020-03-08">March 08, 2020</time>
+    
+    </div>
+  </header>
+
+  <p>In this blog post I'm going to show how to setup a private Helm chart repository on Google Cloud Storage (GCS) and use GitHub Actions to automatically push charts on new commits.</p>
+<h2 id="setting-up-the-gcs-bucket">Setting up the GCS Bucket</h2>
+<p>The first step is to create a GCS bucket that will hold our charts. We can do this over the CLI with the gcloud-sdk or over the Web UI. I'm going to use the CLI for the following examples.</p>
+<p>To make it easier to handle access permissions we use the <code>-b on</code> flag to enable uniform bucket-level access. It let's us manage permissions on a bucket-level rather than on an object-level:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ gsutil mb -b on gs://my-chart-repo-arthurk
+</span><span>Creating gs://my-chart-repo-arthurk/...
+</span></code></pre>
+<p>For Helm to be able to push charts to this bucket we need a Cloud IAM service account (with key) with <em>Storage Object Admin</em> permissions:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ gcloud iam service-accounts create my-chart-repo-svc-acc
+</span><span>Created service account [my-chart-repo-svc-acc].
+</span><span>
+</span><span>$ gcloud iam service-accounts keys create service-account.json --iam-account=my-chart-repo-svc-acc@PROJECT.iam.gserviceaccount.com
+</span><span>created key [123123123] of type [json] as [service-account.json] for [my-chart-repo-svc-acc@PROJECT.iam.gserviceaccount.com]
+</span><span>
+</span><span>$ gsutil iam ch serviceAccount:my-chart-repo-svc-acc@PROJECT.iam.gserviceaccount.com:roles/storage.objectAdmin gs://my-chart-repo-arthurk
+</span></code></pre>
+<p>When referring to the service account we have to use the email (not the name) which has the format <code>SERVICE_ACCOUNT_NAME@PROJECT_ID.iam.gserviceaccount.com</code>.</p>
+<h2 id="setting-up-github-actions">Setting up GitHub Actions</h2>
+<p>In this step we're going to setup GitHub Actions to detect charts that have changed and add them to our helm repo.</p>
+<p>We start by creating the <code>.github/workflows/helm-ci.yml</code> file and add:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">Helm Charts
+</span><span style="color:#bd93f9;">on</span><span>: [</span><span style="color:#f1fa8c;">push</span><span>]
+</span><span>
+</span><span style="color:#ff79c6;">jobs</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">release</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">Release
+</span><span>    </span><span style="color:#ff79c6;">runs-on</span><span>: </span><span style="color:#f1fa8c;">ubuntu-latest
+</span><span>    </span><span style="color:#ff79c6;">steps</span><span>:
+</span><span>      - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">Checkout
+</span><span>        </span><span style="color:#ff79c6;">uses</span><span>: </span><span style="color:#f1fa8c;">actions/checkout@v2
+</span><span>        </span><span style="color:#ff79c6;">with</span><span>:
+</span><span>          </span><span style="color:#ff79c6;">fetch-depth</span><span>: </span><span style="color:#bd93f9;">2
+</span></code></pre>
+<p>By default the checkout action will clone the repo with a detached HEAD. To later compare files that have changed between the current HEAD and the previous commit we have to pass <code>fetch-depth: 2</code> to the action.</p>
+<p>After pushing the code we can open GitHub Actions in the browser and check the workflow. It should look like this:</p>
+<p><img src="https://www.arthurkoziel.com/private-helm-repo-with-gcs-and-github-actions/gh-actions-1.png" alt="GitHub Actions checkout step finished successfully" /></p>
+<h2 id="installing-helm-and-helm-gcs">Installing Helm and helm-gcs</h2>
+<p>The next step in the CI pipeline is to install Helm and the <a href="https://github.com/hayorov/helm-gcs">helm-gcs plugin</a>. We add the following step to our workflow:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">Install helm and plugins
+</span><span>  </span><span style="color:#ff79c6;">run</span><span>: </span><span style="color:#f1fa8c;">./scripts/install.sh
+</span></code></pre>
+<p>and then create the <code>scripts/install.sh</code> file with the following content:</p>
+<pre data-lang="bash" style="background-color:#282a36;color:#f8f8f2;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#6272a4;">#!/usr/bin/env bash
+</span><span>
+</span><span style="color:#8be9fd;">set </span><span style="font-style:italic;color:#ffb86c;">-o</span><span> errexit
+</span><span>
+</span><span style="color:#ffffff;">HELM_VERSION</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">3.1.1
+</span><span style="color:#ffffff;">HELM_GCS_VERSION</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">0.3.1
+</span><span>
+</span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;Installing Helm...&quot;
+</span><span style="color:#50fa7b;">wget</span><span style="font-style:italic;color:#ffb86c;"> -q</span><span> https://get.helm.sh/helm-v${</span><span style="color:#ffffff;">HELM_VERSION</span><span>}-linux-amd64.tar.gz
+</span><span style="color:#50fa7b;">tar</span><span style="font-style:italic;color:#ffb86c;"> -zxf</span><span> helm-v${</span><span style="color:#ffffff;">HELM_VERSION</span><span>}-linux-amd64.tar.gz
+</span><span style="color:#50fa7b;">sudo</span><span> mv linux-amd64/helm /usr/local/bin/helm
+</span><span style="color:#50fa7b;">helm</span><span> version
+</span><span>
+</span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;Installing helm-gcs plugin...&quot;
+</span><span style="color:#50fa7b;">helm</span><span> plugin install https://github.com/hayorov/helm-gcs</span><span style="font-style:italic;color:#ffb86c;"> --version </span><span>${</span><span style="color:#ffffff;">HELM_GCS_VERSION</span><span>}
+</span></code></pre>
+<p>Set <code>chmod u+x scripts/install.sh</code> and push the file. We can check GitHub Actions to make sure everything installed correctly:</p>
+<p><img src="https://www.arthurkoziel.com/private-helm-repo-with-gcs-and-github-actions/gh-actions-2.png" alt="GitHub Actions showing that helm and helm-gcs have been installed successfully" /></p>
+<p>This shows us that Helm 3.1.1 and helm-gcs 0.3.0 have been successfully installed</p>
+<h2 id="initializing-the-helm-repository">Initializing the helm repository</h2>
+<p>We can now initialize the helm repository. For this to work we need to add our previously created service account key to GitHub. To do this we navigate to the repository and click on <strong>&quot;Settings&quot; → &quot;Secrets&quot; → &quot;Add a new secret&quot;</strong>. There we set the name to be <code>GCLOUD_SERVICE_ACCOUNT_KEY</code> and as a value add the content of the service-account.json file. After saving the secret it should look like this:</p>
+<p><img src="https://www.arthurkoziel.com/private-helm-repo-with-gcs-and-github-actions/gh-actions-3.png" alt="GitHub showing that a secret has been added to the project" /></p>
+<p>We can now modify the workflow to pass the secret as an environment variable to our next shell script:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">Release charts
+</span><span>  </span><span style="color:#ff79c6;">run</span><span>: </span><span style="color:#f1fa8c;">./scripts/release.sh
+</span><span>  </span><span style="color:#ff79c6;">env</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">GCLOUD_SERVICE_ACCOUNT_KEY</span><span>: </span><span style="color:#f1fa8c;">${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
+</span></code></pre>
+<p>In the release.sh script we save the service account to a file and point the <code>GOOGLE_APPLICATION_CREDENTIALS</code> environment variable to it. This is needed for helm-gcs plugin to authenticate. Afterwards we initialize the GCS repo which will create an empty <code>index.yaml</code> file in the GCS bucket. Finally we can add the repo to helm so it can access its packages.</p>
+<pre data-lang="bash" style="background-color:#282a36;color:#f8f8f2;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#6272a4;">#!/usr/bin/env bash
+</span><span>
+</span><span style="color:#8be9fd;">set </span><span style="font-style:italic;color:#ffb86c;">-o</span><span> errexit
+</span><span style="color:#8be9fd;">set </span><span style="font-style:italic;color:#ffb86c;">-o</span><span> nounset
+</span><span style="color:#8be9fd;">set </span><span style="font-style:italic;color:#ffb86c;">-o</span><span> pipefail
+</span><span>
+</span><span style="color:#ffffff;">GCS_BUCKET_NAME</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">&quot;gs://my-chart-repo-arthurk&quot;
+</span><span>
+</span><span style="color:#6272a4;"># setup service account for helm-gcs plugin
+</span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;${</span><span style="color:#ffffff;">GCLOUD_SERVICE_ACCOUNT_KEY</span><span style="color:#f1fa8c;">}&quot; </span><span style="color:#ff79c6;">&gt;</span><span> svc-acc.json
+</span><span style="color:#ff79c6;">export </span><span style="color:#ffffff;">GOOGLE_APPLICATION_CREDENTIALS</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">svc-acc.json
+</span><span>
+</span><span style="color:#6272a4;"># initializing helm repo
+</span><span style="color:#6272a4;"># (only needed on first run but will do nothing if already exists)&lt;/span&gt;
+</span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;Initializing helm repo&quot;
+</span><span style="color:#50fa7b;">helm</span><span> gcs init ${</span><span style="color:#ffffff;">GCS_BUCKET_NAME</span><span>}
+</span><span>
+</span><span style="color:#6272a4;"># add gcs bucket as helm repo
+</span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;Adding gcs bucket repo ${</span><span style="color:#ffffff;">GCS_BUCKET_NAME</span><span style="color:#f1fa8c;">}&quot;
+</span><span style="color:#50fa7b;">helm</span><span> repo add private ${</span><span style="color:#ffffff;">GCS_BUCKET_NAME</span><span>}
+</span></code></pre>
+<p>Before committing the file make sure to mark it as executable with <code>chmod u+x scripts/release.sh</code>.</p>
+<h2 id="packaging-and-pushing-changed-charts">Packaging and Pushing changed Charts</h2>
+<p>In the final step of our CI script we need to identify which charts have changed and then package and push them to the helm repo. We do this by running <code>git diff</code> on the previous revision with the following arguments:</p>
+<ul>
+<li><code>--find-renames</code> detect if a file has been renamed</li>
+<li><code>--diff-filter=d</code> will ignore deleted files (we can't package/push a deleted chart)</li>
+<li><code>--name-only</code> only print the name of the changed file</li>
+<li><code>cut -d '/' -f 2 | uniq</code> we only need unique directory names of files that have changed</li>
+</ul>
+<p>We add the following content to the release.sh file:</p>
+<pre data-lang="bash" style="background-color:#282a36;color:#f8f8f2;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#ffffff;">prev_rev</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">$(</span><span style="color:#50fa7b;">git</span><span style="color:#f1fa8c;"> rev-parse HEAD^)
+</span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;Identifying changed charts since git rev ${</span><span style="color:#ffffff;">prev_rev</span><span style="color:#f1fa8c;">}&quot;
+</span><span>
+</span><span style="color:#ffffff;">changed_charts</span><span style="color:#ff79c6;">=</span><span>()
+</span><span style="color:#8be9fd;">readarray </span><span style="font-style:italic;color:#ffb86c;">-t</span><span> changed_charts </span><span style="color:#ff79c6;">&lt;&lt;&lt; </span><span style="color:#f1fa8c;">&quot;$(</span><span style="color:#50fa7b;">git</span><span style="color:#f1fa8c;"> diff</span><span style="font-style:italic;color:#ffb86c;"> --find-renames --diff-filter</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">d</span><span style="font-style:italic;color:#ffb86c;"> --name-only </span><span style="color:#f1fa8c;">&quot;$</span><span style="color:#ffffff;">prev_rev</span><span style="color:#f1fa8c;">&quot;</span><span style="color:#ff79c6;"> --</span><span style="color:#f1fa8c;"> charts </span><span style="color:#ff79c6;">| </span><span style="color:#50fa7b;">cut</span><span style="font-style:italic;color:#ffb86c;"> -d </span><span style="color:#f1fa8c;">&#39;/&#39;</span><span style="font-style:italic;color:#ffb86c;"> -f</span><span style="color:#f1fa8c;"> 2 </span><span style="color:#ff79c6;">| </span><span style="color:#50fa7b;">uniq</span><span style="color:#f1fa8c;">)&quot;
+</span><span>
+</span><span style="color:#ff79c6;">if </span><span style="color:#8be9fd;">[[ </span><span style="font-style:italic;color:#ffb86c;">-n </span><span style="color:#f1fa8c;">&quot;${</span><span style="color:#ffffff;">changed_charts[</span><span style="color:#bd93f9;">*</span><span style="color:#ffffff;">]</span><span style="color:#f1fa8c;">}&quot; </span><span style="color:#8be9fd;">]]</span><span style="color:#ff79c6;">; then
+</span><span>    </span><span style="color:#ff79c6;">for</span><span> chart </span><span style="color:#ff79c6;">in </span><span style="color:#f1fa8c;">&quot;${</span><span style="color:#ffffff;">changed_charts[</span><span style="color:#bd93f9;">@</span><span style="color:#ffffff;">]</span><span style="color:#f1fa8c;">}&quot;</span><span style="color:#ff79c6;">; do
+</span><span>        </span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;Packaging chart &#39;$</span><span style="color:#ffffff;">chart</span><span style="color:#f1fa8c;">&#39;...&quot;
+</span><span>        </span><span style="color:#ffffff;">chart_file</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">$(</span><span style="color:#50fa7b;">helm</span><span style="color:#f1fa8c;"> package &quot;charts/$</span><span style="color:#ffffff;">chart</span><span style="color:#f1fa8c;">&quot; </span><span style="color:#ff79c6;">| </span><span style="color:#50fa7b;">awk </span><span style="color:#f1fa8c;">&#39;{print $NF}&#39;)
+</span><span>
+</span><span>        </span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;Pushing $</span><span style="color:#ffffff;">chart_file</span><span style="color:#f1fa8c;">...&quot;
+</span><span>        </span><span style="color:#50fa7b;">helm</span><span> gcs push </span><span style="color:#f1fa8c;">&quot;$</span><span style="color:#ffffff;">chart_file</span><span style="color:#f1fa8c;">&quot;</span><span> private
+</span><span>    </span><span style="color:#ff79c6;">done
+</span><span style="color:#ff79c6;">else
+</span><span>    </span><span style="color:#8be9fd;">echo </span><span style="color:#f1fa8c;">&quot;No chart changes detected&quot;
+</span><span style="color:#ff79c6;">fi
+</span></code></pre>
+<p>Commit and push the changes. After the CI run has finished, the GCS bucket will be initialized and have an <code>index.yaml</code> file in it. This file is an index of all the helm charts in the repo. As we currently have no charts indexed it has the following content:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ gsutil cat gs://my-chart-repo-arthurk/index.yaml
+</span><span>apiVersion: v1
+</span><span>entries: {}
+</span><span>generated: &quot;2020-03-08T06:51:49.496564824Z&quot;&lt;/span&gt;
+</span></code></pre>
+<h2 id="releasing-our-first-chart">Releasing our first chart</h2>
+<p>We can now create and add the first chart to our helm repository. We do this by creating a <em>chart/</em> directory and running <code>helm create</code> to create an example chart:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ mkdir charts
+</span><span>$ helm create charts/foo
+</span><span>Creating charts/foo&lt;/span&gt;
+</span></code></pre>
+<p>Add, commit and push all new files, then check GitHub Actions. It will show us that the chart was successfully packaged and pushed to the repo:</p>
+<p><img src="https://www.arthurkoziel.com/private-helm-repo-with-gcs-and-github-actions/gh-actions-4.png" alt="GitHub Actions showing that the chart has been successfully added to the repo" /></p>
+<p>Note that it's not possible to push the same chart version to the same repo. The push will fail. We need to always make sure to increase the <code>version</code> value in the <code>Chart.yaml</code> file when releasing a new chart.</p>
+<h2 id="trying-it-out">Trying it out</h2>
+<p>To try out our private helm repo we can add it to helm on our client machine and list the repo contents:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ helm plugin install https://github.com/hayorov/helm-gcs
+</span><span>$ gcloud auth application-default login
+</span><span>$ helm repo add private-repo gs://my-chart-repo-arthurk
+</span><span>$ helm repo update
+</span><span>$ helm search repo private-repo -l
+</span><span>NAME            	CHART VERSION	APP VERSION	DESCRIPTION
+</span><span>private-repo/foo	0.1.0        	1.16.0     	A Helm chart for Kubernetes&lt;/span&gt;
+</span></code></pre>
+<p>As you can see the chart was successfully added to the registry. It can now be used as any other chart, for example by installing it with <code>helm install private-repo/foo --version 0.1.0</code>.</p>
+<p>The source code for all examples is available <a href="https://github.com/arthurk/private-gcs-helm">in this GitHub repo</a>.</p>
+
+</article>
+
+
+</body>
+</html>

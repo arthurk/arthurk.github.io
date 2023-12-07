@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Installing NixOS on a MacBook Pro</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Installing NixOS on a MacBook Pro</h1>
+    <div id="date">
+      <time class="date" datetime="2021-12-02">December 02, 2021</time>
+    
+    </div>
+  </header>
+
+  <p>In this blog post, I'm going to share how to install NixOS 21.11 on an early-2013
+MacBook Pro. </p>
+<p>The specs of the laptop are:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Model Identifier:	MacBookPro10,1
+</span><span>Processor Name:	Quad-Core Intel Core i7
+</span><span>Processor Speed:	2.7 GHz
+</span><span>Total Number of Cores:	4
+</span><span>Memory:	16 GB
+</span><span>Chipset Model:	Intel HD Graphics 4000
+</span><span>Chipset Model:	NVIDIA GeForce GT 650M
+</span><span>Wifi:	Broadcom BCM4331
+</span></code></pre>
+<p>The setup will dual-boot macOS and NixOS. This guide will show how to install
+the base system (without GUI) with a working wifi connection.</p>
+<h2 id="creating-a-custom-installation-iso">Creating a custom installation ISO</h2>
+<p>The NixOS installation CD doesn't ship with any proprietary software, and is
+therefore missing the driver for the Broadcom BCM4331 wifi card. </p>
+<p>To solve this problem, I decided to build a custom installation CD 
+that is based on the NixOS minimal installation CD but with the required
+Broadcom drivers included.</p>
+<h3 id="virtualbox">VirtualBox</h3>
+<p>Building the custom image can't be done on macOS, so we have to download the
+<a href="https://nixos.org/download.html#nixos-virtualbox">NixOS VirtualBox image</a>
+appliance and import it into VirtualBox. </p>
+<p>The NixOS VirtualBox image already includes the Guest Additions, which allow USB
+port forwarding (necessary to flash the resulting ISO on a USB drive) and
+clipboard sharing between host and guest.</p>
+<p>When importing the OVA file into VirtualBox, make sure to increase the amount of
+CPU cores (the default is 1 core) to speed up the build process.</p>
+<p>After starting the VM, we'll notice that the text in KDE is too small due to the
+MacBook's Retina screen. We can fix this by going to Settings -&gt; System
+Settings -&gt; Display and Monitor and setting the Global Scale to 200%.</p>
+<p>To enable shared clipboard in VirtualBox, go to the menu bar and click on Devices
+-&gt; Shared Clipboard -&gt; Bidirectional.</p>
+<h3 id="installation-cd-nix-configuration">Installation CD Nix configuration</h3>
+<p>Open the terminal (Konsole) and create a file called <code>iso.nix</code> with
+the following content:</p>
+<pre data-lang="nix" style="background-color:#282a36;color:#f8f8f2;" class="language-nix "><code class="language-nix" data-lang="nix"><span>{ </span><span style="font-style:italic;color:#ffb86c;">config</span><span style="color:#ff79c6;">, </span><span style="font-style:italic;color:#ffb86c;">pkgs</span><span style="color:#ff79c6;">, ... </span><span>}:
+</span><span>
+</span><span>{
+</span><span>  </span><span style="color:#50fa7b;">imports </span><span style="color:#ff79c6;">= </span><span>[
+</span><span>    </span><span style="color:#f1fa8c;">&lt;nixpkgs/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix&gt;
+</span><span>    </span><span style="color:#f1fa8c;">&lt;nixpkgs/nixos/modules/installer/cd-dvd/channel.nix&gt;
+</span><span>  ];
+</span><span>
+</span><span>  </span><span style="color:#50fa7b;">nixpkgs</span><span>.</span><span style="color:#50fa7b;">config</span><span>.</span><span style="color:#50fa7b;">allowUnfree </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true</span><span>;
+</span><span>  </span><span style="color:#50fa7b;">boot</span><span>.</span><span style="color:#50fa7b;">kernelModules </span><span style="color:#ff79c6;">= </span><span>[ </span><span style="color:#f1fa8c;">&quot;wl&quot; </span><span>];
+</span><span>  </span><span style="color:#50fa7b;">boot</span><span>.</span><span style="color:#50fa7b;">extraModulePackages </span><span style="color:#ff79c6;">= </span><span>[ </span><span style="font-style:italic;color:#ffb86c;">config</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">boot</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">kernelPackages</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">broadcom_sta </span><span>];
+</span><span>  </span><span style="color:#50fa7b;">boot</span><span>.</span><span style="color:#50fa7b;">blacklistedKernelModules </span><span style="color:#ff79c6;">= </span><span>[ </span><span style="color:#f1fa8c;">&quot;b43&quot; &quot;bcma&quot; </span><span>];
+</span><span>}
+</span></code></pre>
+<p>Note that vim is not installed by default. Either use <code>nano</code> or run <code>nix-shell -p vim</code>.</p>
+<p>I've blacklisted the open-source Broadcom drivers since they would
+otherwise be loaded during boot and throw errors about unsupported
+hardware.</p>
+<p>To build the ISO image, run the following command:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>sudo nix-build &#39;&lt;nixpkgs/nixos&gt;&#39; -A config.system.build.isoImage -I nixos-config=iso.nix
+</span></code></pre>
+<p>The password is <code>demo</code>.</p>
+<p>After the build process is finished, the ISO can be found in the <code>result/iso/</code> directory:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>result/iso/nixos-21.11.333823.96b4157790f-x86_64-linux.iso
+</span></code></pre>
+<h2 id="flashing-the-iso-to-a-usb-drive">Flashing the ISO to a USB drive</h2>
+<p>Insert a FAT32 formatted USB drive and enable VirtualBox USB forwarding by
+clicking in the VirtualBox menubar under Devices -&gt; USB -&gt; Generic Mass Storage.
+A popup should show up in KDE with the option to mount the drive.</p>
+<p>We need to find the interface name of our USB drive:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ sudo fdisk -l
+</span><span>
+</span><span>Disk /dev/sdb: 7.5 GiB, 8053063680 bytes, 15728640 sectors
+</span><span>Disk model: Flash Disk      
+</span><span>...
+</span><span>Device     Boot Start      End  Sectors  Size Id Type
+</span><span>/dev/sdb1        2048 15728639 15726592  7.5G  b W95 FAT32
+</span></code></pre>
+<p>Look for <code>Flash Disk</code>. In my case, the interface name is <code>/dev/sdb</code>.</p>
+<p>Copy the ISO image to the USB drive:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ sudo dd if=result/iso/nixos-21.11.333823.96b4157790f-x86_64-linux.iso of=/dev/sdb bs=4M
+</span><span>
+</span><span>191+1 records in
+</span><span>191+1 records out
+</span><span>803209216 bytes (803 MB, 766 MiB) copied, 68.3789 s, 11.7 MB/s
+</span></code></pre>
+<p>After the process is finished, we can eject the USB drive and power off the VM:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>eject /dev/sdb
+</span><span>poweroff
+</span></code></pre>
+<h2 id="creating-partitions">Creating partitions</h2>
+<p>I used <code>Disk Utility</code> to shrink the macOS partition, and left one
+quarter of the available disk space for the NixOS system:</p>
+<p><img src="https://www.arthurkoziel.com/installing-nixos-on-a-macbookpro/partitions.jpg" alt="Disk Utility showing partitions" /></p>
+<p>I then used <code>gdisk</code> (install with <code>brew install gptfdisk</code>) to create a root partition and a
+4 GB swap partition for NixOS.</p>
+<p>This is the initial partition layout before running any commands:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ sudo gdisk /dev/sda
+</span><span>
+</span><span>Command (? for help): p
+</span><span>Disk /dev/disk0: 977105060 sectors, 465.9 GiB
+</span><span>...
+</span><span>Total free space is 244346569 sectors (116.5 GiB)
+</span><span>
+</span><span>Number  Start (sector)    End (sector)  Size       Code  Name
+</span><span>   1              40          409639   200.0 MiB   EF00  EFI system partition
+</span><span>   2          409640       732758463   349.2 GiB   AF0A  Macintosh HD
+</span></code></pre>
+<p>To create the root partition:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Command (? for help): n
+</span><span>Partition number (3-128, default 3): 
+</span><span>First sector (34-977105026, default = 732758464) or {+-}size{KMGTP}: 
+</span><span>Last sector (732758464-977105026, default = 977105026) or {+-}size{KMGTP}: -4G
+</span><span>Current type is AF00 (Apple HFS/HFS+)
+</span><span>Hex code or GUID (L to show codes, Enter = AF00): 8300
+</span><span>Changed type of partition to &#39;Linux filesystem&#39;
+</span></code></pre>
+<p>To create the swap partition:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Command (? for help): n
+</span><span>Partition number (4-128, default 4): 
+</span><span>First sector (34-977105026, default = 968716424) or {+-}size{KMGTP}: 
+</span><span>Last sector (968716424-977105026, default = 977105026) or {+-}size{KMGTP}: 
+</span><span>Current type is AF00 (Apple HFS/HFS+)
+</span><span>Hex code or GUID (L to show codes, Enter = AF00): 8200
+</span><span>Changed type of partition to &#39;Linux swap&#39;
+</span></code></pre>
+<p>The resulting layout should look like this:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Command (? for help): p
+</span><span>Disk /dev/disk0: 977105060 sectors, 465.9 GiB
+</span><span>...
+</span><span>Total free space is 11 sectors (5.5 KiB)
+</span><span>
+</span><span>Number  Start (sector)    End (sector)  Size       Code  Name
+</span><span>   1              40          409639   200.0 MiB   EF00  EFI system partition
+</span><span>   2          409640       732758463   349.2 GiB   AF0A  Macintosh HD
+</span><span>   3       732758464       968716418   112.5 GiB   8300  Linux filesystem
+</span><span>   4       968716424       977105026   4.0 GiB     8200  Linux swap
+</span></code></pre>
+<p>Remember the device name and the partition numbers, we'll need them later during
+the NixOS installation when creating the file system. In my case, the root
+file system is at <code>/dev/sda3</code> and swap is at <code>/dev/sda4</code>.</p>
+<h2 id="installing-refind">Installing rEFInd</h2>
+<p>To dual-boot macOS and NixOS, I'm using rEFInd as the EFI bootloader.</p>
+<p>It can be downloaded from the <a href="https://www.rodsbooks.com/refind/getting.html">rEFInd
+website</a> as a binary zip file.
+After unpacking the file, we can install it by running the <code>refind-install</code>
+command:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ ./refind-install
+</span><span>
+</span><span>Not running as root; attempting to elevate privileges via sudo....
+</span><span>Password:
+</span><span>ShimSource is none
+</span><span>Installing rEFInd on macOS....
+</span><span>Installing rEFInd to the partition mounted at /Volumes/ESP
+</span><span>Found rEFInd installation in /Volumes/ESP/EFI/refind; upgrading it.
+</span><span>Found suspected Linux partition(s); installing ext4fs driver.
+</span><span>Installing driver for ext4 (ext4_x64.efi)
+</span><span>Copied rEFInd binary files
+</span></code></pre>
+<h2 id="boot-into-usb-drive">Boot into USB drive</h2>
+<p>To boot into the NixOS installation image, plug in the USB drive and restart the
+computer, then select the USB drive in the boot menu.</p>
+<p>You'll notice that the terminal font is very small (due to the retina screen).
+We can make it larger with:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>setfont ter-v32n
+</span></code></pre>
+<h2 id="formatting-and-mounting-partitions">Formatting and mounting partitions</h2>
+<p>Next we need to format our partitions and mount them. I chose ext4 as a
+file system and used LUKS to encrypt the disk: </p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># format with luks and open the encrypted partition
+</span><span>cryptsetup luksFormat /dev/sda3
+</span><span>cryptsetup open /dev/sda3 nixosroot
+</span><span>
+</span><span># create filesystem
+</span><span>mkfs.ext4 /dev/mapper/nixosroot
+</span><span>
+</span><span># mount partition
+</span><span>mount /dev/mapper/nixosroot /mnt
+</span><span>mkdir /mnt/boot
+</span><span>mount /dev/sda1 /mnt/boot
+</span></code></pre>
+<p>Set up the swap area and turn on swapping:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>mkswap -L nixosswap /dev/sda4
+</span><span>swapon /dev/disk/by-label/nixosswap
+</span></code></pre>
+<h2 id="enable-wifi-networking">Enable Wifi Networking</h2>
+<p>We enable wifi networking since NixOS needs internet access for the installation.</p>
+<p>In our custom installation image, the proprietary Broadcom <code>wl</code> kernel module
+will automatically load during boot. In the terminal we need to connect to a wifi
+network using <code>wpa_supplicant</code>:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># get the wifi interface name. for me it is `wlp4s0`
+</span><span>ip link
+</span><span>
+</span><span># connect to wifi network. replace `myssid` and `mypassword`
+</span><span>wpa_supplicant -B -i wlp4s0 -c &lt;(wpa_passphrase &quot;myssid&quot; &quot;mypassword&quot;)
+</span></code></pre>
+<p>This will start <code>wpa_supplicant</code> as a background process. After we've installed
+the system we will set it up as a daemon.</p>
+<h2 id="nixos-installation">NixOS installation</h2>
+<p>We generate a NixOS configuration file template:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>nixos-gen --config --root /mnt
+</span></code></pre>
+<p>Then edit <code>/mnt/etc/nixos/configuration.nix</code> and add the following settings:</p>
+<pre data-lang="nix" style="background-color:#282a36;color:#f8f8f2;" class="language-nix "><code class="language-nix" data-lang="nix"><span>{
+</span><span>  </span><span style="color:#50fa7b;">boot</span><span>.</span><span style="color:#50fa7b;">loader</span><span>.</span><span style="color:#50fa7b;">grub</span><span>.</span><span style="color:#50fa7b;">enable </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">false</span><span>;
+</span><span>  </span><span style="color:#50fa7b;">boot</span><span>.</span><span style="color:#50fa7b;">loader</span><span>.</span><span style="color:#50fa7b;">systemd-boot</span><span>.</span><span style="color:#50fa7b;">enable </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true</span><span>;
+</span><span>  </span><span style="color:#50fa7b;">boot</span><span>.</span><span style="color:#50fa7b;">loader</span><span>.</span><span style="color:#50fa7b;">efi</span><span>.</span><span style="color:#50fa7b;">canTouchEfiVariables </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true</span><span>;
+</span><span>
+</span><span>  </span><span style="color:#6272a4;"># the default governor constantly runs all cores on max frequency
+</span><span>  </span><span style="color:#6272a4;"># schedutil will run at a lower frequency and boost when needed
+</span><span>  </span><span style="color:#50fa7b;">powerManagement</span><span>.</span><span style="color:#50fa7b;">cpuFreqGovernor </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;schedutil&quot;</span><span>;
+</span><span>
+</span><span>  </span><span style="color:#6272a4;"># install wpa_supplicant
+</span><span>  </span><span style="color:#50fa7b;">networking</span><span>.</span><span style="color:#50fa7b;">wireless</span><span>.</span><span style="color:#50fa7b;">enable </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true</span><span>;
+</span><span>
+</span><span>  </span><span style="color:#6272a4;"># allow unfree packages (broadcom wifi drivers)
+</span><span>  </span><span style="color:#50fa7b;">nixpkgs</span><span>.</span><span style="color:#50fa7b;">config</span><span>.</span><span style="color:#50fa7b;">allowUnfree </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true</span><span>;
+</span><span>}
+</span></code></pre>
+<p>Start the installation:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>nixos-install
+</span></code></pre>
+<p>After the installation is done, we can reboot the system and select the new NixOS
+installation from the boot menu.</p>
+<h2 id="wifi-setup">Wifi setup</h2>
+<p>After we've booted into our new system. we need to setup the wifi connection
+(again).</p>
+<p>We can use the same command as before (minus the <code>-B</code> flag) and write it to the
+<code>wpa_supplicant.conf</code> file which will automatically get loaded when
+<code>wpa_supplicant</code> starts during boot:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>wpa_supplicant -i wlp4s0 -c &lt;(wpa_passphrase &quot;myssid&quot; &quot;mypassword&quot;) &gt;
+</span><span>/etc/wpa_supplicant.conf
+</span><span>
+</span><span>systemctl restart wpa_supplicant.service
+</span></code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>Installing NixOS on the MacBook Pro was a great learning experience and
+fairly easy to do.</p>
+<p>Most things work fine out of the box. However, I've experienced significantly
+lower battery life and louder fans due to higher (~15C) CPU idle temperatures
+and not being able to switch GPUs on-demand (Nvidia GPU is always active).
+These problems are not specific to NixOS, I've experienced the same issues in other major distributions on this laptop.</p>
+<h2 id="links">Links</h2>
+<p>The following sites were very helpful when trying to install NixOS:</p>
+<ul>
+<li><a href="https://wiki.archlinux.org/title/MacBookPro10,x">ArchWiki page on MacBookPro10,x</a></li>
+<li><a href="https://thoughtbot.com/blog/install-linux-on-a-macbook-air">Install Linux on a MacBook Air</a></li>
+<li><a href="https://unencumberedbyfacts.com/2013/08/16/linux-on-a-macbook-pro-101/">Linux On A Macbook Pro 10,1</a></li>
+</ul>
+
+</article>
+
+
+</body>
+</html>

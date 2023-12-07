@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Running virt-manager and libvirt on macOS</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Running virt-manager and libvirt on macOS</h1>
+    <div id="date">
+      <time class="date" datetime="2021-05-12">May 12, 2021</time>
+    
+    </div>
+  </header>
+
+  <p>I've previously written about <a href="https://www.arthurkoziel.com/qemu-ubuntu-20-04/">using QEMU on macOS to create an Ubuntu VM</a> via
+CLI. In this blog post I'm going to describe how to install <a href="https://libvirt.org/">libvirt</a> and
+<a href="https://virt-manager.org/">virt-manager</a> on macOS to create an <a href="https://ubuntu.com/">Ubuntu</a> VM via <a href="https://www.qemu.org/">QEMU</a> from the virt-manager GUI.</p>
+<p>What's described in this blog post was an experiment to see if it would
+work. Running libvirt locally is very slow and not usable due to the missing
+support for the HVF
+<a href="https://developer.apple.com/documentation/hypervisor">Hypervisor.Framework</a>.
+The developers of virt-manager (Red Hat) are not testing on macOS and
+it will break on major updates.</p>
+<p>If you're only interested in running virt-manager on macOS (and connect to remote machines) you can skip the steps after the virt-manager installation.</p>
+<p><img src="https://www.arthurkoziel.com/running-virt-manager-and-libvirt-on-macos/ubuntu-desktop.png" alt="Ubuntu Desktop" /></p>
+<h2 id="description">Description</h2>
+<p>Libvirt uses a hypervisor (such as QEMU) to run a VM and provides an API to
+manage it. API Clients are available for many languages such as Python, Go or
+Rust.</p>
+<p>Virt-manager is a Python application that provides a GUI to manage VMs though
+the libvirt API.</p>
+<h2 id="installation">Installation</h2>
+<p>Libvirt is available in Homebrew and the installation
+can be done with a single command:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>brew install libvirt
+</span></code></pre>
+<p>Virt-manager is not available in Homebrew but there's a <a href="https://github.com/jeffreywildman/homebrew-virt-manager">custom
+formula</a> available that makes it
+convenient to install it. However, this formula is outdated and
+fails to run on macOS Catalina and Big Sur.</p>
+<p>To fix this I've <a href="https://github.com/arthurk/homebrew-virt-manager">created a fork</a> with
+updated dependencies. It can be installed via a custom tap:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>brew tap arthurk/homebrew-virt-manager
+</span><span>brew install virt-manager virt-viewer
+</span></code></pre>
+<p>The installation might take a few minutes due to many dependencies.</p>
+<h2 id="usage">Usage</h2>
+<p>When the installation has finished we can test it by starting the libvirtd daemon:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>brew services start libvirt
+</span></code></pre>
+<p>and then virt-manager with a connection to it:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>virt-manager -c &quot;qemu:///session&quot; --no-fork
+</span></code></pre>
+<p>The original Homebrew formula had a custom patch applied that made <code>--no-fork</code>
+the default behaviour (launching it in the foreground). To make it easier to
+maintain the formula I've removed the patch. If the process should run in the
+foreground the <code>--no-fork</code> argument needs to be specified or else it will run in
+the background.</p>
+<p>Note that the virt-manager window will be hidden after starting. It will show up
+in the Dock (the icon is a rocket) and clicking on it will bring it into the
+foreground.</p>
+<h2 id="creating-a-vm">Creating a VM</h2>
+<p>As an example I'm creating a Ubuntu 20.10 VM.</p>
+<p>Virt-manager assumes that <a href="https://www.spice-space.org/">SPICE</a> is available and will add it to the default
+settings. However, it's is not supported on macOS and therefore we need to change a
+the default values to remove all SPICE related settings:</p>
+<p>Make sure to check the customize box before starting the VM:</p>
+<p><img src="https://www.arthurkoziel.com/running-virt-manager-and-libvirt-on-macos/customize.png" alt="virt-manager window before creating the VM, showing the customize checkbox" /></p>
+<p>In the customization window we need to remove all hardware related to SPICE (Right-Click -&gt; Remove Hardware):</p>
+<ul>
+<li>Channel spice</li>
+<li>USB Redirector 1</li>
+<li>USB Redirector 2</li>
+</ul>
+<p><img src="https://www.arthurkoziel.com/running-virt-manager-and-libvirt-on-macos/settings-remove-hardware.png" alt="virt-manager settings with annotation about which hardware to remove" /></p>
+<p>In the <strong>Display</strong> section set the type to VNC server:</p>
+<p><img src="https://www.arthurkoziel.com/running-virt-manager-and-libvirt-on-macos/settings-display.png" alt="virt-manager settings showing the display section" /></p>
+<p>In the <strong>Video</strong> section set the model to Virtio:</p>
+<p><img src="https://www.arthurkoziel.com/running-virt-manager-and-libvirt-on-macos/settings-video.png" alt="virt-manager settings showing the video section" /></p>
+<p>Apply these changes and click on <em>Begin Installation</em> in the top left corner. It
+will open a window that boots into the Ubuntu installer. From there on we can
+follow the installer. The default settings are usually fine.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>As mentioned above this was an experiment. The VM runs very slow due to the missing support for HVF (Hypervisor.Framework). The
+focus of libvirt is on KVM/Linux hosts. I wouldn't use it on a daily
+basis on macOS and instead stick to the QEMU CLI with HVF set as the accelerator. You can
+check my <a href="https://www.arthurkoziel.com/qemu-ubuntu-20-04/">previous blog post</a> on how to do that.</p>
+
+</article>
+
+
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Setting up Argo CD with Helm</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Setting up Argo CD with Helm</h1>
+    <div id="date">
+      <time class="date" datetime="2021-01-05">January 05, 2021</time>
+    
+    <strong>(Updated: <time class="date" datetime="2023-10-27">October 27, 2023)</time></strong>
+    
+    </div>
+  </header>
+
+  <p><img src="https://www.arthurkoziel.com/setting-up-argocd-with-helm/title.jpeg" alt="blog post title picture" /></p>
+<p>In this blog post we're going to setup <a href="https://argo-cd.readthedocs.io/en/stable/">Argo CD</a> on a Kubernetes cluster. We'll install it with Helm, create an application to use the <a href="https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#app-of-apps">app-of-apps</a> pattern, set Argo CD up so that it can update itself, and install Prometheus via Argo CD as an example.</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-argocd-with-helm/1-argo-app-details.png" alt="A picture of the Argo CD web UI showing the details view of an application" /></p>
+<p>All files mentioned in this blog post are available in a <a href="https://github.com/arthurk/argocd-example-install/">Git repository on GitHub</a>.</p>
+<h2 id="what-is-argo-cd">What is Argo CD?</h2>
+<p><a href="https://argoproj.github.io/argo-cd/">Argo CD</a> is a <a href="https://www.gitops.tech/">GitOps</a> tool to automatically synchronize the cluster to the desired state defined in a Git repository. Each workload is defined declarative through a resource manifest in a YAML file. Argo CD checks if the state defined in the Git repository matches what is running on the cluster, and synchronizes it if changes were detected.</p>
+<p>For example, instead of manually running CLI commands to update Kubernetes resources with <code>kubectl apply</code> or <code>helm upgrade</code>, we update a YAML files that we then commit and push to our Git repository. Each workload is described in an <code>Application</code> manifest. Argo CD periodically checks resources that are defined in the manifest for changes, and will automatically synchronize them with the ones that are running on our cluster.</p>
+<p>A connection to the cluster, either from the developer's laptop or from a CI/CD system, is no longer needed because changes are now pulled from the Git repository by a Kubernetes operator that's running inside the cluster.</p>
+<h2 id="requirements">Requirements</h2>
+<p>To follow this tutorial, you'll need the following:</p>
+<ul>
+<li>A Kubernetes cluster (1.28)</li>
+<li>kubectl (1.28)</li>
+<li>Helm (3.13)</li>
+<li>A public git repository (for Argo CD to pull the manifests)</li>
+</ul>
+<p>Our application manifests will be stored in a public Git repository. For this tutorial I'm using GitHub, but this can be any public Git repository, and GitLab, Gitea, etc. work just as well.</p>
+<h2 id="creating-a-custom-helm-chart">Creating a custom Helm chart</h2>
+<p>We'll use Helm to install Argo CD with the community-maintained chart from <a href="https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd">argoproj/argo-helm</a>. The Argo project doesn't provide an official Helm chart.</p>
+<p>Specifically, we are going to create a Helm &quot;umbrella chart&quot;. This is basically a custom chart that wraps another chart. It pulls the original chart in as a dependency, and overrides the default values. In our case, we create an <code>argo-cd</code> Helm chart that wraps the community-maintained <code>argo-cd</code> Helm chart.</p>
+<p>Using this approach, we have more flexibility in the future, by possibly including additional Kubernetes resources. The most common use case for this is to add Secrets (which could be encrypted using sops or SealedSecrets) to our application. For example, if we use webhooks with Argo CD, we have the possibility to securely store the webhook URL in a Secret.</p>
+<p>To create the umbrella chart, we make a directory in our Git repository:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ mkdir -p charts/argo-cd
+</span></code></pre>
+<p>Then place a <code>Chart.yaml</code> file in it:</p>
+<p><a href="https://github.com/arthurk/argocd-example-install/blob/master/charts/argo-cd/Chart.yaml">charts/argo-cd/Chart.yaml</a></p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">v2
+</span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">argo-cd
+</span><span style="color:#ff79c6;">version</span><span>: </span><span style="color:#bd93f9;">1.0.0
+</span><span style="color:#ff79c6;">dependencies</span><span>:
+</span><span>  - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">argo-cd
+</span><span>    </span><span style="color:#ff79c6;">version</span><span>: </span><span style="color:#bd93f9;">5.46.8
+</span><span>    </span><span style="color:#ff79c6;">repository</span><span>: </span><span style="color:#f1fa8c;">https://argoproj.github.io/argo-helm
+</span></code></pre>
+<p>The version of <em>our</em> custom chart doesn't matter and can stay the same. The version of the dependency matters and if you want to upgrade the chart, would be the place to do it. The important thing is that we pull in the community-maintained argo-cd chart as a dependency. Next, create a values.yaml file for our chart:</p>
+<p><a href="https://github.com/arthurk/argocd-example-install/blob/master/charts/argo-cd/values.yaml">charts/argo-cd/values.yaml</a></p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">argo-cd</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">dex</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">enabled</span><span>: </span><span style="color:#bd93f9;">false
+</span><span>  </span><span style="color:#ff79c6;">notifications</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">enabled</span><span>: </span><span style="color:#bd93f9;">false
+</span><span>  </span><span style="color:#ff79c6;">applicationSet</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">enabled</span><span>: </span><span style="color:#bd93f9;">false
+</span><span>  </span><span style="color:#ff79c6;">server</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">extraArgs</span><span>:
+</span><span>      - </span><span style="color:#f1fa8c;">--insecure
+</span></code></pre>
+<p>To override the chart values of a dependency, we have to place them under the dependency name. Since our dependency in the Chart.yaml is called <code>argo-cd</code>, we have to place our values under the <code>argo-cd:</code> key. If the dependency name would be <code>abcd</code>, we'd place the values under the <code>abcd:</code> key.</p>
+<p>All available options for the Argo CD Helm chart can be found in the <a href="https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml">values.yaml</a> file. </p>
+<p>We use a rather minimal installation, and disable components that are not useful for this tutorial. The changes are:</p>
+<ul>
+<li>Disable the dex component (integration with external auth providers).</li>
+<li>Disable the notifications controller (notify users about changes to application state).</li>
+<li>Disable the ApplicationSet controller (automated generation of Argo CD Applications).</li>
+<li>We start the server with the <code>--insecure</code> flag to serve the Web UI over HTTP. For this tutorial, we're using a local k8s server without TLS setup.</li>
+</ul>
+<p>Before we install our chart, we need to generate a Helm chart lock file for it. When installing a Helm chart, Argo CD checks the lock file for any dependencies and downloads them. Not having the lock file will result in an error.</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ helm repo add argo-cd https://argoproj.github.io/argo-helm
+</span><span>$ helm dep update charts/argo-cd/
+</span></code></pre>
+<p>This will create the <code>Chart.lock</code> and <code>charts/argo-cd-&lt;version&gt;.tgz</code> files. The .tgz file is only required for the initial installation from our local machine. To avoid accidentally committing it, we can add it to the gitignore file:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ echo &quot;charts/**/charts&quot; &gt;&gt; .gitignore
+</span></code></pre>
+<p>Our custom chart is ready and can be pushed to our public Git repository:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ git add charts/argo-cd
+</span><span>$ git commit -m &#39;add argo-cd chart&#39;
+</span><span>$ git push
+</span></code></pre>
+<p>The next step is to install our chart.</p>
+<h2 id="installing-our-helm-chart">Installing our Helm chart</h2>
+<p>We have to do the initial installation manually from our local machine, later we set up Argo CD to manage itself (meaning that Argo CD will automatically detect any changes to the helm chart and synchronize it):</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ helm install argo-cd charts/argo-cd/
+</span></code></pre>
+<p>After a minute all resources should have been deployed:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl get pods
+</span><span>NAME                                         READY   STATUS    RESTARTS   AGE
+</span><span>argo-cd-argocd-redis-65ff569495-xtc86        1/1     Running   0          10s
+</span><span>argo-cd-argocd-repo-server-7c487bb9c-bl77h   1/1     Running   0          10s
+</span><span>argo-cd-argocd-server-6fd79f8fb5-54z9j       1/1     Running   0          10s
+</span><span>argo-cd-argocd-application-controller-0      1/1     Running   0          10s
+</span></code></pre>
+<h2 id="accessing-the-web-ui">Accessing the Web UI</h2>
+<p>The Helm chart doesn't install an Ingress by default. To access the Web UI we have to port-forward to the <code>argocd-server</code> service on port 443:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl port-forward svc/argo-cd-argocd-server 8080:443
+</span></code></pre>
+<p>We can then visit <a href="http://localhost:8080">http://localhost:8080</a> to access it, which will show as a login form. The default username is <strong><code>admin</code></strong>. The password is auto-generated, we can get it with:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl get secret argocd-initial-admin-secret -o jsonpath=&quot;{.data.password}&quot; | base64 -d
+</span></code></pre>
+<p>Note that some shells (like Zsh) display a percentage sign at the end. It's not part of the password.</p>
+<p>After logging in, we'll see the empty Web UI:</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-argocd-with-helm/2-argo-new-install.png" alt="A picture of the Argo CD Web UI after logging in for the first time" /></p>
+<p>At this point, Argo CD applications could be added through the Web UI or CLI, but we want to manage everything in a declarative way (Infrastructure as code). This means need to write <code>Application</code> manifests in YAML, and commit them to our Git repo.</p>
+<h2 id="applications-and-root-app">Applications and root-app</h2>
+<p>In general, when we want to add an application to Argo CD, we need to add an <a href="https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#applications"><code>Application</code></a> resource in our Kubernetes cluster. The resource needs to specify where to find manifests for our application. These manifest can either be YAML files, a Helm chart, Kustomize or Jsonnet. In this tutorial, we'll focus on creating applications that use Helm charts.</p>
+<p>For example, if we wanted to deploy <a href="https://prometheus.io/">Prometheus</a> (which we will do later), we would write a <code>Application</code> YAML manifest for it, and put it in our Git repository. It would specify the URL to the Prometheus Helm-Chart, and override values to customize it. We would then apply the manifest and wait for the resources to be created in the cluster.</p>
+<p>The easiest way to apply the manifest is with the kubectl CLI. However, it's a manual step that's error-prone, insecure, and we need to repeat it every time we add or update applications. With Argo CD there is a better way to handle this. We can automate adding/updating applications by creating an Application that implements the <a href="https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#app-of-apps">app of apps</a> pattern. In this tutorial, we'll call this the <strong>&quot;root-app&quot;</strong>.</p>
+<p>The root-app is a Helm chart that renders Application manifests. Initially it has to be added manually, but after that we can just commit Application manifests with Git, and they will be deployed automatically.</p>
+<p>To show how this works in more detail, we'll create the root-app next.</p>
+<h2 id="creating-the-root-app-helm-chart">Creating the root-app Helm chart</h2>
+<p>The root-app will be a Helm chart. You could also use Kubernetes YAML manifests, but after adding more applications there will be a lot of duplicated code (like the destination cluster), and we can reduce it by putting the values in the charts values file. Another interesting solution for this are <a href="https://argo-cd.readthedocs.io/en/stable/user-guide/application-set/">ApplicationSets</a>, but we won't cover them in this tutorial.</p>
+<p>We create the chart in the same public Git repository from before. We put a <code>Chart.yaml</code> file and an (empty) <code>values.yaml</code> file in it:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ mkdir -p charts/root-app/templates
+</span><span>$ touch charts/root-app/values.yaml
+</span></code></pre>
+<p><a href="https://github.com/arthurk/argocd-example-install/blob/master/charts/root-app/Chart.yaml">charts/root-app/Chart.yaml</a></p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">v2
+</span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">root-app
+</span><span style="color:#ff79c6;">version</span><span>: </span><span style="color:#bd93f9;">1.0.0
+</span></code></pre>
+<p>We create the <code>Application</code> manifest for our root-app in <code>charts/root-app/templates/root-app.yaml</code>. Make sure to replace the <code>repoURL</code> with the one for your public Git repo:</p>
+<p><a href="https://github.com/arthurk/argocd-example-install/blob/master/charts/root-app/templates/root-app.yaml">charts/root-app/templates/root-app.yaml</a>:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">argoproj.io/v1alpha1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Application
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">root-app
+</span><span>  </span><span style="color:#ff79c6;">finalizers</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">resources-finalizer.argocd.argoproj.io
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">project</span><span>: </span><span style="color:#f1fa8c;">default
+</span><span>  </span><span style="color:#ff79c6;">source</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">repoURL</span><span>: </span><span style="color:#f1fa8c;">https://github.com/arthurk/argocd-example-install.git
+</span><span>    </span><span style="color:#ff79c6;">path</span><span>: </span><span style="color:#f1fa8c;">charts/root-app/
+</span><span>    </span><span style="color:#ff79c6;">targetRevision</span><span>: </span><span style="color:#f1fa8c;">HEAD
+</span><span>  </span><span style="color:#ff79c6;">destination</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">server</span><span>: </span><span style="color:#f1fa8c;">https://kubernetes.default.svc
+</span><span>    </span><span style="color:#ff79c6;">namespace</span><span>: </span><span style="color:#f1fa8c;">default
+</span><span>  </span><span style="color:#ff79c6;">syncPolicy</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">automated</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">selfHeal</span><span>: </span><span style="color:#bd93f9;">true
+</span></code></pre>
+<p>The above <code>Application</code> watches our root-app Helm chart (under <code>charts/root-app/</code>), and if changes were detected, synchronizes (meaning that it will render the Helm chart and apply the resulting manifests on the cluster) it. </p>
+<p>How does Argo CD know our application is a Helm chart? It looks for a <code>Chart.yaml</code> file under <code>path</code> in the Git repository. The same applies for Kustomize, which will be used if it finds a <code>kustomization.yaml</code> in a directory.</p>
+<p>Argo CD will not use <code>helm install</code> to install charts. It will render the chart with <code>helm template</code> and then apply the output with <code>kubectl</code>. This means we can't run <code>helm list</code> on a local machine to get all installed releases.</p>
+<p>We push the files to our Git repository:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ git add charts/root-app
+</span><span>$ git commit -m &#39;add root-app&#39;
+</span><span>$ git push
+</span></code></pre>
+<p>And then apply the manifest in our Kubernetes cluster. The first time we have to do it manually, later we'll let Argo CD manage the root-app and synchronize it automatically:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ helm template root-app/ | kubectl apply -f -
+</span></code></pre>
+<p>In the Web UI we can now see that the root-app was created:</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-argocd-with-helm/3-argo-root-app-created.png" alt="Argo CD Web UI showing root application" /></p>
+<h2 id="let-argo-cd-manage-itself">Let Argo CD manage itself</h2>
+<p>We previously installed Argo CD manually by running <code>helm install</code> from our local machine. This means that updates to Argo CD, like upgrading the chart version or changing the <code>values.yaml</code>, require us to execute the Helm CLI command from a local machine again. It's repetitive, error-prone and inconsistent with how we install other applications in our cluster.</p>
+<p>The solution is to let Argo CD manage Argo CD. To be more specific: We let the Argo CD controller watch for changes to the argo-cd helm chart in our repo (under <code>charts/argo-cd</code>), render the Helm chart, and apply the resulting manifests. It's done using <code>kubectl</code> and asynchronous, so it is safe for Kubernetes to restart the Argo CD Pods after it has been executed.</p>
+<p>To achieve this, we need to create an Application manifest that points to our Argo CD chart. We'll use the same chart version and values file as with our previous manual installation, so initially there won't be any changes made to the resources in the cluster.</p>
+<p>The application manifest looks like this:</p>
+<p><a href="https://github.com/arthurk/argocd-example-install/blob/master/charts/root-app/templates/argo-cd.yaml">charts/root-app/templates/argo-cd.yaml</a>:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">argoproj.io/v1alpha1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Application
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">argo-cd
+</span><span>  </span><span style="color:#ff79c6;">finalizers</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">resources-finalizer.argocd.argoproj.io
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">project</span><span>: </span><span style="color:#f1fa8c;">default
+</span><span>  </span><span style="color:#ff79c6;">source</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">repoURL</span><span>: </span><span style="color:#f1fa8c;">https://github.com/arthurk/argocd-example-install.git
+</span><span>    </span><span style="color:#ff79c6;">path</span><span>: </span><span style="color:#f1fa8c;">charts/argo-cd
+</span><span>    </span><span style="color:#ff79c6;">targetRevision</span><span>: </span><span style="color:#f1fa8c;">HEAD
+</span><span>  </span><span style="color:#ff79c6;">destination</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">server</span><span>: </span><span style="color:#f1fa8c;">https://kubernetes.default.svc
+</span><span>    </span><span style="color:#ff79c6;">namespace</span><span>: </span><span style="color:#f1fa8c;">default
+</span><span>  </span><span style="color:#ff79c6;">syncPolicy</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">automated</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">selfHeal</span><span>: </span><span style="color:#bd93f9;">true
+</span></code></pre>
+<p>We can commit and push the application manifest to our Git repository. We don't need to generate a Chart.lock file since we don't have any dependencies:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ git add charts/root-app/templates/argo-cd.yaml
+</span><span>$ git commit -m &#39;add argo-cd application&#39;
+</span><span>$ git push
+</span></code></pre>
+<p>In the Web UI we should now see the root-app being <code>OutOfSync</code>, and then changing to <code>Syncing</code>. If it doesn't show the changes right away, it's probably due to the default change detection polling rate of 3 minutes. We can speed this up by clicking on the <em>Refresh</em> button on the root-app which triggers a manual sync.</p>
+<p>For faster change detection look into setting up <a href="https://argo-cd.readthedocs.io/en/stable/operator-manual/webhook/">webhooks</a>, these will trigger a sync immediately after pushing to the Git repo.</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-argocd-with-helm/4-argo-app-created.png" alt="Argo CD Web UI overview after the Argo CD application has been created" /></p>
+<p>Once the Argo CD application is green (synced) we're done. We can make changes to our Argo CD installation the same way we change other applications: by changing the files in the repo and pushing it to our Git repository.</p>
+<p>The final directory structure should look like this:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>└── charts
+</span><span>    ├── argo-cd
+</span><span>    │   ├── Chart.lock
+</span><span>    │   ├── Chart.yaml
+</span><span>    │   └── values.yaml
+</span><span>    └── root-app
+</span><span>        ├── Chart.yaml
+</span><span>        ├── templates
+</span><span>        │   ├── argo-cd.yaml
+</span><span>        │   └── root-app.yaml
+</span><span>        └── values.yaml
+</span></code></pre>
+<p>As a last step, we can remove the Secret that Helm creates for each manual chart installation:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl delete secret -l owner=helm,name=argo-cd
+</span></code></pre>
+<h2 id="example-installing-prometheus">Example: Installing Prometheus</h2>
+<p>As a real-world example on how to deploy a Helm chart with Argo CD, we'll add <a href="https://prometheus.io/">Prometheus</a> to our cluster.</p>
+<p>First we create an <code>Application</code> manifest in <code>charts/root-app/templates/prometheus.yaml</code> that uses the <a href="https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus">Prometheus helm chart</a>.</p>
+<p><a href="https://github.com/arthurk/argocd-example-install/blob/master/charts/root-app/templates/prometheus.yaml">charts/root-app/templates/prometheus.yaml</a></p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">argoproj.io/v1alpha1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Application
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">prometheus
+</span><span>  </span><span style="color:#ff79c6;">finalizers</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">resources-finalizer.argocd.argoproj.io
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">project</span><span>: </span><span style="color:#f1fa8c;">default
+</span><span>  </span><span style="color:#ff79c6;">source</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">repoURL</span><span>: </span><span style="color:#f1fa8c;">https://prometheus-community.github.io/helm-charts
+</span><span>    </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">prometheus
+</span><span>    </span><span style="color:#ff79c6;">targetRevision</span><span>: </span><span style="color:#bd93f9;">25.3.1
+</span><span>    </span><span style="color:#ff79c6;">helm</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">values</span><span>: </span><span style="color:#ff79c6;">|
+</span><span style="color:#f1fa8c;">        pushgateway:
+</span><span style="color:#f1fa8c;">          enabled: false
+</span><span>  </span><span style="color:#ff79c6;">destination</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">server</span><span>: </span><span style="color:#f1fa8c;">https://kubernetes.default.svc
+</span><span>    </span><span style="color:#ff79c6;">namespace</span><span>: </span><span style="color:#f1fa8c;">default
+</span><span>  </span><span style="color:#ff79c6;">syncPolicy</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">automated</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">prune</span><span>: </span><span style="color:#bd93f9;">true
+</span><span>      </span><span style="color:#ff79c6;">selfHeal</span><span>: </span><span style="color:#bd93f9;">true
+</span></code></pre>
+<p>There are a few differences compared to our previously created Argo CD Application:</p>
+<ul>
+<li>The <code>repoURL</code> is set to the <a href="https://github.com/prometheus-community/helm-charts/">prometheus-community</a> Helm chart repository.</li>
+<li>We're using <code>chart</code> (instead of <code>path</code>) to specify the Helm chart we want to use (the repository contains multiple Helm charts).</li>
+<li>The <code>targetRevision</code> is set to the chart version.</li>
+<li>We're overriding the chart default <a href="https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus/values.yaml">values</a> inline, rather than keeping them in a separate values.yaml file.</li>
+<li>We've added <code>prune</code> sync policy. This will delete all Kubernetes resources when the Application is deleted. Previously, we didn't set this as a pre-caution. If we had it enabled and accidentally deleted the root-app or argo-cd app, it would delete all applications in the cluster.</li>
+</ul>
+<p>To deploy the application, we just need to commit and push the manifest to our Git repository:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ git add charts/root-app/templates/prometheus.yaml
+</span><span>$ git commit -m &#39;add prometheus&#39;
+</span><span>$ git push
+</span></code></pre>
+<p>After the next refresh, Prometheus should show up in the Web UI: </p>
+<p><img src="https://www.arthurkoziel.com/setting-up-argocd-with-helm/5-prometheus.png" alt="Argo CD Web UI showing application overview after the Prometheus application has been added" /></p>
+<p>Clicking on the application will show us a detailed overview of all resources in the Prometheus helm chart:</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-argocd-with-helm/1-argo-app-details.png" alt="A picture of the Argo CD web UI showing the details view of the Prometheus application" /></p>
+<h2 id="example-uninstall-prometheus">Example: Uninstall Prometheus</h2>
+<p>To uninstall Prometheus, we just have to delete the previously added <code>prometheus.yaml</code> file from out Git repo:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ git rm charts/root-app/templates/prometheus.yaml
+</span><span>$ git commit -m &#39;remove prometheus&#39;
+</span><span>$ git push
+</span></code></pre>
+<p>The application, along with all its resources, will then be removed from the cluster. </p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this tutorial, we've installed Argo CD with Helm, and set it up so that it can manage itself. This allows us to update Argo CD the same way we update other applications: by modifying the manifest inside the Git repository.</p>
+<p>We've created a root application that uses the <a href="https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#app-of-apps">app-of-apps</a> pattern to manage our applications in a declarative way.</p>
+<p>Applications can be added, updated or removed using Git commits. As an example, we've installed and uninstalled Prometheus in our cluster.</p>
+<p>All files mentioned in this blog post are available in a <a href="https://github.com/arthurk/argocd-example-install/">Git repository on GitHub</a>.</p>
+
+</article>
+
+
+</body>
+</html>

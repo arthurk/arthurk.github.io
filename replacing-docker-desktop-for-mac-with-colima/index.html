@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Replacing Docker Desktop for Mac with Colima</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Replacing Docker Desktop for Mac with Colima</h1>
+    <div id="date">
+      <time class="date" datetime="2021-12-21">December 21, 2021</time>
+    
+    </div>
+  </header>
+
+  <p><a href="https://www.docker.com/products/docker-desktop">Docker Desktop for Mac</a> is
+probably the most commonly used solution to run Docker on macOS. It runs the
+daemon in a VM, handles port-forwarding, shared folders and sets up the Docker
+CLI. It's a quick and easy way to get Docker running on macOS.</p>
+<p>Although technically it works fine, the following reasons made me look for a
+replacement:</p>
+<ul>
+<li>Closed-source</li>
+<li>Pop-ups asking me how likely I am to recommend Docker Desktop to a co-worker</li>
+<li>Weekly tips and anonymous reporting are enabled by default</li>
+<li>It makes a request to <code>desktop.docker.com</code> every time the settings are opened,
+even with anonymous reporting turned off</li>
+</ul>
+<p>While there is the option to run something like
+<a href="https://multipass.run/">Multipass</a> or <a href="https://www.virtualbox.org/">VirtualBox</a>
+with a custom provisioning script for Docker and then configure shared folders,
+I was looking for a drop-in replacement with minimal or no configuration.</p>
+<p><a href="https://github.com/abiosoft/colima/">Colima</a> fits the criteria well. It's based
+on <a href="https://github.com/lima-vm/lima">Lima</a> which creates a QEMU VM with HVF
+accelerator and handles the port-forwarding and folder sharing. Lima comes with
+<a href="https://github.com/containerd/containerd">containerd</a> and
+<a href="https://github.com/containerd/nerdctl">nerdctl</a> installed, but for a drop-in
+replacement the Docker container runtime is required which is what Colima is
+for.</p>
+<p>Colima provisions the Docker container runtime in a Lima VM, configures the
+<code>docker</code> CLI on macOS and handles port-forwarding and volume mounts. This makes
+Docker easily usable on macOS without any configuration, similar to Docker Desktop.</p>
+<h2 id="installation-and-usage">Installation and Usage</h2>
+<p>Installation is easy and can be done through Homebrew:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>brew install colima
+</span></code></pre>
+<p>To start the VM we run:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>colima start
+</span></code></pre>
+<p>It will start the docker daemon in the VM and configure the docker CLI on the
+host. The usage in macOS is no different from Docker Desktop, and all
+<code>docker</code> commands should work as before.</p>
+<h2 id="performance">Performance</h2>
+<p>Since both solutions are based on the macOS HVF I don't think there is much
+difference in terms of CPU and memory performance. However, shared folder
+performance has always been a
+<a href="https://github.com/docker/roadmap/issues/7">bottleneck</a> for Docker on macOS.</p>
+<p>I think it's worth to test the differences in performance since Docker Desktop
+uses gRPC FUSE while Colima/Lima uses sshfs to share folders.</p>
+<p>I've used <a href="https://github.com/axboe/fio">fio</a> to run a quick benchmark in Docker
+desktop for mac (v4.3.1) and colima (v0.2.2) that performs random 4K writes on a
+shared volume:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>fio --name=random-write --ioengine=libaio --rw=randwrite --direct=1 --bs=4k --size=4g --numjobs=1 --iodepth=16 --runtime=60 --time_based --end_fsync=1 --filename=/app/testfile
+</span></code></pre>
+<p>The results:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># Docker Desktop for Mac
+</span><span>IOPS: 1545
+</span><span>Bandwidth: 6.3MB/s
+</span><span>
+</span><span># Colima
+</span><span>IOPS: 2786
+</span><span>Bandwidth: 11.4MB/s
+</span></code></pre>
+<p>We can see that Colima is around 80% faster for both IOPS and bandwidth metrics.</p>
+<p>For comparison, the native speed on macOS was 28.6k IOPS and 117MB/s bandwidth.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>After testing <a href="https://github.com/abiosoft/colima/">Colima</a> I found it to be a
+great drop-in replacement for Docker Desktop. It even has faster performance for
+shared folders, which is another good argument to switch.</p>
+<p>I did not notice any difference when running docker containers and all <code>docker</code>
+commands worked the same as before, which is great since none of my build-scripts
+had to be changed.</p>
+
+</article>
+
+
+</body>
+</html>

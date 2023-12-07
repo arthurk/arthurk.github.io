@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Tutorial: Encrypting Kubernetes Secrets with Sealed Secrets</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Tutorial: Encrypting Kubernetes Secrets with Sealed Secrets</h1>
+    <div id="date">
+      <time class="date" datetime="2021-01-12">January 12, 2021</time>
+    
+    </div>
+  </header>
+
+  <p><a href="https://github.com/bitnami-labs/sealed-secrets/">Sealed Secrets</a> is a solution to store encrypted <a href="https://kubernetes.io/">Kubernetes</a> secrets in version control.</p>
+<p>In this blog post we'll learn how to install and use it.</p>
+<h2 id="comparison-with-helm-secrets-and-sops">Comparison with helm-secrets and sops</h2>
+<p>A popular alternative to Sealed Secrets is <a href="https://github.com/zendesk/helm-secrets">helm-secrets</a> which uses <a href="https://github.com/mozilla/sops">sops</a> as a backend.</p>
+<p>The main difference is:</p>
+<ul>
+<li>Sealed Secrets decrypts the secret <em>server-side</em></li>
+<li>Helm-secrets decrypts the secret <em>client-side</em></li>
+</ul>
+<p>Client-side decryption with helm-secrets can be a security risk since the client (such as a CI/CD system) needs to have access to the encryption key to perform the deployment. Note that this is not a problem if you use GitOps tools such as Argo CD or Flux.</p>
+<p>With Sealed Secrets and server-side decryption we can avoid this security risk. The encryption key only exists in the Kubernetes cluster and is never exposed.</p>
+<p>Sealed Secrets is not able to use cloud KMS solutions such as AWS KMS. If this is a requirement then go with sops/helm-secrets.</p>
+<h2 id="installation-via-helm-chart">Installation via Helm chart</h2>
+<p>Sealed Secrets consists of two components:</p>
+<ul>
+<li>Client-side CLI tool to encrypt secrets and create sealed secrets</li>
+<li>Server-side controller used to decrypt sealed secrets and create secrets</li>
+</ul>
+<p>To install the controller in our Kubernetes cluster we'll use the official Helm chart from the <a href="https://github.com/bitnami-labs/sealed-secrets/tree/master/helm/sealed-secrets">sealed-secrets repository</a>.</p>
+<p>Add the repository and install it to the <code>kube-system</code> namespace:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+</span><span>
+</span><span>helm install sealed-secrets --namespace kube-system --version 1.13.2 sealed-secrets/sealed-secrets
+</span></code></pre>
+<h2 id="cli-tool-installation">CLI tool installation</h2>
+<p>Secrets are encrypted client-side using the <code>kubeseal</code> CLI tool.</p>
+<p>For macOS, we can use the <a href="https://formulae.brew.sh/formula/kubeseal">Homebrew formula</a>. For Linux, we can download the binary from the <a href="https://github.com/bitnami-labs/sealed-secrets/releases">GitHub release page</a>. </p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># macos
+</span><span>brew install kubeseal
+</span><span>
+</span><span># linux
+</span><span>wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.13.1/kubeseal-linux-amd64 -O kubeseal
+</span><span>sudo install -m 755 kubeseal /usr/local/bin/kubeseal
+</span></code></pre>
+<p>The <code>kubeseal</code> CLI uses the current <code>kubectl</code> context to <a href="https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/">access the cluster</a>. Before continuing make sure that <code>kubectl</code> is connected to the cluster where Sealed Secrets should be installed.</p>
+<h2 id="creating-a-sealed-secret">Creating a sealed secret</h2>
+<p>The <code>kubeseal</code> CLI takes a Kubernetes <code>Secret</code> manifest as an input, encrypts it and outputs a <code>SealedSecret</code> manifest.</p>
+<p>In this tutorial we'll use this secret manifest as an input:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">v1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Secret
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">creationTimestamp</span><span>: </span><span style="color:#bd93f9;">null
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">my-secret
+</span><span style="color:#ff79c6;">data</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">password</span><span>: </span><span style="color:#f1fa8c;">YmFy
+</span><span>  </span><span style="color:#ff79c6;">username</span><span>: </span><span style="color:#f1fa8c;">Zm9v
+</span></code></pre>
+<p>Store the manifest in a file named <code>secret.yaml</code> and encrypt it:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>cat secret.yaml | kubeseal \
+</span><span>    --controller-namespace kube-system \
+</span><span>    --controller-name sealed-secrets \
+</span><span>    --format yaml \
+</span><span>    &gt; sealed-secret.yaml
+</span></code></pre>
+<p>The content of the <code>sealed-secret.yaml</code> file should look like this:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">bitnami.com/v1alpha1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">SealedSecret
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">creationTimestamp</span><span>: </span><span style="color:#bd93f9;">null
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">my-secret
+</span><span>  </span><span style="color:#ff79c6;">namespace</span><span>: </span><span style="color:#f1fa8c;">default
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">encryptedData</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">password</span><span>: </span><span style="color:#f1fa8c;">AgA...
+</span><span>    </span><span style="color:#ff79c6;">username</span><span>: </span><span style="color:#f1fa8c;">AgA...
+</span><span>  </span><span style="color:#ff79c6;">template</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">creationTimestamp</span><span>: </span><span style="color:#bd93f9;">null
+</span><span>      </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">my-secret
+</span><span>      </span><span style="color:#ff79c6;">namespace</span><span>: </span><span style="color:#f1fa8c;">default
+</span></code></pre>
+<p>We should now have the secret in <code>secret.yaml</code> and the sealed secret in <code>sealed-secret.yaml</code>.</p>
+<blockquote>
+<p><strong>Note</strong>: It's not a good practice to store the unencrypted secret in a file. This is only for demonstration purposes in this tutorial.</p>
+</blockquote>
+<p>To deploy the sealed secret we apply the manifest with kubectl:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>kubectl apply -f sealed-secret.yaml
+</span></code></pre>
+<p>The controller in the cluster will notice that a <code>SealedSecret</code> resource has been created, decrypt it and create a decrypted <code>Secret</code>. </p>
+<p>Let's fetch the secret to make sure that the controller has successfully unsealed it:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>kubectl get secret my-secret -o yaml
+</span></code></pre>
+<p>The data should contain our base64 encoded username and password:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>...
+</span><span>data:
+</span><span>  password: YmFy
+</span><span>  username: Zm9v
+</span><span>...
+</span></code></pre>
+<p>Everything went well. The secret has been successfully unsealed.</p>
+<h2 id="updating-a-sealed-secret">Updating a sealed secret</h2>
+<p>To update a value in a sealed secret, we have to create a new <code>Secret</code> manifest locally and merge it into an existing <code>SealedSecret</code> with the <code>--merge-into</code> option.</p>
+<p>In the example below we update the value of the password key (<code>--from-file=password</code>) to <code>my new password</code>. </p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>echo -n &quot;my new password&quot; \
+</span><span>    | kubectl create secret generic xxx --dry-run=client --from-file=password=/dev/stdin -o json \
+</span><span>    | kubeseal --controller-namespace=kube-system --controller-name=sealed-secrets --format yaml --merge-into sealed-secret.yaml
+</span><span>
+</span><span>kubectl apply -f sealed-secret.yaml
+</span></code></pre>
+<p>The local secret is temporary and the name (<code>xxx</code> in our case) doesn't matter. The name of the sealed secret will stay the same.</p>
+<h2 id="adding-a-new-value-to-a-sealed-secret">Adding a new value to a sealed secret</h2>
+<p>The difference between updating a value and adding a new value is the name of the key. If a key named <code>password</code> already exists, it will update it. If it doesn't exist, it will add it.</p>
+<p>For example to add a new <code>api_key</code> key (<code>--from-file=api_key</code>) into our secret we run:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>echo -n &quot;my secret api key&quot; \
+</span><span>    | kubectl create secret generic xxx --dry-run=client --from-file=api_key=/dev/stdin -o json \
+</span><span>    | kubeseal --controller-namespace=kube-system --controller-name=sealed-secrets --format yaml --merge-into sealed-secret.yaml
+</span><span>
+</span><span>kubectl apply -f sealed-secret.yaml
+</span></code></pre>
+<h2 id="deleting-a-value-from-a-sealed-secret">Deleting a value from a sealed secret</h2>
+<p>To delete a key from the sealed secret we have to remove it from the YAML file:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># BSD sed (macOS)
+</span><span>sed -i &#39;&#39; &#39;/api_key:/d&#39; sealed-secret.yaml
+</span><span>
+</span><span># GNU sed
+</span><span>sed -i &#39;/api_key:/d&#39; sealed-secret.yaml
+</span><span>
+</span><span>kubectl apply -f sealed-secret.yaml
+</span></code></pre>
+<p>After applying the file, the controller will update the <code>Secret</code> automatically and remove the <code>api_key</code>.</p>
+<h2 id="delete-the-sealed-secret">Delete the sealed secret</h2>
+<p>To delete the secret, we use kubectl to delete the resource:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>kubectl delete -f sealed-secret.yaml
+</span></code></pre>
+<p>This will delete the <code>SealedSecret</code> resource from the cluster as well as the corresponding <code>Secret</code> resource.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Sealed Secrets is a secure way to manage Kubernetes secrets in version control. The encryption key is stored and secrets are decrypted in the cluster. The client doesn't have access to the encryption key.</p>
+<p>The client uses the <code>kubeseal</code> CLI tool to generate <code>SealedSecret</code> manifests that hold encrypted data. After applying the file the server-side controller will recognize a new sealed secret resource and decrypt it to create a <code>Secret</code> resource.</p>
+
+</article>
+
+
+</body>
+</html>

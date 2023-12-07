@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Fixing Argo CD &quot;Too long must have at most 262144 bytes&quot; error</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Fixing Argo CD &quot;Too long must have at most 262144 bytes&quot; error</h1>
+    <div id="date">
+      <time class="date" datetime="2022-10-28">October 28, 2022</time>
+    
+    </div>
+  </header>
+
+  <p>In this post, I'll explain how to fix the <code>&quot;Too long: must have at most 262144 bytes&quot;</code> error in Argo CD. It often appears when trying to sync a Helm chart that includes large CRDs such as 
+<a href="https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack">kube-prometheus-stack</a>.</p>
+<h2 id="problem">Problem</h2>
+<p>Kubernetes objects have a fixed size limit of 256kb for
+annotations. When using <code>kubectl apply</code> to update resources (which Argo CD does) it tries to
+set a <code>last-applied-configuration</code> annotation that contains the JSON
+representation of the last applied object configuration.</p>
+<p>For example, if we have a Deployment object that we update with <code>kubectl apply</code>, the <code>last-applied-configuration</code> annotation will contain the JSON
+serialized format of the whole Deployment object:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">apps/v1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Deployment
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">annotations</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">kubectl.kubernetes.io/last-applied-configuration</span><span>: </span><span style="color:#ff79c6;">|
+</span><span style="color:#f1fa8c;">      {&quot;apiVersion&quot;:&quot;apps/v1&quot;,&quot;kind&quot;:&quot;Deployment&quot;, &quot;metadata&quot;:{}, ...}
+</span></code></pre>
+<p>This is not a problem for most resources, but there are objects which go over
+the 256kb limit, such as the <a href="https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/crds/crd-prometheuses.yaml">Prometheus
+CRD</a>
+from the <a href="https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack">kube-prometheus-stack</a> Helm chart, which is 500kb in size. </p>
+<p>Syncing the <code>Prometheus</code> CRD in Argo CD will run <code>kubectl apply</code> and try to add the 500kb JSON representation of it as an annotation. This
+will then result in the <code>&quot;Too long: must have at most 262144 bytes&quot;</code> error as
+it goes over the Kubernetes annotations size limit of 256kb (or, 262144 bytes).</p>
+<h2 id="solution">Solution</h2>
+<p>The solution is to stop using Client Side Apply (the current default when running <code>kubectl apply</code>) and instead use <a href="https://kubernetes.io/docs/reference/using-api/server-side-apply/">Server Side
+Apply</a> which
+will not add the <code>last-applied-configuration</code> annotation to objects.</p>
+<p>Server Side Apply is planned to be the default apply method in future Kubernetes and Argo CD versions, but for now we have to explicitly enable it. </p>
+<p>Support for Server Side Apply was added in Argo CD v2.5 and can be enabled by
+setting it in the sync options for an Application resource:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">argoproj.io/v1alpha1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Application
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">syncPolicy</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">syncOptions</span><span>:
+</span><span>    - </span><span style="color:#f1fa8c;">ServerSideApply=true
+</span></code></pre>
+<p>Argo CD versions lower than v2.5 don't have support for Server Side Apply. In
+these cases, we can fall back to using <code>kubectl replace</code> to update the object.
+We can do this by setting the <code>Replace=true</code> sync option. But be aware that replace
+can lead to unexpected results when you have multiple clients modifying an
+object.</p>
+
+</article>
+
+
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Pre-Installed Daemons on Google Compute Engine</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Pre-Installed Daemons on Google Compute Engine</h1>
+    <div id="date">
+      <time class="date" datetime="2020-02-23">February 23, 2020</time>
+    
+    </div>
+  </header>
+
+  <p>I found out that Google Compute Engine instances will come with the <a href="https://cloud.google.com/compute/docs/images/guest-environment">Google Guest Environment</a> pre-installed which runs daemons in the background. This is unlike AWS EC2 instances which don't install any daemons (but come with <a href="https://github.com/aws/aws-cli">aws-cli</a> pre-installed). We can see the following output when listing the running processes on a new Debian GCE intance:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ ps ax | grep google
+</span><span>
+</span><span>418 ?        Ssl    2:52 /usr/bin/google_osconfig_agent
+</span><span>526 ?        Ss     2:17 /usr/bin/python3 /usr/bin/google_network_daemon
+</span><span>528 ?        Ss     3:32 /usr/bin/python3 /usr/bin/google_accounts_daemon
+</span><span>529 ?        Ss     1:14 /usr/bin/python3 /usr/bin/google_clock_skew_daemon
+</span></code></pre>
+<p>We can check all installed google packages:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ apt list --installed | grep google
+</span><span>
+</span><span>gce-disk-expand
+</span><span>google-cloud-packages-archive-keyring
+</span><span>google-cloud-sdk
+</span><span>google-compute-engine-oslogin
+</span><span>google-compute-engine
+</span><span>google-osconfig-agent
+</span><span>python-google-compute-engine
+</span><span>python3-google-compute-engine
+</span></code></pre>
+<p>and systemd services:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ systemctl list-unit-files | grep google
+</span><span>
+</span><span>google-accounts-daemon.service         enabled
+</span><span>google-clock-skew-daemon.service       enabled
+</span><span>google-instance-setup.service          enabled
+</span><span>google-network-daemon.service          enabled
+</span><span>google-osconfig-agent.service          enabled
+</span><span>google-shutdown-scripts.service        enabled
+</span><span>google-startup-scripts.service         enabled
+</span></code></pre>
+<p>These packages and services are part of the Google <a href="https://cloud.google.com/compute/docs/images/guest-environment">Linux Guest Environment</a> and <a href="https://cloud.google.com/compute/docs/instances/managing-instance-access">OS Login Guest Environment</a>.</p>
+<p>The GCP docs have some information on the <a href="https://cloud.google.com/compute/docs/images/guest-environment">Guest Environment</a> but it lacks details on the specifics of each daemon/script. A better source is the <a href="https://github.com/GoogleCloudPlatform/compute-image-packages/tree/master/packages/python-google-compute-engine">GitHub repo</a> where we can find a good explanation for each daemon and script:</p>
+<ul>
+<li><strong>google-network-daemon:</strong> handles network setup for multiple network interfaces on boot and integrates network load balancing with forwarding rule changes into the guest</li>
+<li><strong>google-accounts-daemon:</strong> daemon to setup and manage user accounts, and to enable SSH key based authentication</li>
+<li><strong>google-clock-skew-daemon:</strong> daemon to keep the system clock in sync after VM start and stop events</li>
+<li><strong>google-instance-setup:</strong> scripts to execute VM configuration scripts during boot</li>
+<li><strong>google-startup-scripts/google-shutdown-scripts:</strong> run user-provided scripts at VM startup and shutdown</li>
+</ul>
+<p>The remaining daemon is the agent for the <a href="https://github.com/GoogleCloudPlatform/guest-oslogin">OS Login Guest Environment</a>. It manages access control when using the <a href="https://cloud.google.com/compute/docs/oslogin/">OS Login</a> feature by linking linux user accounts to Google accounts (which can then be managed with Cloud IAM). This feature is disabled by default and I'm not sure why the package is installed and the daemon is running.</p>
+<h2 id="uninstall">Uninstall</h2>
+<p>If all that's needed is a simple VM instance without Google Cloud integration, all daemons and scripts can be uninstalled by removing the packages:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ apt-get remove python-google-compute-engine python3-google-compute-engine \
+</span><span>                 google-osconfig-agent google-compute-engine-oslogin
+</span></code></pre>
+<p>I think it's good to at least remove the <code>google-osconfig-agent</code> package and get rid of the <code>google_osconfig_agent</code> daemon running in the background. The package can be re-installed before enabling OS Login.</p>
+<p>Each daemon can also be disabled separately:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ systemctl disable google-accounts-daemon.service
+</span></code></pre>
+
+</article>
+
+
+</body>
+</html>

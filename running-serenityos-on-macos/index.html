@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Running SerenityOS on macOS</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Running SerenityOS on macOS</h1>
+    <div id="date">
+      <time class="date" datetime="2021-06-04">June 04, 2021</time>
+    
+    </div>
+  </header>
+
+  <p>In this blog post, I'll describe how to build and run <a href="https://serenityos.org/">SerenityOS</a> on macOS (via QEMU).</p>
+<p>SerenityOS is an operating system that combines UNIX with the GUI of Windows 9x/NT. It's still early in development but being improved daily with many contributors working on it.</p>
+<p><img src="https://www.arthurkoziel.com/running-serenityos-on-macos/serenity-os.png" alt="SerenityOS Desktop" /></p>
+<p>The tips mentioned here can also be found in the <a href="https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md">wiki</a>. This tutorial is a step-by-step guide specifically for macOS. It will work on Catalina but to run this on macOS Big Sur you'll need to grant QEMU the permission to use the macOS hypervisor via entitlements. See my <a href="https://www.arthurkoziel.com/qemu-on-macos-big-sur/">previous blog post</a> about how to do this.</p>
+<h2 id="installing-xcode">Installing Xcode</h2>
+<p>We need to have a full <a href="https://developer.apple.com/xcode/">Xcode</a> installation on our system to compile SerenityOS. The Command Line Tools are not enough.</p>
+<p>Xcode can be downloaded from the <a href="https://developer.apple.com/download/more/">Apple Developer page</a>. To access it you'll need an iCloud account and accept the Developer Agreement that will show up when opening the link.</p>
+<p>Note that Xcode 12.4 is the last version compatible with macOS Catalina.</p>
+<p>After the download is done, move the app to your <code>Applications</code>.</p>
+<p>If you previously had the Command Line Tools installed, you'll need to change the
+active developer directory and point it to the new Xcode installation:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+</span></code></pre>
+<h2 id="installing-dependencies">Installing Dependencies</h2>
+<p>Most dependencies can be installed via Homebrew. The only exception is <a href="https://github.com/alperakcan/fuse-ext2">fuse-ext2</a>, which doesn't have a Homebrew Formula and has to installed manually. </p>
+<p>First we install the dependencies from Homebrew:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>brew install coreutils qemu bash gcc@10 ninja cmake macfuse
+</span></code></pre>
+<p>Once the installation is done, you'll need to reboot your machine for macfuse to work.</p>
+<p>After the reboot we need to install fuse-ext2. The SerenityOS developers provide a bash
+script in the git repository:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>git clone https://github.com/SerenityOS/serenity.git
+</span><span>cd serenity/Toolchain
+</span><span>./BuildFuseExt2.sh
+</span></code></pre>
+<h2 id="building-serenityos">Building SerenityOS</h2>
+<p>Now that we have all dependencies installed, we need to compile the SerenityOS
+toolchain. The toolchain includes a GCC cross-compiler that is needed to compile SerenityOS itself:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>./BuildIt.sh
+</span></code></pre>
+<p>As the &quot;gcc&quot; that is shipped with Xcode is just an alias for <code>clang</code> we need to change the binary that is used by CMake:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>cd ../Build/i686
+</span><span>rm -rf Root/
+</span><span>cmake ../.. -G Ninja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+</span></code></pre>
+<p>Finally, we can compile SerenityOS, build a disk image and run it:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>ninja install
+</span><span>ninja image
+</span><span>ninja run
+</span></code></pre>
+<p>The QEMU window will show up and boot right into the SerenityOS desktop where we
+can play around with it.</p>
+
+</article>
+
+
+</body>
+</html>

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Managing Kubernetes resources in Terraform: Helm provider</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Managing Kubernetes resources in Terraform: Helm provider</h1>
+    <div id="date">
+      <time class="date" datetime="2023-11-20">November 20, 2023</time>
+    
+    </div>
+  </header>
+
+  <p><img src="https://www.arthurkoziel.com/managing-kubernetes-resources-in-terraform-helm-provider/title.jpeg" alt="container ship" /></p>
+<p>In the <a href="https://www.arthurkoziel.com/managing-kubernetes-resources-in-terraform-kubernetes-provider/">previous blog post</a> we've covered the <a href="https://github.com/hashicorp/terraform-provider-kubernetes">Kubernetes provider</a> for Terraform. In this blog post, we look at the <a href="https://github.com/hashicorp/terraform-provider-helm">Helm provider</a>.</p>
+<p>With the Terraform provider the most time-consuming tasks were the conversion from YAML to HCL, and the need to manually split CRDs. With the Helm provider we don't need to do these tasks.</p>
+<h2 id="the-basics">The basics</h2>
+<p>The Helm provider only has one resource called <code>helm_release</code>. As an example we can configure and use it to install Grafana like this:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">provider </span><span style="color:#f1fa8c;">&quot;helm&quot;</span><span> {
+</span><span>  kubernetes {
+</span><span>    config_path </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;~/.kube/config&quot;
+</span><span>  }
+</span><span>}
+</span><span>
+</span><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;helm_release&quot; &quot;grafana&quot;</span><span> {
+</span><span>  name             </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>  repository       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;https://grafana.github.io/helm-charts&quot;
+</span><span>  chart            </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>  version          </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;7.0.6&quot;
+</span><span>}
+</span></code></pre>
+<p>Applying it will create the Terraform resource:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ terraform apply
+</span><span>Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+</span></code></pre>
+<p>And deploy the application in Kubernetes:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl get pods
+</span><span>NAME                       READY   STATUS    RESTARTS   AGE
+</span><span>grafana-5b67f46b65-pq25z   1/1     Running   0          76s
+</span></code></pre>
+<h2 id="installing-istio">Installing Istio</h2>
+<p>In the <a href="https://www.arthurkoziel.com/managing-kubernetes-resources-in-terraform-kubernetes-provider/">previous post</a> we installed Istio using the Kubernetes provider. To show the differences between both providers, we'll reinstall Istio, this time using the Helm provider.</p>
+<p>Last time we generated the Istio YAML manifests using istioctl, which included the CRDs and Istiod deployment. To deploy the same resources with Helm, we need to install two charts:</p>
+<ul>
+<li>The <a href="https://github.com/istio/istio/tree/master/manifests/charts/base">base chart</a> which contains the CRDs.</li>
+<li>The <a href="https://github.com/istio/istio/tree/master/manifests/charts/istio-control/istio-discovery">istiod chart</a> which contains the istiod deployment.</li>
+</ul>
+<p>In Terraform they can be installed as follows:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;helm_release&quot; &quot;istio_base&quot;</span><span> {
+</span><span>  name             </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;istio-base&quot;
+</span><span>  repository       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;https://istio-release.storage.googleapis.com/charts&quot;
+</span><span>  chart            </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;base&quot;
+</span><span>  namespace        </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;istio-system&quot;
+</span><span>  create_namespace </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true
+</span><span>  version          </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;1.20.0&quot;
+</span><span>}
+</span><span>
+</span><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;helm_release&quot; &quot;istiod&quot;</span><span> {
+</span><span>  name             </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;istiod&quot;
+</span><span>  repository       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;https://istio-release.storage.googleapis.com/charts&quot;
+</span><span>  chart            </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;istiod&quot;
+</span><span>  namespace        </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;istio-system&quot;
+</span><span>  create_namespace </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true
+</span><span>  version          </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;1.20.0&quot;
+</span><span>
+</span><span>  </span><span style="color:#6272a4;"># to install the CRDs first
+</span><span>  </span><span style="color:#ff79c6;">depends_on =</span><span> [helm_release</span><span style="color:#ff79c6;">.</span><span>istio_base]
+</span><span>}
+</span></code></pre>
+<p>We apply it:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ terraform apply
+</span><span>
+</span><span>Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+</span></code></pre>
+<p>And with that the installation is done:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl get pods -n istio-system
+</span><span>NAME                      READY   STATUS    RESTARTS   AGE
+</span><span>istiod-7d4885fc54-qgk54   1/1     Running   0          37s
+</span></code></pre>
+<p>Compared to using the Kubernetes provider, this was much easier and faster. We didn't have to convert YAML to HCL, and then split the CRDs manually into a different file.</p>
+<h2 id="chart-values">Chart values</h2>
+<p>There are 3 options to set custom chart values:</p>
+<ul>
+<li>HCL <code>set</code> blocks</li>
+<li>HCL <code>set_sensitive</code> blocks</li>
+<li>YAML/JSON in the <code>values</code> attribute</li>
+</ul>
+<p>We'll look at each of them and see how they can be used and what the pros and cons of each method are.</p>
+<h2 id="hcl-set-blocks">HCL set blocks</h2>
+<p>As an example here's how to set custom values using <code>set</code> with the same Istio chart from above:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;helm_release&quot; &quot;istiod&quot;</span><span> {
+</span><span>  </span><span style="color:#6272a4;"># ...
+</span><span>
+</span><span>  set {
+</span><span>    name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;pilot.resources.requests.cpu&quot;
+</span><span>    value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;100m&quot;
+</span><span>  }
+</span><span>
+</span><span>  set {
+</span><span>    name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;pilot.resources.requests.memory&quot;
+</span><span>    value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;100Mi&quot;
+</span><span>  }
+</span><span>
+</span><span>  set {
+</span><span>    name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;pilot.resources.limits.memory&quot;
+</span><span>    value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;100Mi&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>When setting values that have <code>{}</code>, <code>[]</code>, <code>.</code>, and <code>,</code> characters in them we have to double-escape them:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span>set {
+</span><span>  name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;pilot.podAnnotations.prometheus</span><span style="color:#ff79c6;">\\</span><span style="color:#f1fa8c;">.io/scrape&quot;
+</span><span>  value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;</span><span style="color:#ff79c6;">\&quot;</span><span style="color:#f1fa8c;">true</span><span style="color:#ff79c6;">\&quot;</span><span style="color:#f1fa8c;">&quot;
+</span><span>}
+</span></code></pre>
+<p>The downside of this method is that it's verbose. Each value takes up 4 lines. HCL doesn't allow to merge it into a single line:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Error: Invalid single-argument block definition
+</span><span>
+</span><span>  on main.tf line 28, in resource &quot;helm_release&quot; &quot;istiod&quot;:
+</span><span>  28:   set { name  = &quot;pilot.resources.requests.memory&quot;, value = &quot;100Mi&quot; }
+</span><span>
+</span><span>Single-line block syntax can include only one argument definition. To define multiple
+</span><span>arguments, use the multi-line block syntax with one argument definition per line.
+</span></code></pre>
+<p>This means that setting 3 custom values for a Helm chart requires adding 12 lines to the Terraform file. This can quickly add up for larger charts and make it difficult to get a good overview of the changes.</p>
+<h2 id="hcl-set-sensitive-blocks">HCL set_sensitive blocks</h2>
+<p>For sensitive values (secrets) which should not be displayed as clear text in the plan output, we have to use the HCL <code>set_sensitive</code> block.</p>
+<p>There is no equivalent with when using the <code>values</code> attribute. There is an <a href="https://github.com/hashicorp/terraform-provider-helm/issues/546">Issue</a> and <a href="https://github.com/hashicorp/terraform-provider-helm/pull/625">PR</a> but they are abandoned.</p>
+<p>Using the <a href="https://github.com/grafana/helm-charts/tree/main/charts/grafana">Grafana Helm chart</a> we can set the admin password like this:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span>set_sensitive {
+</span><span>  name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana.adminPassword&quot;
+</span><span>  value </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">local</span><span style="color:#ff79c6;">.</span><span>password
+</span><span>}
+</span></code></pre>
+<p>However, there is an issue with names that contain backslashes, which leads to sensitive values being shown in clear-text. There is an <a href="https://github.com/hashicorp/terraform-provider-helm/issues/737">Issue</a> about this, but it has been marked as stale and closed by a bot. A <a href="https://github.com/hashicorp/terraform-provider-helm/pull/746">PR</a> with a proposed fix is ignored by the developers.</p>
+<p>In the following example we use the Grafana Helm chart and set the client secret for the GitHub OAuth2 authentication:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;helm_release&quot; &quot;grafana&quot;</span><span> {
+</span><span>  name             </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>  repository       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;https://grafana.github.io/helm-charts&quot;
+</span><span>  chart            </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>  version          </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;7.0.6&quot;
+</span><span>  namespace        </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>  create_namespace </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true
+</span><span>
+</span><span>  set {
+</span><span>    name </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana</span><span style="color:#ff79c6;">\\</span><span style="color:#f1fa8c;">.ini.server.root_url&quot;
+</span><span>    value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;htps://example.org&quot;
+</span><span>  }
+</span><span>
+</span><span>  set_sensitive {
+</span><span>    name </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana</span><span style="color:#ff79c6;">\\</span><span style="color:#f1fa8c;">.ini.server.auth</span><span style="color:#ff79c6;">\\</span><span style="color:#f1fa8c;">.github.client_secret&quot;
+</span><span>    value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;very-secret&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>On the first apply the sensitive value will not be shown, but if we change any attribute in the resource (below I've changed the <code>root_url</code>) it will be displayed in clear text:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="color:#6272a4;"># helm_release.grafana will be updated in-place
+</span><span>~ </span><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;helm_release&quot; &quot;grafana&quot;</span><span> {
+</span><span>      id                         </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>    ~ metadata                   </span><span style="color:#ff79c6;">=</span><span> [
+</span><span>        - {
+</span><span>            </span><span style="color:#ff79c6;">- </span><span>app_version </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;10.1.5&quot;
+</span><span>            </span><span style="color:#ff79c6;">- </span><span>chart       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>            </span><span style="color:#ff79c6;">- </span><span>name        </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>            </span><span style="color:#ff79c6;">- </span><span>namespace   </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>            </span><span style="color:#ff79c6;">- </span><span>revision    </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">3
+</span><span>            </span><span style="color:#ff79c6;">- </span><span>values      </span><span style="color:#ff79c6;">= </span><span style="color:#8be9fd;">jsonencode</span><span>(
+</span><span>                  {
+</span><span>                    </span><span style="color:#ff79c6;">- </span><span style="color:#f1fa8c;">&quot;grafana.ini&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>                        </span><span style="color:#ff79c6;">- </span><span>server </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>                            </span><span style="color:#ff79c6;">- </span><span style="color:#f1fa8c;">&quot;auth.github&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>                                </span><span style="color:#ff79c6;">- </span><span>client_secret </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;very-secret&quot;
+</span><span>                              }
+</span><span>                            </span><span style="color:#ff79c6;">- </span><span>root_url      </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;htps://example.org&quot;
+</span><span>                          }
+</span><span>                      }
+</span><span>                  }
+</span><span>              )
+</span><span>            </span><span style="color:#ff79c6;">- </span><span>version     </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;7.0.6&quot;
+</span><span>          },
+</span><span>      ] </span><span style="color:#ff79c6;">-&gt;</span><span> (known after apply)
+</span><span>      name                       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>      </span><span style="color:#6272a4;"># (27 unchanged attributes hidden)
+</span><span>
+</span><span>    </span><span style="color:#ff79c6;">- </span><span>set {
+</span><span>        </span><span style="color:#ff79c6;">- </span><span>name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana</span><span style="color:#ff79c6;">\\</span><span style="color:#f1fa8c;">.ini.server.root_url&quot; </span><span style="color:#ff79c6;">-&gt;</span><span> null
+</span><span>        </span><span style="color:#ff79c6;">- </span><span>value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;htps://example.org&quot; </span><span style="color:#ff79c6;">-&gt;</span><span> null
+</span><span>      }
+</span><span>    </span><span style="color:#ff79c6;">+ </span><span>set {
+</span><span>        </span><span style="color:#ff79c6;">+ </span><span>name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana</span><span style="color:#ff79c6;">\\</span><span style="color:#f1fa8c;">.ini.server.root_url&quot;
+</span><span>        </span><span style="color:#ff79c6;">+ </span><span>value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;htps://www.grafana.com&quot;
+</span><span>      }
+</span><span>
+</span><span>      </span><span style="color:#6272a4;"># (1 unchanged block hidden)
+</span><span>  }
+</span></code></pre>
+<p>You can see the <code>very-secret</code> value being leaked as clear text in the output.</p>
+<h2 id="yaml-in-values-attribute">YAML in values attribute</h2>
+<p>As an alternative to using HCL <code>set</code> blocks, we can specify values in YAML or JSON by setting the <code>values</code> argument. In the examples below I'll focus on YAML.</p>
+<p>Most commonly an <a href="https://developer.hashicorp.com/terraform/language/expressions/strings#heredoc-strings">HCL heredoc string</a> is used. As an example we use the Istio Helm chart:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span>values </span><span style="color:#ff79c6;">=</span><span> [</span><span style="color:#f1fa8c;">&lt;&lt;EOT
+</span><span style="color:#f1fa8c;">pilot:
+</span><span style="color:#f1fa8c;">  resources:
+</span><span style="color:#f1fa8c;">    requests:
+</span><span style="color:#f1fa8c;">      cpu: &quot;100m&quot;
+</span><span style="color:#f1fa8c;">      memory: &quot;100Mi&quot;
+</span><span style="color:#f1fa8c;">    limits:
+</span><span style="color:#f1fa8c;">      memory: &quot;100Mi&quot;
+</span><span style="color:#f1fa8c;">EOT
+</span><span>]
+</span></code></pre>
+<p>This is more compact and readable than the HCL <code>set</code> blocks. It also allows for easy copying and pasting of examples from Helm chart documentation or the default values files, which are written in YAML.</p>
+<p>However, a drawback of this approach is the absence of linting, syntax highlighting, or schema validation in our editor, as the attribute is a HCL text field. This can lead to common errors like indentation errors.</p>
+<p>One solution is to read the values from a separate YAML file:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span>values </span><span style="color:#ff79c6;">=</span><span> [</span><span style="color:#8be9fd;">file</span><span>(</span><span style="color:#f1fa8c;">&quot;${</span><span style="color:#bd93f9;">path</span><span style="color:#ff79c6;">.</span><span style="color:#bd93f9;">module</span><span style="color:#f1fa8c;">}/values.yaml&quot;</span><span>)]
+</span></code></pre>
+<p>This allows us to open the YAML file in our editor and get language support. Another benefit is better debugging when locally rendering the Helm chart since we can use the same values as Terraform.</p>
+<p>The downside of this method is that it doesn't allow for substitutions (using variables in the YAML file). This is important when we want to use the output of a Terraform resource as an input to our Helm chart resource.</p>
+<p>To work around this we can render the YAML file as a template and pass in the values in a variable.</p>
+<p>In the following example we create a DNS record with Cloudflare and then use the hostname output in the Grafana Helm chart YAML values:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;cloudflare_record&quot; &quot;cluster&quot;</span><span> {
+</span><span>  zone_id </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;000&quot;
+</span><span>  name    </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;cluster&quot;
+</span><span>  value   </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;192.0.2.1&quot;
+</span><span>  type    </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;A&quot;
+</span><span>}
+</span><span>
+</span><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;helm_release&quot; &quot;grafana&quot;</span><span> {
+</span><span>  name             </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>  repository       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;https://grafana.github.io/helm-charts&quot;
+</span><span>  chart            </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;grafana&quot;
+</span><span>  version          </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;7.0.0&quot;
+</span><span>
+</span><span>  values </span><span style="color:#ff79c6;">=</span><span> [</span><span style="color:#8be9fd;">templatefile</span><span>(</span><span style="color:#f1fa8c;">&quot;values.yaml&quot;</span><span>, {
+</span><span>    root_url </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;https://${cloudflare_record</span><span style="color:#ff79c6;">.</span><span style="color:#f1fa8c;">cluster</span><span style="color:#ff79c6;">.</span><span style="color:#f1fa8c;">hostname}&quot;
+</span><span>  })]
+</span><span>}
+</span></code></pre>
+<p>The values.yaml file:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">grafana.ini</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">server</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">root_url</span><span>: </span><span style="color:#f1fa8c;">${root_url}
+</span></code></pre>
+<p>The drawback is that we now have to manage two files and coordinate changes between the HCL configuration file and the associated YAML file, which can increase the likelihood of errors.</p>
+<h2 id="hcl-objects-instead-of-text">HCL objects instead of text</h2>
+<p>Another way to set values is to use HCL objects and encode them using <a href="https://developer.hashicorp.com/terraform/language/functions/jsonencode">jsonencode</a> or <a href="https://developer.hashicorp.com/terraform/language/functions/yamlencode">yamlencode</a>. It's less verbose than <code>set</code> blocks, but slightly more verbose than YAML. The benefit is that it lets us keep everything in one file, allows for substitutions and have editor language support.</p>
+<p>The following example sets the resource requests/limits for the Istio Helm chart:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span>values </span><span style="color:#ff79c6;">=</span><span> [
+</span><span>  </span><span style="color:#8be9fd;">jsonencode</span><span>({
+</span><span>    pilot </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>      resources </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>        requests </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>            cpu </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;100m&quot;
+</span><span>            memory </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;100Mi&quot;
+</span><span>          }
+</span><span>          limits </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>            memory </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;100Mi&quot;
+</span><span>          }
+</span><span>      }
+</span><span>    }
+</span><span>  })
+</span><span>]
+</span></code></pre>
+<p>The drawbacks are the same as for the other HCL blocks. The biggest issue is that we have to convert YAML code from the documentation or examples into HCL objects. This additional step can slow down the development speed and also lead to errors when doing the conversion.</p>
+<h2 id="diff-output">Diff output</h2>
+<p>The most notable difference between the above methods for setting values, is the diff output when running a terraform plan.</p>
+<p>In general the HCL <code>set</code> blocks will give a clear view of what has changed. The plan output when changing the memory limit value looks like this:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="color:#ff79c6;">- </span><span>set {
+</span><span>    </span><span style="color:#ff79c6;">- </span><span>name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;pilot.resources.limits.memory&quot; </span><span style="color:#ff79c6;">-&gt;</span><span> null
+</span><span>    </span><span style="color:#ff79c6;">- </span><span>value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;100Mi&quot; </span><span style="color:#ff79c6;">-&gt;</span><span> null
+</span><span>  }
+</span><span style="color:#ff79c6;">+ </span><span>set {
+</span><span>    </span><span style="color:#ff79c6;">+ </span><span>name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;pilot.resources.limits.memory&quot;
+</span><span>    </span><span style="color:#ff79c6;">+ </span><span>value </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;150Mi&quot;
+</span><span>  }
+</span></code></pre>
+<p>However, the <code>values</code> attribute is treated as plain text and changing any value will always mark the whole attribute as changed. When changing the memory limit value the output looks like this:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span>~ values </span><span style="color:#ff79c6;">=</span><span> [
+</span><span>  </span><span style="color:#ff79c6;">- &lt;&lt;-</span><span>EOT
+</span><span>      pilot</span><span style="color:#ff79c6;">:
+</span><span>        resources</span><span style="color:#ff79c6;">:
+</span><span>          requests</span><span style="color:#ff79c6;">:
+</span><span>            cpu</span><span style="color:#ff79c6;">: </span><span style="color:#f1fa8c;">&quot;100m&quot;
+</span><span>            memory</span><span style="color:#ff79c6;">: </span><span style="color:#f1fa8c;">&quot;100Mi&quot;
+</span><span>          limits</span><span style="color:#ff79c6;">:
+</span><span>            memory</span><span style="color:#ff79c6;">: </span><span style="color:#f1fa8c;">&quot;100Mi&quot;
+</span><span>  EOT,
+</span><span>  </span><span style="color:#ff79c6;">+ &lt;&lt;-</span><span>EOT
+</span><span>      pilot</span><span style="color:#ff79c6;">:
+</span><span>        resources</span><span style="color:#ff79c6;">:
+</span><span>          requests</span><span style="color:#ff79c6;">:
+</span><span>            cpu</span><span style="color:#ff79c6;">: </span><span style="color:#f1fa8c;">&quot;100m&quot;
+</span><span>            memory</span><span style="color:#ff79c6;">: </span><span style="color:#f1fa8c;">&quot;100Mi&quot;
+</span><span>          limits</span><span style="color:#ff79c6;">:
+</span><span>            memory</span><span style="color:#ff79c6;">: </span><span style="color:#f1fa8c;">&quot;150Mi&quot;
+</span><span>  EOT,
+</span><span>]
+</span></code></pre>
+<p>When reviewing code, this makes it difficult to see what the actual change was. Projects that use a pull request automation tool like <a href="https://www.runatlantis.io/">Atlantis</a>, which posts the terraform plan output as a comment, will be less useful. There is an open <a href="https://github.com/hashicorp/terraform-provider-helm/issues/1121">Issue</a> discussing this, but it seems to be ignored.</p>
+<p>These are all the ways to set custom values (that I could find). Below I'll go into two issues that I've found when using the provider.</p>
+<h2 id="viewing-rendered-kubernetes-resources">Viewing rendered Kubernetes resources</h2>
+<p>It's not possible to see the manifests of the generated Kubernetes resources. The provider has an experimental flag to show them, but in my testing it didn't work for any chart and broke the deployments.</p>
+<p>First step is to enable it in the provider:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">provider </span><span style="color:#f1fa8c;">&quot;helm&quot;</span><span> {
+</span><span>  kubernetes {
+</span><span>    config_path </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;~/.kube/config&quot;
+</span><span>  }
+</span><span>
+</span><span>  experiments {
+</span><span>    manifest </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>Trying to deploy the Grafana Helm chart resulted in the following error:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ terraform plan
+</span><span>
+</span><span>│ Error: Provider produced inconsistent final plan
+</span><span>│
+</span><span>│ When expanding the plan for helm_release.grafana to include new values learned so far
+</span><span>│ during apply, provider &quot;registry.terraform.io/hashicorp/helm&quot; produced an invalid new
+</span><span>│ value for .manifest: was
+</span><span>│ cty.StringVal(&quot;
+</span><span>
+</span><span>### ... Truncated output for readability ... ###
+</span><span>
+</span><span>│ This is a bug in the provider, which should be reported in the provider&#39;s own issue
+</span><span>│ tracker.
+</span></code></pre>
+<p>The issue happened with all Helm charts I tested.</p>
+<p>Seeing the generated Kubernetes resources is important, especially for security. Without this feature we can only hope/trust that the Helm chart authors won't include any Kubernetes resources that could be a security risk (such as an RBAC Role with too many permissions).</p>
+<h2 id="fixing-issues-when-client-aborts">Fixing issues when client aborts</h2>
+<p>When a client has to abort an apply (for example due to a lost network connection) the resource will be in <code>pending-upgrade</code> state and not allow to re-run an apply.</p>
+<p>For example, if we installed Argo CD using the Helm provider like this:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;helm_release&quot; &quot;argocd&quot;</span><span> {
+</span><span>  name             </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;argocd&quot;
+</span><span>  repository       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;https://argoproj.github.io/argo-helm&quot;
+</span><span>  chart            </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;argo-cd&quot;
+</span><span>  version          </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;5.51.0&quot;
+</span><span>  namespace        </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;default&quot;
+</span><span>}
+</span></code></pre>
+<p>Then update the version to 5.51.1 and press Ctrl+C during the apply process:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>helm_release.argocd: Still modifying... [id=argocd, 10s elapsed]
+</span><span>^C
+</span><span>Two interrupts received. Exiting immediately. Note that data loss may have occurred.
+</span><span>
+</span><span>│ Error: operation canceled
+</span></code></pre>
+<p>Next time we run apply we get the following error:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>│ Error: another operation (install/upgrade/rollback) is in progress
+</span><span>│
+</span><span>│   with helm_release.argocd,
+</span><span>│   on main.tf line 29, in resource &quot;helm_release&quot; &quot;argocd&quot;:
+</span><span>│   29: resource &quot;helm_release&quot; &quot;argocd&quot; {
+</span></code></pre>
+<p>We can fix this by deleting the latest secret created for this release by Helm:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl get secret
+</span><span>NAME                           TYPE                 DATA   AGE
+</span><span>sh.helm.release.v1.argocd.v1   helm.sh/release.v1   1      45m
+</span><span>sh.helm.release.v1.argocd.v2   helm.sh/release.v1   1      40m
+</span><span>sh.helm.release.v1.argocd.v3   helm.sh/release.v1   1      32m
+</span><span>
+</span><span>$ kubectl delete secret sh.helm.release.v1.argocd.v3
+</span></code></pre>
+<p>After that the apply process will work again. A similar error is <code>Error: cannot re-use a name that is still in use</code> which can be fixed in the same way.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this blog post we've seen how to use the Terraform Helm provider. We covered the basics on how to use it and showed how to set custom Helm chart values in different ways.</p>
+<p>In general the provider makes the deployment of Kubernetes resources much easier than the Kubernetes provider shown in the last blog post. We don't have to manually convert YAML to HCL, and don't have to handle CRDs in a special way.</p>
+<p>The provider has disadvantages and bugs. It's not possible to see the generated Kubernetes manifests (the manifest experiment flag did not work). This makes it hard to troubleshoot issues and understand configurations. Another issue is that the <code>set_sensitive</code> block is leaking secrets in the terraform plan output.</p>
+<p>The project development is not very active. All of the issues above have open Issues and PRs but have been ignored for years.</p>
+<p>In conclusion I can't recommend using the provider for anything beyond temporary testing environments. Alternative solutions such as Argo CD and Flux are currently the better choices.</p>
+
+</article>
+
+
+</body>
+</html>

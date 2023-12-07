@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Writing Reusable Helm Charts</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Writing Reusable Helm Charts</h1>
+    <div id="date">
+      <time class="date" datetime="2020-03-01">March 01, 2020</time>
+    
+    </div>
+  </header>
+
+  <p><a href="https://helm.sh/">Helm charts</a> make it possible to easily package <a href="https://kubernetes.io/">Kubernetes</a> manifests, version them and share them with other developers. To use a Helm chart across projects with different requirements it needs to be <em>reusable</em>, meaning that common parts of the Kubernetes manifests can be changed in a values file without having to re-write the templates.</p>
+<p>Let's say we are looking into deploying Prometheus via Helm into our Kubernetes cluster. We search around and find a chart that is stable, well documented and actively maintained. It looks like a good choice. But there are a few options that you need to change in order to fit our requirements. Normally this could be done by creating a <code>values.yaml</code> file and overriding the default settings. However, the chart that is available is not reusable enough and the options that we need to change are not available.</p>
+<p>In such a case the only option for us is to copy the whole chart and modify it to fit the requirements even if the modification is only 1 or 2 lines of code. After copying the chart we also have to maintain it and keep it up to date with the upstream branch. It would've saved us a lot of time and work if the chart added a few options to make it reusable for projects that have different requirements.</p>
+<p>In the next sections I'm going to go over the templates from the default Helm chart template (that is created when running <code>helm create</code>) and explain what makes them reusable (and what can be improved).</p>
+<h2 id="ingress">Ingress</h2>
+<p>An Ingress allows external users to access Kubernetes Services. It provides a reverse-proxy, configurable traffic routing and TLS termination. There are several Ingress controllers available such as <a href="https://github.com/kubernetes/ingress-nginx">nginx</a>, <a href="https://github.com/kubernetes/ingress-gce">GCE</a>, <a href="https://github.com/containous/traefik">Traefik</a>, <a href="https://github.com/haproxytech/kubernetes-ingress/">HAProxy</a>, <a href="https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/">and more</a>.</p>
+<p>For a reusable Ingress template we need to consider the following requirements:</p>
+<ul>
+<li>Using the Ingress should be optional. Not every developer wants to expose their service to external users</li>
+<li>It should be possible to choose an ingress controller such as nginx or GCE</li>
+<li>Traffic routing should be configurable</li>
+<li>TLS should be optional</li>
+</ul>
+<p>The <a href="https://gist.github.com/arthurk/d872e92fabfca4f2e6af84662da10106">default Ingress template</a> meets all of our requirements and is a great example of a reusable template. The custom annotations are a very important part. A typical usage example of would look like this:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">ingress</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">enabled</span><span>: </span><span style="color:#bd93f9;">true
+</span><span>  </span><span style="color:#ff79c6;">annotations</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">kubernetes.io/ingress.class</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span>    </span><span style="color:#ff79c6;">nginx.ingress.kubernetes.io/server-snippet</span><span>: </span><span style="color:#ff79c6;">|
+</span><span style="color:#f1fa8c;">      add_header X-Frame-Options &quot;DENY&quot;;
+</span><span style="color:#f1fa8c;">      proxy_set_header X-Frame-Options &quot;DENY&quot;;
+</span><span>    </span><span style="color:#ff79c6;">certmanager.k8s.io/cluster-issuer</span><span>: </span><span style="color:#f1fa8c;">letsencrypt
+</span><span>    </span><span style="color:#ff79c6;">certmanager.k8s.io/acme-challenge-type</span><span>: </span><span style="color:#f1fa8c;">dns01
+</span><span>    </span><span style="color:#ff79c6;">certmanager.k8s.io/acme-dns01-provider</span><span>: </span><span style="color:#f1fa8c;">cloudflare
+</span></code></pre>
+<p>We have the ingress enabled and use nginx as a controller. We specify a custom <code>server-snippet</code> (used by the nginx-ingress to inject custom code into the server config) that adds a custom header (<code>X-Frame-Options</code>). We use annotations to signal <a href="https://www.arthurkoziel.com/writing-reusable-helm-charts/cert-manager.readthedocs.io/">cert-manager</a> to provision a SSL certificate for this host.</p>
+<p>Other ingress controllers such as <a href="https://github.com/kubernetes/ingress-gce">GCE</a> also make use of annotations to integrate with Google Cloud services. In this example we assign an external static IP and provision an SSL certificate (with <a href="http://github.com/GoogleCloudPlatform/gke-managed-certs">gke-managed-certs</a>):</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">ingress</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">enabled</span><span>: </span><span style="color:#bd93f9;">true
+</span><span>  </span><span style="color:#ff79c6;">annotations</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">kubernetes.io/ingress.class</span><span>: </span><span style="color:#f1fa8c;">gce
+</span><span>    </span><span style="color:#ff79c6;">kubernetes.io/ingress.global-static-ip-name</span><span>: </span><span style="color:#f1fa8c;">my-external-ip
+</span><span>    </span><span style="color:#ff79c6;">kubernetes.io/ingress.allow-http</span><span>: </span><span style="color:#f1fa8c;">&#39;false&#39;
+</span><span>    </span><span style="color:#ff79c6;">networking.gke.io/managed-certificates</span><span>: </span><span style="color:#f1fa8c;">example-certificate
+</span><span>  </span><span style="color:#ff79c6;">hosts</span><span>:
+</span><span>    - </span><span style="color:#ff79c6;">host</span><span>: </span><span style="color:#f1fa8c;">example.org
+</span><span>      </span><span style="color:#ff79c6;">paths</span><span>:
+</span><span>        - </span><span style="color:#f1fa8c;">&quot;/*&quot;
+</span><span>  </span><span style="color:#ff79c6;">tls</span><span>:
+</span><span>    - </span><span style="color:#ff79c6;">hosts</span><span>:
+</span><span>        - </span><span style="color:#f1fa8c;">example.org
+</span><span>      </span><span style="color:#ff79c6;">secretName</span><span>: </span><span style="color:#f1fa8c;">&quot;example-org-tls&quot;
+</span></code></pre>
+<h2 id="service">Service</h2>
+<p>A Service is an abstraction for a grouping of pods. It selects pods based on labels and allows network access to them. There are several Service types that Kubernetes supports such as ClusterIP, LoadBalancer or NodePort.</p>
+<p>The requirements for a Service template in a reusable Helm chart are:</p>
+<ul>
+<li>It should be possible to pick a Service type. Not everyone wants to run an application behind a Load Balancer</li>
+<li>It should be possible to add annotations</li>
+</ul>
+<p>These are fairly simple requirements and the <a href="https://gist.github.com/arthurk/e7bec72e9e7f4ea8785656f582846421">default Service template</a> meets all of them. A usage example looks like this:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">service</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">type</span><span>: </span><span style="color:#f1fa8c;">ClusterIP
+</span><span>  </span><span style="color:#ff79c6;">port</span><span>: </span><span style="color:#bd93f9;">80
+</span><span>  </span><span style="color:#ff79c6;">annotations</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">prometheus.io/scrape</span><span>: </span><span style="color:#f1fa8c;">&quot;true&quot;
+</span><span>    </span><span style="color:#ff79c6;">prometheus.io/port</span><span>: </span><span style="color:#f1fa8c;">&quot;4000&quot;
+</span></code></pre>
+<p>The service has a <code>ClusterIP</code> Service type. In environments where higher availability is required this could be changed to a <code>LoadBalancer</code>. The annotations are used by the Prometheus Helm chart: The prometheus server looks for all services in a cluster that have the <code>prometheus.io/scrape: &quot;true&quot;</code> annotation and automatically scrapes them every minute.</p>
+<h2 id="deployment">Deployment</h2>
+<p>A Deployment is an abstraction for pods. It runs multiple replicas of an application and keeps them in the desired state. If an application fails or becomes unresponsive it will be replaced automatically.</p>
+<p>In a reusable Deployment template we should be able to:</p>
+<ul>
+<li><strong>Set the number of replicas</strong>: Depending on the environment we should be able to adjust this value. A test environment doesn't need to run as many replicas as a production environment.</li>
+<li><strong>Add Pod annotations</strong>: Applications such as <a href="https://linkerd.io/">Linkerd</a> use annotations to identify Pods into which to inject a sidecar container (<code>linkerd.io/inject: enabled</code>)</li>
+<li><strong>Pull the Docker image from a custom (private) registry</strong></li>
+<li><strong>Modify arguments and environment variables</strong>: As an example we should be able to pass <code>--log.level=debug</code> to a container to see debug logs in case we have to identify problems with our application. Environment variables such as <code>MIX_ENV=prod</code> often tell the application in which environment it is running and which configuration it should load</li>
+<li><strong>Add custom ConfigMaps and Secrets</strong>: It should be possible to load application-specific configuration files or secrets that were added externally (for example SSL certificates for a database connection or API keys)</li>
+<li><strong>Add Liveness and Readiness probes</strong> to check if the container is started and alive</li>
+<li><strong>Configure container resource limits and requests</strong>: In test or staging environments we should be able to disable it or set it to a low value</li>
+<li><strong>Run Sidecar Containers</strong>: If the application requires a database connection but the database is on CloudSQL it is often recommended to run <a href="https://github.com/GoogleCloudPlatform/cloudsql-proxy/">cloudsql-proxy</a> as a sidecar container to establish a secure connection to the database</li>
+<li><strong>Allow to set Affinity and Tolerations</strong>: To optimize the performance of the application we should be able to run it on the same machine as certain other applications or have it scheduled on a specific node pool</li>
+</ul>
+<p>Unlike the Ingress and Service templates, the <a href="https://gist.github.com/arthurk/5f833ec5b264b84b6e1bedbd8eac69ea">default template</a> doesn't meet the requirements from above. Specifically we need to allow to:</p>
+<ul>
+<li>Add Pod annotations so that other applications such as Linkerd know where to inject sidecar containers</li>
+<li>Replace <code>appVersion</code> with <code>image.tag</code>. This allows to change the docker image tag without having to re-package the chart with a different <code>appVersion</code></li>
+<li>Add <code>extraArgs</code> to allow additional arguments to be passed into the container</li>
+<li>Add <code>env</code> to allow additional environment variables to be passed into the container</li>
+<li>Replace the default livenessProbe/readinessProbe with a block that allows us to set all values (the default template only allows <code>httpGet</code> probes on <code>/</code></li>
+<li>Add <code>extraVolumes</code> and <code>extraVolumeMounts</code> to allow mounting of custom ConfigMaps and Secrets</li>
+<li>Add <code>sidecarContainers</code> to allow to inject additional containers into the pod (such as <a href="https://github.com/GoogleCloudPlatform/cloudsql-proxy/">cloudsql-proxy</a>)</li>
+</ul>
+<p>The modified template code looks as follows (<span class="diff_add">green</span> text marks added and changed code):</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">apps/v1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Deployment
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: {{ </span><span style="color:#f1fa8c;">include &quot;mychart.fullname&quot; . </span><span>}}
+</span><span>  </span><span style="color:#ff79c6;">labels</span><span>:
+</span><span>    {{- </span><span style="color:#f1fa8c;">include &quot;mychart.labels&quot; . | nindent 4 </span><span>}}
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">replicas</span><span>: {{ </span><span style="color:#f1fa8c;">.Values.replicaCount </span><span>}}
+</span><span>  </span><span style="color:#ff79c6;">selector</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">matchLabels</span><span>:
+</span><span>      {{- </span><span style="color:#f1fa8c;">include &quot;mychart.selectorLabels&quot; . | nindent 6 </span><span>}}
+</span><span>  </span><span style="color:#ff79c6;">template</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">labels</span><span>:
+</span><span>        {{- </span><span style="color:#f1fa8c;">include &quot;mychart.selectorLabels&quot; . | nindent 8 </span><span>}} </span><span style="color:#ff79c6;">&lt;span class=&quot;diff_add&quot;&gt;annotations</span><span>:
+</span><span>      {{- </span><span style="color:#f1fa8c;">if .Values.podAnnotations </span><span>}}
+</span><span>        {{- </span><span style="color:#f1fa8c;">toYaml .Values.podAnnotations | nindent 8 </span><span>}}
+</span><span>      {{- </span><span style="color:#f1fa8c;">end </span><span>}}</span><span style="color:#f1fa8c;">&lt;/span&gt;
+</span><span>    </span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>    {{- </span><span style="color:#f1fa8c;">with .Values.imagePullSecrets </span><span>}}
+</span><span>      </span><span style="color:#ff79c6;">imagePullSecrets</span><span>:
+</span><span>        {{- </span><span style="color:#f1fa8c;">toYaml . | nindent 8 </span><span>}}
+</span><span>    {{- </span><span style="color:#f1fa8c;">end </span><span>}}
+</span><span>      </span><span style="color:#ff79c6;">serviceAccountName</span><span>: {{ </span><span style="color:#f1fa8c;">include &quot;mychart.serviceAccountName&quot; . </span><span>}}
+</span><span>      </span><span style="color:#ff79c6;">securityContext</span><span>:
+</span><span>        {{- </span><span style="color:#f1fa8c;">toYaml .Values.podSecurityContext | nindent 8 </span><span>}}
+</span><span>      </span><span style="color:#ff79c6;">containers</span><span>:
+</span><span>        - </span><span style="color:#ff79c6;">name</span><span>: {{ </span><span style="color:#f1fa8c;">.Chart.Name </span><span>}}
+</span><span>          </span><span style="color:#ff79c6;">securityContext</span><span>:
+</span><span>            {{- </span><span style="color:#f1fa8c;">toYaml .Values.securityContext | nindent 12 </span><span>}} </span><span style="color:#ff79c6;">&lt;span class=&quot;diff_add&quot;&gt;image</span><span>: </span><span style="color:#f1fa8c;">&quot;{{ .Values.image.repository }}:{{ .Values.image.tag }}&quot;&lt;/span&gt;
+</span><span>          </span><span style="color:#ff79c6;">imagePullPolicy</span><span>: {{ </span><span style="color:#f1fa8c;">.Values.image.pullPolicy </span><span>}} </span><span style="color:#ff79c6;">&lt;span class=&quot;diff_add&quot;&gt;args</span><span>:
+</span><span>          {{- </span><span style="color:#f1fa8c;">range $key</span><span>, </span><span style="color:#f1fa8c;">$value := .Values.extraArgs </span><span>}}
+</span><span>            - </span><span style="color:#f1fa8c;">--{{ $key }}={{ $value }}
+</span><span>          {{- </span><span style="color:#f1fa8c;">end </span><span>}}
+</span><span>          {{- </span><span style="color:#f1fa8c;">if .Values.env </span><span>}}
+</span><span>          </span><span style="color:#ff79c6;">env</span><span>:
+</span><span>            {{ </span><span style="color:#f1fa8c;">toYaml .Values.env | nindent 12</span><span>}}
+</span><span>          {{- </span><span style="color:#f1fa8c;">end </span><span>}}</span><span style="color:#f1fa8c;">&lt;/span&gt;
+</span><span>          </span><span style="color:#ff79c6;">ports</span><span>:
+</span><span>            - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">http
+</span><span>              </span><span style="color:#ff79c6;">containerPort</span><span>: </span><span style="color:#bd93f9;">80
+</span><span>              </span><span style="color:#ff79c6;">protocol</span><span>: </span><span style="color:#f1fa8c;">TCP &lt;span class=&quot;diff_add&quot;&gt;{{- with .Values.livenessProbe }}
+</span><span>          </span><span style="color:#ff79c6;">livenessProbe</span><span>:
+</span><span>            {{- </span><span style="color:#f1fa8c;">toYaml . | nindent 12 </span><span>}}
+</span><span>          {{- </span><span style="color:#f1fa8c;">end </span><span>}}
+</span><span>          {{- </span><span style="color:#f1fa8c;">with .Values.readinessProbe </span><span>}}
+</span><span>          </span><span style="color:#ff79c6;">readinessProbe</span><span>:
+</span><span>            {{- </span><span style="color:#f1fa8c;">toYaml . | nindent 12 </span><span>}}
+</span><span>          {{- </span><span style="color:#f1fa8c;">end </span><span>}}</span><span style="color:#f1fa8c;">&lt;/span&gt;
+</span><span>          </span><span style="color:#ff79c6;">resources</span><span>:
+</span><span>            {{- </span><span style="color:#f1fa8c;">toYaml .Values.resources | nindent 12 </span><span>}} </span><span style="color:#ff79c6;">&lt;span class=&quot;diff_add&quot;&gt;volumeMounts</span><span>:
+</span><span>          {{- </span><span style="color:#f1fa8c;">if .Values.extraVolumeMounts </span><span>}}
+</span><span>          {{ </span><span style="color:#f1fa8c;">toYaml .Values.extraVolumeMounts | nindent 12 </span><span>}}
+</span><span>          {{- </span><span style="color:#f1fa8c;">end </span><span>}}
+</span><span>       {{- </span><span style="color:#f1fa8c;">if .Values.sidecarContainers </span><span>}}
+</span><span>       {{- </span><span style="color:#f1fa8c;">toYaml .Values.sidecarContainers | nindent 8 </span><span>}}
+</span><span>       {{- </span><span style="color:#f1fa8c;">end </span><span>}}
+</span><span>      </span><span style="color:#ff79c6;">volumes</span><span>:
+</span><span>      {{- </span><span style="color:#f1fa8c;">if .Values.extraVolumes </span><span>}}
+</span><span>      {{ </span><span style="color:#f1fa8c;">toYaml .Values.extraVolumes | nindent 8</span><span>}}
+</span><span>      {{- </span><span style="color:#f1fa8c;">end </span><span>}}</span><span style="color:#f1fa8c;">&lt;/span&gt;
+</span><span>      {{- </span><span style="color:#f1fa8c;">with .Values.nodeSelector </span><span>}}
+</span><span>      </span><span style="color:#ff79c6;">nodeSelector</span><span>:
+</span><span>        {{- </span><span style="color:#f1fa8c;">toYaml . | nindent 8 </span><span>}}
+</span><span>      {{- </span><span style="color:#f1fa8c;">end </span><span>}}
+</span><span>    {{- </span><span style="color:#f1fa8c;">with .Values.affinity </span><span>}}
+</span><span>      </span><span style="color:#ff79c6;">affinity</span><span>:
+</span><span>        {{- </span><span style="color:#f1fa8c;">toYaml . | nindent 8 </span><span>}}
+</span><span>    {{- </span><span style="color:#f1fa8c;">end </span><span>}}
+</span><span>    {{- </span><span style="color:#f1fa8c;">with .Values.tolerations </span><span>}}
+</span><span>      </span><span style="color:#ff79c6;">tolerations</span><span>:
+</span><span>        {{- </span><span style="color:#f1fa8c;">toYaml . | nindent 8 </span><span>}}
+</span><span>    {{- </span><span style="color:#f1fa8c;">end </span><span>}}
+</span></code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>The default helm chart template is a great starting point for building reusable helm charts. The Ingress and Service templates are perfect examples. The Deployment template is lacking a few options to be reusable enough but can easily be modified and improved.</p>
+<p>For good examples of reusable Helm charts I recommend checking the <a href="https://github.com/helm/charts/tree/master/stable">helm/charts stable repo</a>. Charts such as <a href="https://github.com/helm/charts/tree/master/stable/prometheus">Prometheus</a>, <a href="https://github.com/helm/charts/tree/master/stable/grafana">Grafana</a> or <a href="https://github.com/helm/charts/tree/master/stable/nginx-ingress">nginx-ingress</a> are actively maintained and constantly improved. They are good references to look at when writing a new Helm chart.</p>
+
+</article>
+
+
+</body>
+</html>

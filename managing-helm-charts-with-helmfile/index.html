@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Managing Helm Charts with Helmfile</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Managing Helm Charts with Helmfile</h1>
+    <div id="date">
+      <time class="date" datetime="2020-03-29">March 29, 2020</time>
+    
+    </div>
+  </header>
+
+  <p>In this blog post I'm going to show how <a href="https://github.com/roboll/helmfile">Helmfile</a> makes it easier to manage Helm charts and environments.</p>
+<p>To do this I'm going to walk through an example where at the beginning we install helm charts over the CLI using the <code>helm</code> command, and then refactor the code in steps to use the <code>helmfile</code> command instead.</p>
+<h2 id="setup">Setup</h2>
+<p>Our setup consists of 2 applications (backend and frontend) and Prometheus for metrics. We have helm charts for:</p>
+<ul>
+<li>Backend (custom chart)</li>
+<li>Frontend (custom chart)</li>
+<li>Prometheus (chart from the <a href="https://github.com/helm/charts/tree/master/stable/prometheus">helm stable repo</a>)</li>
+</ul>
+<p>which are deployed into these environments:</p>
+<ul>
+<li>Development</li>
+<li>Staging</li>
+<li>Production</li>
+</ul>
+<p>The files are organized in this directory structure:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>.
+</span><span>└── charts
+</span><span>   ├── backend
+</span><span>   │  ├── Chart.yaml
+</span><span>   │  ├── templates
+</span><span>   │  └── values-development.yaml
+</span><span>   │  └── values-staging.yaml
+</span><span>   │  └── values-production.yaml
+</span><span>   │  └── secrets-development.yaml
+</span><span>   │  └── secrets-staging.yaml
+</span><span>   │  └── secrets-production.yaml
+</span><span>   └── frontend
+</span><span>   │  ├── Chart.yaml
+</span><span>   │  ├── templates
+</span><span>   │  └── values-development.yaml
+</span><span>   │  └── values-staging.yaml
+</span><span>   │  └── values-production.yaml
+</span><span>   │  └── secrets-development.yaml
+</span><span>   │  └── secrets-staging.yaml
+</span><span>   │  └── secrets-production.yaml
+</span><span>   └── prometheus
+</span><span>      └── values-development.yaml
+</span><span>      └── values-staging.yaml
+</span><span>      └── values-production.yaml
+</span></code></pre>
+<p>Each values-development.yaml, values-staging.yaml, values-production.yaml file contains values that are specific to that environment.</p>
+<p>For example the development environment only needs to deploy 1 replica of the backend while the staging and production environments need 3 replicas.</p>
+<p>We use <a href="https://github.com/fstech/helm-secrets">helm-secrets</a> to manage secrets. Each secrets file is encrypted and has to be manually decrypted before deploying the chart. After the deployment is done the decrypted file has to be deleted.</p>
+<h2 id="installation-and-upgrades">Installation and Upgrades</h2>
+<p>With the above setup we use the following commands to deploy (install/upgrade) the backend chart in the staging environment:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>helm secrets dec ./charts/backend/secrets-backend.yaml
+</span><span>helm upgrade --install --atomic --cleanup-on-fail -f ./charts/backend/values-staging.yaml -f ./charts/backend/secrets-staging.yaml backend ./charts/backend
+</span><span>rm ./charts/backend/secrets-backend.yaml.dec
+</span></code></pre>
+<p>We use the <code>helm upgrade</code> command with the <code>--install</code> flag to be able to install and upgrade charts with the same command. We also use the <code>--atomic</code> and <code>--cleanup-on-fail</code> flags to rollback changes in case a chart upgrade fails.</p>
+<p>To deploy the other charts we have to repeat the same commands (for the prometheus chart we can leave out the part that handles secrets).</p>
+<p>Now the problem is that it's hard to remember the exact commands to run when deploying a chart (especially when the upgrades are not very frequent). When multiple people are responsible for deployments it's also difficult to make sure the same commands are used. If, for example, the secrets were not decrypted beforehand it will lead to encrypted values being deployed and probably crash the application.</p>
+<h2 id="writing-bash-scripts">Writing Bash Scripts</h2>
+<p>To fix the issues mentioned above we can write bash scripts that execute the exact commands needed for a deployment. We create one script per environment in each chart directory which leads to the following directory tree for the backend chart:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>.
+</span><span>└── charts
+</span><span>   ├── backend
+</span><span>      ├── Chart.yaml
+</span><span>      ├── templates/
+</span><span>      └── values-development.yaml
+</span><span>      └── values-staging.yaml
+</span><span>      └── values-production.yaml
+</span><span>      └── secrets-development.yaml
+</span><span>      └── secrets-staging.yaml
+</span><span>      └── secrets-production.yaml
+</span><span>      └── deploy-development.sh
+</span><span>      └── deploy-staging.sh
+</span><span>      └── deploy-production.sh
+</span></code></pre>
+<p>When we want to deploy the backend chart in the staging environment we can run:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>./charts/backend/deploy-staging.sh
+</span></code></pre>
+<p>This works fine for small environments like in the example above, but for larger environments with 15 or 20 charts it will lead to a lot of similar-looking bash scripts with large amounts of code duplication.</p>
+<p>Provisioning a new environment would mean that a new deploy script has to be created in each chart directory. If we have 15 charts that means we have to copy one of the existing deploy scripts 15 times and search/replace the contents to match the new environment name.</p>
+<p>To avoid duplicating the same code over and over again we could consolidate all of our small deploy scripts into one large deploy script. But this comes with a cost: We have to spend time maintaining it, fixing bugs and possibly extend it to handle new environments.</p>
+<p>At this point Helmfile comes in handy. Instead of writing our custom deploy script we can declare our environments in a YAML file and let it handle the deployment logic for us.</p>
+<h2 id="using-a-helmfile">Using a Helmfile</h2>
+<p>Using the backend chart as an example we can write the following content into a <code>helmfile.yaml</code> file to manage the staging deployment:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">releases</span><span>:
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">backend
+</span><span>  </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">charts/backend
+</span><span>  </span><span style="color:#ff79c6;">values</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/backend/values-staging.yaml
+</span><span>  </span><span style="color:#ff79c6;">secrets</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/backend/secrets-staging.yaml
+</span></code></pre>
+<p>We can deploy the chart by running:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>helmfile sync
+</span></code></pre>
+<p>In the background Helmfile will run the same <code>helm upgrade --install ...</code> command as before.</p>
+<p>Note that there's no need to manually decrypt secrets anymore as Helmfile has built-in support for helm-secrets. This means that any file that is listed under <code>secrets:</code> will automatically be decrypted and after the deployment is finished the decrypted file will automatically be removed.</p>
+<h2 id="environments">Environments</h2>
+<p>The above example uses the <code>values-staging.yaml</code> file as chart values. To be able to use multiple environments we can list them under the <code>environments:</code> key at the beginning of the helmfile and then use the environment name as a variable in the release definition. The file would now look like this:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">environments</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">development</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">staging</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">production</span><span>:
+</span><span>
+</span><span style="color:#ff79c6;">releases</span><span>:
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">backend
+</span><span>  </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">charts/backend
+</span><span>  </span><span style="color:#ff79c6;">values</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/backend/values-{{ .Environment.Name }}.yaml
+</span><span>  </span><span style="color:#ff79c6;">secrets</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/backend/secrets-{{ .Environment.Name }}.yaml
+</span></code></pre>
+<p>When deploying the chart we now have to use the <code>--environment/-e</code> option when executing the helmfile command:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>helmfile -e staging sync
+</span></code></pre>
+<p>We can now easily create new environments by listing them under <code>environments</code> instead of duplicating our bash scripts.</p>
+<h2 id="templates">Templates</h2>
+<p>After adding all of our helm charts into the helmfile the file content would look like this:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">environments</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">development</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">staging</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">production</span><span>:
+</span><span>
+</span><span style="color:#ff79c6;">releases</span><span>:
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">backend
+</span><span>  </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">charts/backend
+</span><span>  </span><span style="color:#ff79c6;">values</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/backend/values-{{ .Environment.Name }}.yaml
+</span><span>  </span><span style="color:#ff79c6;">secrets</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/backend/secrets-{{ .Environment.Name }}.yaml
+</span><span>
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">frontend
+</span><span>  </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">charts/frontend
+</span><span>  </span><span style="color:#ff79c6;">values</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/frontend/values-{{ .Environment.Name }}.yaml
+</span><span>  </span><span style="color:#ff79c6;">secrets</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/frontend/secrets-{{ .Environment.Name }}.yaml
+</span><span>
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">prometheus
+</span><span>  </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">stable/prometheus
+</span><span>  </span><span style="color:#ff79c6;">version</span><span>: </span><span style="color:#bd93f9;">11.0.4
+</span><span>  </span><span style="color:#ff79c6;">values</span><span>:
+</span><span>  - </span><span style="color:#f1fa8c;">charts/prometheus/values-{{ .Environment.Name }}.yaml
+</span></code></pre>
+<p>The same pattern (for values and secrets) is repeated for each release. While in the example above we only have 3 releases the pattern will continue for future additions and eventually lead to much duplicated code.</p>
+<p>We can avoid copy/pasting the release definitions by using Helmfile templates. A template is defined at the top of the file and then referenced in the release by using <a href="https://confluence.atlassian.com/bitbucket/yaml-anchors-960154027.html">YAML anchors</a>. This is our helmfile after using templates:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">environments</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">development</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">staging</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">production</span><span>:
+</span><span>
+</span><span style="color:#ff79c6;">templates</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">default</span><span>: </span><span style="color:#ff79c6;">&amp;</span><span>default
+</span><span>    </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">charts/{{`{{ .Release.Name }}`}}
+</span><span>    </span><span style="color:#ff79c6;">missingFileHandler</span><span>: </span><span style="color:#f1fa8c;">Warn
+</span><span>    </span><span style="color:#ff79c6;">values</span><span>:
+</span><span>    - </span><span style="color:#f1fa8c;">charts/{{`{{ .Release.Name }}`}}/values-{{ .Environment.Name }}.yaml
+</span><span>    </span><span style="color:#ff79c6;">secrets</span><span>:
+</span><span>    - </span><span style="color:#f1fa8c;">charts/{{`{{ .Release.Name }}`}}/secrets-{{ .Environment.Name }}.yaml
+</span><span>
+</span><span style="color:#ff79c6;">releases</span><span>:
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">backend
+</span><span>  </span><span style="color:#bd93f9;">&lt;&lt;</span><span>: </span><span style="color:#ff79c6;">*</span><span style="color:#ffffff;">default
+</span><span>
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">frontend
+</span><span>  </span><span style="color:#bd93f9;">&lt;&lt;</span><span>: </span><span style="color:#ff79c6;">*</span><span style="color:#ffffff;">default
+</span><span>
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">prometheus
+</span><span>  </span><span style="color:#bd93f9;">&lt;&lt;</span><span>: </span><span style="color:#ff79c6;">*</span><span style="color:#ffffff;">default
+</span><span>  </span><span style="color:#6272a4;"># override the defaults since it&#39;s a remote chart
+</span><span>  </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">stable/prometheus
+</span><span>  </span><span style="color:#ff79c6;">version</span><span>: </span><span style="color:#bd93f9;">11.0.4
+</span></code></pre>
+<p>We have removed much of the duplicated code from our helmfile and can now easily add new environments and releases.</p>
+<h2 id="helm-defaults">Helm Defaults</h2>
+<p>We've previously used the the <code>--atomic</code> and <code>--cleanup-on-fail</code> options when deploying charts. To do the same when using Helmfile we just have to specify them under <code>helmDefaults</code>:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">helmDefaults</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">atomic</span><span>: </span><span style="color:#bd93f9;">true
+</span><span>  </span><span style="color:#ff79c6;">cleanupOnFail</span><span>: </span><span style="color:#bd93f9;">true
+</span></code></pre>
+<h2 id="running-helmfile-commands">Running Helmfile Commands</h2>
+<p>Here are a few examples of helmfile commands for common operations.</p>
+<p>To install or upgrade all charts in an environment (using staging as an example) we run:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>helmfile -e staging sync
+</span></code></pre>
+<p>If we just want to sync (meaning to install/upgrade) a single chart we can use selectors. This command will sync the backend chart in the staging environment with our local values:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>helmfile -e staging -l name=backend sync
+</span></code></pre>
+<p>To show the changes an operation would perform on a cluster without actually applying them we can run the following command (requires the <a href="https://github.com/databus23/helm-diff">helm-diff</a> plugin):</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>helmfile -e staging -l name=prometheus diff
+</span></code></pre>
+<h2 id="full-example-code">Full Example Code</h2>
+<p>This is the final content of our helmfile.yaml file:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">environments</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">development</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">staging</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">production</span><span>:
+</span><span>
+</span><span style="color:#ff79c6;">helmDefaults</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">atomic</span><span>: </span><span style="color:#bd93f9;">true
+</span><span>  </span><span style="color:#ff79c6;">cleanupOnFail</span><span>: </span><span style="color:#bd93f9;">true
+</span><span>
+</span><span style="color:#ff79c6;">templates</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">default</span><span>: </span><span style="color:#ff79c6;">&amp;</span><span>default
+</span><span>    </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">charts/{{`{{ .Release.Name }}`}}
+</span><span>    </span><span style="color:#ff79c6;">missingFileHandler</span><span>: </span><span style="color:#f1fa8c;">Warn
+</span><span>    </span><span style="color:#ff79c6;">values</span><span>:
+</span><span>    - </span><span style="color:#f1fa8c;">charts/{{`{{ .Release.Name }}`}}/values-{{ .Environment.Name }}.yaml
+</span><span>    </span><span style="color:#ff79c6;">secrets</span><span>:
+</span><span>    - </span><span style="color:#f1fa8c;">charts/{{`{{ .Release.Name }}`}}/secrets-{{ .Environment.Name }}.yaml
+</span><span>
+</span><span style="color:#ff79c6;">releases</span><span>:
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">backend
+</span><span>  </span><span style="color:#bd93f9;">&lt;&lt;</span><span>: </span><span style="color:#ff79c6;">*</span><span style="color:#ffffff;">default
+</span><span>
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">frontend
+</span><span>  </span><span style="color:#bd93f9;">&lt;&lt;</span><span>: </span><span style="color:#ff79c6;">*</span><span style="color:#ffffff;">default
+</span><span>
+</span><span>- </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">prometheus
+</span><span>  </span><span style="color:#bd93f9;">&lt;&lt;</span><span>: </span><span style="color:#ff79c6;">*</span><span style="color:#ffffff;">default
+</span><span>  </span><span style="color:#ff79c6;">chart</span><span>: </span><span style="color:#f1fa8c;">stable/prometheus
+</span><span>  </span><span style="color:#ff79c6;">version</span><span>: </span><span style="color:#bd93f9;">11.0.4
+</span></code></pre>
+<p>The directory structure did not change and is the same as described at the top of the post.</p>
+
+</article>
+
+
+</body>
+</html>

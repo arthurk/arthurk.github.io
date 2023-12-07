@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Listing Images and Tags in GCR</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Listing Images and Tags in GCR</h1>
+    <div id="date">
+      <time class="date" datetime="2020-06-02">June 02, 2020</time>
+    
+    </div>
+  </header>
+
+  <p>In this blog post I'm going to describe how to use the <a href="https://cloud.google.com/container-registry/">GCR</a> Docker Registry API to list all Docker images and tags in the registry. An installation of the Docker daemon is not needed (we're going to use a service account).</p>
+<h2 id="authentication-flow">Authentication Flow</h2>
+<p>In the next sections we'll walk through the authentication and authorization with the Google Auth Server and the GCR Docker registry.</p>
+<p>The whole process looks like this:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>+---------+                                 +-------------+ +-----+
+</span><span>| Client  |                                 | GoogleAuth  | | GCR |
+</span><span>+---------+                                 +-------------+ +-----+
+</span><span>     |                                             |           |
+</span><span>     | 1) Authenticate (needs Service Account)     |           |
+</span><span>     |--------------------------------------------&gt;|           |
+</span><span>     |                                             |           |
+</span><span>     |                         OAuth2 Access Token |           |
+</span><span>     |&lt;--------------------------------------------|           |
+</span><span>     |                                             |           |
+</span><span>     | 2) Get JWT token (needs Access Token)       |           |
+</span><span>     |--------------------------------------------------------&gt;|
+</span><span>     |                                             |           |
+</span><span>     |                                             | JWT Token |
+</span><span>     |&lt;--------------------------------------------------------|
+</span><span>     |                                             |           |
+</span><span>     | 3) Get Catalog/Tags (needs JWT token)       |           |
+</span><span>     |--------------------------------------------------------&gt;|
+</span><span>     |                                             |           |
+</span><span>     |                                           Image Catalog |
+</span><span>     |&lt;--------------------------------------------------------|
+</span><span>     |                                             |           |
+</span></code></pre>
+<p>We'll later make this process shorter by using the service account key for authentication which allows us to skip steps 1 and 2.</p>
+<p>The 3-step process shown above is longer but makes it possible to use more restricted permissions on the service account. This is not possible when using the service account key for authentication.</p>
+<h2 id="creating-the-service-account">Creating the Service Account</h2>
+<p>Before we go into step 1 we need to create a service account that is able to authenticate with the Google Authentication Server and get authorization to fetch the necessary information from the Docker registry.</p>
+<p>To create the service account and a JSON keyfile we run the following command:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># create service account
+</span><span>$ gcloud iam service-accounts create gcr-svc-acc
+</span><span>
+</span><span># create JSON keyfile
+</span><span>$ gcloud iam service-accounts keys create gcr-svc-acc-keyfile.json --iam-account gcr-svc-acc@&lt;your-project&gt;.iam.gserviceaccount.com
+</span></code></pre>
+<p>We should now have a file called <code>gcr-svc-acc-keyfile.json</code> that we can later use to get the OAuth2 Access Token, but first we need to grant the service account permissions to access resources in the GCP project.</p>
+<p>In our use case we need to grant it the following roles:</p>
+<ul>
+<li>Project Browser</li>
+<li>Storage Object Viewer on the GCS bucket for the container registry (the bucket is automatically created for each project and named <code>artifacts.&lt;your-project&gt;.appspot.com</code>)</li>
+</ul>
+<p>Note: If you don't want to list all images in the registry (only the tags for an image) you don't have to grant the Project Browser role.</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># grant &quot;Project Browser&quot; role
+</span><span>$ gcloud projects add-iam-policy-binding &lt;your-project&gt; --member=&quot;serviceAccount:gcr-svc-acc@&lt;your-project&gt;.iam.gserviceaccount.com&quot; --role=&quot;roles/browser&quot;
+</span><span>
+</span><span># grant &quot;Storage Object&quot; Viewer role for GCR bucket
+</span><span>$ gsutil iam ch serviceAccount:gcr-svc-acc@&lt;your-project&gt;.iam.gserviceaccount.com:objectViewer gs://artifacts.&lt;your-project&gt;.appspot.com/
+</span></code></pre>
+<p>Next we need to enable the Cloud Resource Manager API. You can skip this if you only need the image tags.</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ gcloud services enable cloudresourcemanager.googleapis.com
+</span></code></pre>
+<p>We are now ready to use our service account to get an OAuth2 Access Token from the Google Authorization Server.</p>
+<h2 id="step-1-getting-the-oauth2-access-token">Step 1: Getting the OAuth2 Access Token</h2>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>+---------+                                 +-------------+
+</span><span>| Client  |                                 | GoogleAuth  |
+</span><span>+---------+                                 +-------------+
+</span><span>     |                                             |
+</span><span>     | 1) Authenticate (needs Service Account)     |
+</span><span>     |--------------------------------------------&gt;|
+</span><span>     |                                             |
+</span><span>     |                         OAuth2 Access Token |
+</span><span>     |&lt;--------------------------------------------|
+</span><span>     |                                             |
+</span></code></pre>
+<p>The OAuth2 Access Token is required to access data over Google APIs. In our case we want to access the images and tags from the GCR Docker Registry API.</p>
+<p>Obtaining this token by directly communicating via HTTP/REST is <a href="https://developers.google.com/identity/protocols/oauth2/service-account#authorizingrequests">complicated</a> but fortunately there are client libraries available which let us abstract the cryptography parts away.</p>
+<p>I'm going to use <a href="https://github.com/google/oauth2l">oauth2l</a> CLI tool.</p>
+<p>When requesting the access token we need to pass in a scope that specifies the level of access we need. In our case that's the <code>cloud-platform.read-only</code> scope, or the <code>devstorage.read_only</code> scope if you only want the image tags.</p>
+<p>We run the following command to get the access token:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ export ACCESS_TOKEN=$(oauth2l fetch --credentials gcr-svc-acc-keyfile.json --scope cloud-platform.read-only --cache=&quot;&quot;)
+</span><span>
+</span><span>$ echo $ACCESS_TOKEN
+</span><span>ya29.c.Ko9BzQetXXzZ6mOZTg71LdmqabQx...
+</span></code></pre>
+<p>With the OAuth2 Access Token saved we can continue with the Docker registry authentication.</p>
+<h2 id="step-2-docker-registry-jwt-token">Step 2: Docker Registry JWT token</h2>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>+---------+                                                 +-----+
+</span><span>| Client  |                                                 | GCR |
+</span><span>+---------+                                                 +-----+
+</span><span>     |                                                         |
+</span><span>     | 2) Get JWT token (needs OAuth2 Access Token)            |
+</span><span>     |--------------------------------------------------------&gt;|
+</span><span>     |                                                         |
+</span><span>     |                                               JWT Token |
+</span><span>     |&lt;--------------------------------------------------------|
+</span></code></pre>
+<p>For communication with the Docker registry we need to obtain a JWT token that authorizes us to access the data.</p>
+<p>Depending on which data we want to request from the Docker registry we have to use a different scope for the JWT token:</p>
+<ul>
+<li><code>registry:catalog:*</code> scope to get the list of images</li>
+<li><code>repository:&lt;image_name&gt;:pull</code> scope to get the tags for an image</li>
+</ul>
+<p>To get this token we have to make a request to the gcr.io token server with the username <code>_token</code> and the previously obtained OAuth2 access token as the password:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># Get JWT token with &quot;registry:catalog:*&quot; scope
+</span><span>$ export JWT_TOKEN=$(curl -sSL &quot;https://gcr.io/v2/token?service=gcr.io&amp;scope=registry:catalog:*&quot; -u _token:$ACCESS_TOKEN | jq --raw-output &#39;.token&#39;)
+</span><span>
+</span><span>$ echo $JWT_TOKEN
+</span><span>AJAD5v14fnm+N...
+</span></code></pre>
+<p>With the JWT token we can use the <a href="https://docs.docker.com/registry/spec/api/">Docker Registry HTTP API</a> to list all images in the registry.</p>
+<h2 id="step-3-get-the-image-catalog-and-tags">Step 3: Get the image catalog and tags</h2>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>+---------+                                                 +-----+
+</span><span>| Client  |                                                 | GCR |
+</span><span>+---------+                                                 +-----+
+</span><span>     |                                                         |
+</span><span>     | 3) Get Catalog/Tags (needs JWT token)                   |
+</span><span>     |--------------------------------------------------------&gt;|
+</span><span>     |                                                         |
+</span><span>     |                                      Image Catalog/Tags |
+</span><span>     |&lt;--------------------------------------------------------|
+</span><span>     |                                                         |
+</span></code></pre>
+<p>To get a list of all docker images in the registry we use the <a href="https://docs.docker.com/registry/spec/api/#listing-repositories">_catalog</a> endpoint. In the HTTP request we have to pass the JWT token in the <code>Authorization</code> header:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ curl -sSL -H &quot;Authorization: Bearer $JWT_TOKEN&quot; &quot;https://gcr.io/v2/_catalog&quot; | jq
+</span><span>
+</span><span>{
+</span><span>  &quot;repositories&quot;: [
+</span><span>    &quot;project/alpine&quot;,
+</span><span>    &quot;project/busybox&quot;
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<p>The registry has the &quot;project/alpine&quot; and &quot;project/busybox&quot; images in it (which I pushed there before writing this tutorial). The project name is always part of the image name.</p>
+<p>Next we can pick an image and list the tags. For this we can use the <a href="https://docs.docker.com/registry/spec/api/#listing-image-tags"><name>/tags/list</a> endpoint. But before we can do this, we need a new JWT token.</p>
+<p>Our previously created token (with the <code>registry:catalog:*</code> scope) doesn't have the permission to get this information. If we try to send a request it will respond with:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ curl -sSL -H &quot;Authorization: Bearer $JWT_TOKEN&quot; &quot;https://gcr.io/v2/project/alpine/tags/list&quot; | jq
+</span><span>
+</span><span>{
+</span><span>  &quot;errors&quot;: [
+</span><span>    {
+</span><span>      &quot;code&quot;: &quot;UNAUTHORIZED&quot;,
+</span><span>      &quot;message&quot;: &quot;Requested repository does not match bearer token resource: project/alpine&quot;
+</span><span>    }
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<p>The scope we need is called <code>repository:&lt;image_name&gt;:pull</code>. The <code>image_name</code> includes the GCP project name. In the following example we're going to generate a new token and list the tags for the <code>project/alpine</code> image:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># request a new JWT token
+</span><span>export JWT_TOKEN=$(curl -sSL &quot;https://gcr.io/v2/token?service=gcr.io&amp;scope=repository:&lt;your-project&gt;/alpine:pull&quot; -u _token:$ACCESS_TOKEN | jq --raw-output &#39;.token&#39;)
+</span><span>
+</span><span># fetch list of tags
+</span><span>curl -sSL -H &quot;Authorization: Bearer $JWT_TOKEN&quot; &quot;https://gcr.io/v2/&lt;your-project&gt;/alpine/tags/list&quot; | jq &#39;.tags&#39;
+</span><span>
+</span><span>[
+</span><span>  &quot;3.11&quot;
+</span><span>]
+</span></code></pre>
+<p>Next we're going to look into making this process shorter. GCR which let us skip the request for the OAuth2 Access Token and the request for the JWT token by using different users.</p>
+<h2 id="skipping-the-docker-registry-jwt">Skipping the Docker Registry JWT</h2>
+<p>The GCR Docker registry has a user called <code>oauth2accesstoken</code> that lets us send the OAuth2 access token to the Docker Registry without having to obtain the JWT token. The process can be reduced to 2 steps and looks like this:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>+---------+                                    +-------------+ +-----+
+</span><span>| Client  |                                    | GoogleAuth  | | GCR |
+</span><span>+---------+                                    +-------------+ +-----+
+</span><span>     |                                                |           |
+</span><span>     | 1) Authenticate (needs Service Account)        |           |
+</span><span>     |-----------------------------------------------&gt;|           |
+</span><span>     |                                                |           |
+</span><span>     |                            OAuth2 Access Token |           |
+</span><span>     |&lt;-----------------------------------------------|           |
+</span><span>     |                                                |           |
+</span><span>     | 2) Get Image Catalog (needs Access Token)      |           |
+</span><span>     |-----------------------------------------------------------&lt;|
+</span><span>     |                                                |           |
+</span><span>     |                                              Image Catalog |
+</span><span>     |&lt;-----------------------------------------------------------|
+</span><span>     |                                                |           |
+</span></code></pre>
+<p>The command to get the list of image tags with the access token is:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ curl -sSL -u &quot;oauth2accesstoken:$ACCESS_TOKEN&quot; &quot;https://gcr.io/v2/&lt;your-project&gt;/alpine/tags/list | jq &#39;.tags&#39;&quot;
+</span><span>
+</span><span>[
+</span><span>  &quot;3.11&quot;
+</span><span>]
+</span></code></pre>
+<h2 id="json-user">JSON User</h2>
+<p>We can also use the <code>_json_key</code> user to authenticate with the GCR Docker registry. It lets us save another request by not having to obtain the OAuth2 access token. The process of getting data from the GCR Docker registry can then be reduced to a single request and looks like this:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>+---------+                                      +-----+
+</span><span>| Client  |                                      | GCR |
+</span><span>+---------+                                      +-----+
+</span><span>     |                                              |
+</span><span>     | Get Image Catalog (needs Service Account)    |
+</span><span>     |---------------------------------------------&gt;|
+</span><span>     |                                              |
+</span><span>     |                                Image Catalog |
+</span><span>     |&lt;---------------------------------------------|
+</span><span>     |                                              |
+</span></code></pre>
+<p>When using the <code>_json_key</code> user we have to pass in the content of the service account json keyfile as the password:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ curl -sSL -u &quot;_json_key:$(cat gcr-svc-acc-keyfile.json)&quot; &quot;https://gcr.io/v2/&lt;your-project&gt;/alpine/tags/list&quot; | jq &#39;.tags&#39;
+</span><span>
+</span><span>[
+</span><span>  &quot;3.11&quot;
+</span><span>]
+</span></code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this tutorial we've walked through the process of obtaining an OAuth2 access token from the Google Auth Server and a JWT token from the GCR Docker registry. We've then used the Docker registry API to fetch a list of images and tags for a specific image.</p>
+<p>We've seen three different authentication methods by using either the <code>_token</code>, <code>oauth2accesstoken</code> or <code>_json_key</code> users.</p>
+<p>Using the <code>_token</code> user involves more requests but is the same process that will work for all Docker registries. Depending on if we need to fetch the list of images we can also restrict the service account permissions by not having to grant it the <code>Project Browser</code> role, not having to enable the Cloud Resource Manager API and using the <code>devstorage.read_only</code> scope instead of the <code>cloud-platform.read-only</code> scope for the OAuth2 Access Key.</p>
+<p>Using the <code>oauth2accesstoken</code> or <code>_json_key</code> users is more convenient but only works with the GCR Docker registry and requires project-level permissions for the service account.</p>
+<p>The example code available in <a href="https://gist.github.com/arthurk/ab9ced56ce78bb8309599ccc62fa2576">this gist</a>.</p>
+
+</article>
+
+
+</body>
+</html>

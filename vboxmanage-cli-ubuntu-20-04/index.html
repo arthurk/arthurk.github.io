@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Using the VBoxManage CLI to create a Ubuntu 20.04 VM</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Using the VBoxManage CLI to create a Ubuntu 20.04 VM</h1>
+    <div id="date">
+      <time class="date" datetime="2020-09-11">September 11, 2020</time>
+    
+    </div>
+  </header>
+
+  <p>This tutorial describes the installation of Ubuntu 20.04 in VirtualBox by using the <a href="https://www.virtualbox.org/manual/ch08.html">VBoxManage CLI</a>.</p>
+<p><img src="https://www.arthurkoziel.com/vboxmanage-cli-ubuntu-20-04/ubuntu-desktop.png" alt="Ubuntu 20.04 Desktop" /></p>
+<p>I'm assuming that <a href="https://www.virtualbox.org/">VirtualBox 6.1</a> is installed, the VBoxManage CLI is ready to use and the <a href="https://ubuntu.com/download/desktop">Ubuntu 20.04 ISO</a> has been downloaded.</p>
+<p>I've tested this on an apple laptop with retina (HiDPI) display and included instructions to scale the display output. The scaling commands can be ignored for non-HiDPI displays.</p>
+<h2 id="getting-started">Getting started</h2>
+<p>We first create the VM and increase the hardware resources. The default settings use 1 CPU core, 128MB RAM and 8MB VRAM which is not enough. We'll increase it to use 2 CPU cores, 4GB RAM and 128MB VRAM:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ VBoxManage createvm --name &quot;Ubuntu 20.04&quot; --ostype Ubuntu_64 --register
+</span><span>$ VBoxManage modifyvm &quot;Ubuntu 20.04&quot; --cpus 2 --memory 4096 --vram 128 --graphicscontroller vmsvga --usbohci on --mouse usbtablet
+</span></code></pre>
+<p>In the above command I've also enabled USB and set the Graphics Controller to VMSVGA which is the default controller when using the GUI but set to the legacy VBoxVGA when using the CLI.</p>
+<p>To see all available options run <code>VBoxManage modifyvm</code> which will output a list of all flags. The current values can be seen with <code>VBoxManage showvminfo &quot;Ubuntu 20.04&quot;</code>.</p>
+<h2 id="storage-devices">Storage Devices</h2>
+<p>Next we need to configure the storage devices. We create an empty 20GB hard drive that we can install Ubuntu on. A minimal Ubuntu installation takes about 5GB of space:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ VBoxManage createhd --filename ~/VirtualBox\ VMs/Ubuntu\ 20.04/Ubuntu\ 20.04.vdi --size 20480 --variant Standard
+</span><span>$ VBoxManage storagectl &quot;Ubuntu 20.04&quot; --name &quot;SATA Controller&quot; --add sata --bootable on
+</span><span>$ VBoxManage storageattach &quot;Ubuntu 20.04&quot; --storagectl &quot;SATA Controller&quot; --port 0 --device 0 --type hdd --medium ~/VirtualBox\ VMs/Ubuntu\ 20.04/Ubuntu\ 20.04.vdi 
+</span></code></pre>
+<p>We also create a dvd drive with the Ubuntu ISO mounted in it. The VM will boot from this drive first when starting:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ VBoxManage storagectl &quot;Ubuntu 20.04&quot; --name &quot;IDE Controller&quot; --add ide
+</span><span>$ VBoxManage storageattach &quot;Ubuntu 20.04&quot; --storagectl &quot;IDE Controller&quot; --port 0 --device 0 --type dvddrive --medium ~/Downloads/ubuntu-20.04.1-desktop-amd64.iso
+</span></code></pre>
+<h2 id="display-output-scaling">Display output scaling</h2>
+<p>The Ubuntu installer runs with a resolution of 800x600 and would look tiny on HiDPI screens if we wouldn't scale up the display output. The following command will scale up the display output by a factor of 2:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ VBoxManage setextradata &quot;Ubuntu 20.04&quot; GUI/ScaleFactor 2
+</span></code></pre>
+<h2 id="start-the-vm">Start the VM</h2>
+<p>Now we can start the VM which will load the Ubuntu GUI installer from the mounted ISO:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ VBoxManage startvm &quot;Ubuntu 20.04&quot;
+</span></code></pre>
+<p>After the installation is done the installer will prompt to remove the installation media. We can ignore this for now and press enter to reboot.</p>
+<p>When Ubuntu is booted up we install the VirtualBox Guest Additions to get the display drivers. This can be done by clicking on the menu bar and selecting &quot;Devices&quot;, then &quot;Insert Guest Additions CD Image&quot;. The installer will start automatically.</p>
+<h2 id="finishing-the-installation">Finishing the installation</h2>
+<p>After the Guest Additions are installed we can let GNOME handle the display output scaling which has a better quality.</p>
+<p>In the Ubuntu terminal (right click on Desktop and select &quot;Open in Terminal&quot;) enter:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ gsettings set org.gnome.desktop.interface scaling-factor 2
+</span></code></pre>
+<p>We can now shut down the VM to remove the installation media and disable the VirtualBox display scaling. On the Desktop click on the arrow in the top right corner and select &quot;Power Off&quot;. Then run the following command on the host:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ VBoxManage storageattach &quot;Ubuntu 20.04&quot; --storagectl &quot;IDE Controller&quot; --port 0 --device 0 --type dvddrive --medium emptydrive
+</span><span>$ VBoxManage setextradata &quot;Ubuntu 20.04&quot; GUI/ScaleFactor 1
+</span></code></pre>
+<p>With that done the Ubuntu VM is ready to use.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>We created a Ubuntu 20.04 VM by using the CLI instead of the GUI wizard. Personally I find this useful since I sometimes forget to set values in the GUI (such as increasing the VRAM). The Ubuntu Desktop installer has to run in a GUI, to automate this we'd need to use the Ubuntu Server ISO and install the GNOME desktop manually.</p>
+
+</article>
+
+
+</body>
+</html>

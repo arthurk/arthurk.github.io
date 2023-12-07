@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Creating CI Pipelines with Tekton (Part 1&#x2F;2)</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Creating CI Pipelines with Tekton (Part 1&#x2F;2)</h1>
+    <div id="date">
+      <time class="date" datetime="2020-04-26">April 26, 2020</time>
+    
+    <strong>(Updated: <time class="date" datetime="2021-02-13">February 13, 2021)</time></strong>
+    
+    </div>
+  </header>
+
+  <p>In this blog post we're going to build a continuous integration (CI) pipeline with <a href="https://tekton.dev">Tekton</a>, an open-source framework for creating CI/CD pipelines in Kubernetes.</p>
+<p>We're going to provision a local Kubernetes cluster via <a href="https://kind.sigs.k8s.io">kind</a> and install Tekton on it. After that we'll create a pipeline consisting of two steps which will run application unit tests, build a Docker image, and push it to DockerHub.</p>
+<p>This is part 1 of 2 in which we will install Tekton and create a task that runs our application test. The second part is available <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-2/">here</a>.</p>
+<h2 id="creating-the-k8s-cluster">Creating the k8s cluster</h2>
+<p>We use <a href="http://kind.sigs.k8s.io">kind</a> to create a Kubernetes cluster for our Tekton installation:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kind create cluster --name tekton
+</span></code></pre>
+<h2 id="installing-tekton">Installing Tekton</h2>
+<p>We can install Tekton by applying the <code>release.yaml</code> file from the latest release of the <a href="https://github.com/tektoncd/pipeline">tektoncd/pipeline</a> GitHub repo:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.20.1/release.yaml
+</span></code></pre>
+<p>This will install Tekton into the <code>tekton-pipelines</code> namespace. We can check that the installation succeeded by listing the Pods in that namespace and making sure they're in <code>Running</code> state.</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl get pods --namespace tekton-pipelines
+</span><span>NAME                                           READY   STATUS    RESTARTS   AGE
+</span><span>tekton-pipelines-controller-74848c44df-m42gf   1/1     Running   0          20s
+</span><span>tekton-pipelines-webhook-6f764dc8bf-zq44s      1/1     Running   0          19s
+</span></code></pre>
+<h2 id="setting-up-the-tekton-cli">Setting up the Tekton CLI</h2>
+<p>Installing the CLI is optional but I found it to be more convenient than <code>kubectl</code> when managing Tekton resources. The examples later on will show both ways.</p>
+<p>We can install it via Homebrew:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ brew tap tektoncd/tools
+</span><span>$ brew install tektoncd/tools/tektoncd-cli
+</span><span>
+</span><span>$ tkn version
+</span><span>Client version: 0.16.0
+</span><span>Pipeline version: v0.20.1
+</span></code></pre>
+<h2 id="concepts">Concepts</h2>
+<p>Tekton provides custom resource definitions (<a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/">CRDs</a>) for Kubernetes that can be used to define our Pipelines. In this tutorial we will use the following custom resources:</p>
+<ul>
+<li>Task: A series of steps that execute commands (In CircleCI this is called a <em>Job</em>)</li>
+<li>Pipeline: A set of Tasks (In CircleCI this is called a <em>Workflow</em>)</li>
+<li>PipelineResource: Input or Output of a Pipeline (for example a git repo or a tar file)</li>
+</ul>
+<p>We will use the following two resources to define the execution of our Tasks and Pipeline:</p>
+<ul>
+<li>TaskRun: Defines the execution of a Task</li>
+<li>PipelineRun: Defines the execution of a Pipeline</li>
+</ul>
+<p>For example, if we write a Task and want to test it we can execute it with a TaskRun. The same applies for a Pipeline: To execute a Pipeline we need to create a PipelineRun.</p>
+<h2 id="application-code">Application Code</h2>
+<p>In our example Pipeline we're going to use a Go application that simply prints the sum of two integers. You can find the application code, test, and Dockerfile in the <code>src/</code> directory in <a href="https://github.com/arthurk/tekton-example">this repo</a>.</p>
+<h2 id="creating-our-first-task">Creating our first task</h2>
+<p>Our first Task will run the application tests inside the cloned git repo. Create a file called <a href="https://github.com/arthurk/tekton-example/blob/master/01-task-test.yaml">01-task-test.yaml</a> with the following content:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">tekton.dev/v1beta1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Task
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">test
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">resources</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">inputs</span><span>:
+</span><span>      - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">repo
+</span><span>        </span><span style="color:#ff79c6;">type</span><span>: </span><span style="color:#f1fa8c;">git
+</span><span>  </span><span style="color:#ff79c6;">steps</span><span>:
+</span><span>    - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">run-test
+</span><span>      </span><span style="color:#ff79c6;">image</span><span>: </span><span style="color:#f1fa8c;">golang:1.14-alpine
+</span><span>      </span><span style="color:#ff79c6;">workingDir</span><span>: </span><span style="color:#f1fa8c;">/workspace/repo/src
+</span><span>      </span><span style="color:#ff79c6;">command</span><span>: [</span><span style="color:#f1fa8c;">&quot;go&quot;</span><span>]
+</span><span>      </span><span style="color:#ff79c6;">args</span><span>: [</span><span style="color:#f1fa8c;">&quot;test&quot;</span><span>]
+</span></code></pre>
+<p>The <code>resources:</code> block defines the inputs that our task needs to execute its steps. Our step (named <code>run-test</code>) needs the cloned <a href="https://github.com/arthurk/tekton-example/">tekton-example</a> git repository as an input and we can create this input with a PipelineResource.</p>
+<p>Create a file called <a href="https://github.com/arthurk/tekton-example/blob/master/02-pipelineresource.yaml">02-pipelineresource.yaml</a>:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">tekton.dev/v1alpha1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">PipelineResource
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">arthurk-tekton-example
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">type</span><span>: </span><span style="color:#f1fa8c;">git
+</span><span>  </span><span style="color:#ff79c6;">params</span><span>:
+</span><span>    - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">url
+</span><span>      </span><span style="color:#ff79c6;">value</span><span>: </span><span style="color:#f1fa8c;">https://github.com/arthurk/tekton-example
+</span><span>    - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">revision
+</span><span>      </span><span style="color:#ff79c6;">value</span><span>: </span><span style="color:#f1fa8c;">master
+</span></code></pre>
+<p>The <code>git</code> resource type will use git to clone the repo into the <code>/workspace/$input_name</code> directory everytime the Task is run. Since our input is named <code>repo</code> the code will be cloned to <code>/workspace/repo</code>. If our input would be named <code>foobar</code> it would be cloned into <code>/workspace/foobar</code>.</p>
+<p>The next block in our Task (<code>steps:</code>) specifies the command to execute and the Docker image in which to run that command. We're going to use the <a href="https://hub.docker.com/_/golang">golang</a> Docker image as it already has Go installed.</p>
+<p>For the <code>go test</code> command to run we need to change the directory. By default the command will run in the <code>/workspace/repo</code> directory but in our <a href="https://github.com/arthurk/tekton-example">tekton-example</a> repo the Go application is in the <code>src</code> directory. We do this by setting <code>workingDir: /workspace/repo/src</code>.</p>
+<p>Next we specify the command to run (<code>go test</code>) but note that the command (<code>go</code>) and args (<code>test</code>) need to be defined separately in the YAML file.</p>
+<p>Apply the Task and the PipelineResource with kubectl:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl apply -f 01-task-test.yaml
+</span><span>task.tekton.dev/test created
+</span><span>
+</span><span>$ kubectl apply -f 02-pipelineresource.yaml
+</span><span>pipelineresource.tekton.dev/arthurk-tekton-example created
+</span></code></pre>
+<h2 id="running-our-task">Running our task</h2>
+<p>To run our <code>Task</code> we have to create a <code>TaskRun</code> that references the previously created <code>Task</code> and passes in all required inputs (<code>PipelineResource</code>).</p>
+<p>Create a file called <a href="https://github.com/arthurk/tekton-example/blob/master/03-taskrun.yaml">03-taskrun.yaml</a> with the following content:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">tekton.dev/v1beta1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">TaskRun
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">testrun
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">taskRef</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">test
+</span><span>  </span><span style="color:#ff79c6;">resources</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">inputs</span><span>:
+</span><span>      - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">repo
+</span><span>        </span><span style="color:#ff79c6;">resourceRef</span><span>:
+</span><span>          </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">arthurk-tekton-example
+</span></code></pre>
+<p>This will take our Task (<code>taskRef</code> is a reference to our previously created task named <code>test</code>) with our <a href="https://github.com/arthurk/tekton-example">tekton-example</a> git repo as an input (<code>resourceRef</code> is a reference to our PipelineResource named <code>arthurk-tekton-example</code>) and execute it.</p>
+<p>Apply the file with kubectl and then check the Pods and TaskRun resources. The Pod will go through the <code>Init:0/2</code> and <code>PodInitializing</code> status and then succeed:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl apply -f 03-taskrun.yaml
+</span><span>pipelineresource.tekton.dev/arthurk-tekton-example created
+</span><span>
+</span><span>$ kubectl get pods
+</span><span>NAME                READY   STATUS      RESTARTS   AGE
+</span><span>testrun-pod-pds5z   0/2     Completed   0          4m27s
+</span><span>
+</span><span>$ kubectl get taskrun
+</span><span>NAME      SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
+</span><span>testrun   True        Succeeded   70s         57s
+</span></code></pre>
+<p>To see the output of the containers we can run the following command. Make sure to replace <code>testrun-pod-pds5z</code> with the the Pod name from the output above (it will be different for each run).</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl logs testrun-pod-pds5z --all-containers
+</span><span>{&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1588477119.3692405,&quot;caller&quot;:&quot;git/git.go:136&quot;,&quot;msg&quot;:&quot;Successfully cloned https://github.com/arthurk/tekton-example @ 301aeaa8f7fa6ec01218ba6c5ddf9095b24d5d98 (grafted, HEAD, origin/master) in path /workspace/repo&quot;}
+</span><span>{&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1588477119.4230678,&quot;caller&quot;:&quot;git/git.go:177&quot;,&quot;msg&quot;:&quot;Successfully initialized and updated submodules in path /workspace/repo&quot;}
+</span><span>PASS
+</span><span>ok  	_/workspace/repo/src	0.003s
+</span></code></pre>
+<p>Our tests passed and our task succeeded. Next we will use the Tekton CLI to see how we can make this whole process easier.</p>
+<h2 id="using-the-tekton-cli-to-run-a-task">Using the Tekton CLI to run a Task</h2>
+<p>The Tekton CLI provides a faster and more convenient way to run Tasks.</p>
+<p>Instead of manually writing a <code>TaskRun</code> manifest we can run the following command which takes our Task (named <code>test</code>), generates a <code>TaskRun</code> (with a random name) and shows its logs:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ tkn task start test --inputresource repo=arthurk-tekton-example --showlog
+</span><span>Taskrun started: test-run-8t46m
+</span><span>Waiting for logs to be available...
+</span><span>[git-source-arthurk-tekton-example-dqjfb] {&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1588477372.740875,&quot;caller&quot;:&quot;git/git.go:136&quot;,&quot;msg&quot;:&quot;Successfully cloned https://github.com/arthurk/tekton-example @ 301aeaa8f7fa6ec01218ba6c5ddf9095b24d5d98 (grafted, HEAD, origin/master) in path /workspace/repo&quot;}
+</span><span>[git-source-arthurk-tekton-example-dqjfb] {&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1588477372.7954974,&quot;caller&quot;:&quot;git/git.go:177&quot;,&quot;msg&quot;:&quot;Successfully initialized and updated submodules in path /workspace/repo&quot;}
+</span><span>
+</span><span>[run-test] PASS
+</span><span>[run-test] ok  	_/workspace/repo/src	0.006s
+</span></code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>We have successfully installed Tekton on a local Kubernetes cluster, defined a Task, and tested it by creating a TaskRun via YAML manifest as well as the Tekton CLI <code>tkn</code>.</p>
+<p>All example code is available <a href="https://github.com/arthurk/tekton-example">here</a>.</p>
+<p>In the next part we're going to create a task that will use <a href="https://github.com/GoogleContainerTools/kaniko">Kaniko</a> to build a Docker image for our application and then push it to DockerHub. We will then create a Pipeline that runs both of our tasks sequentially (run application tests, build and push).</p>
+<p>Part 2 is available <a href="https://www.arthurkoziel.com/creating-ci-pipelines-with-tekton-part-2/">here</a>.</p>
+
+</article>
+
+
+</body>
+</html>

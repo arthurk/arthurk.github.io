@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>JSON Schemas in Neovim</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">JSON Schemas in Neovim</h1>
+    <div id="date">
+      <time class="date" datetime="2023-12-07">December 07, 2023</time>
+    
+    </div>
+  </header>
+
+  <p>In this post I'll describe how to setup JSON schemas in Neovim.</p>
+<p><img src="https://www.arthurkoziel.com/json-schemas-in-neovim/k8s-deployment-autocomplete.png" alt="" /></p>
+<p>Basically, a <a href="https://json-schema.org/">JSON Schema</a> describes the structure of data in a document. Most commonly these are YAML, JSON and sometimes TOML documents. For example we can make sure our GitHub Actions Workflow YAML file is valid (has all required fields, etc.) while writing it in our editor.</p>
+<p>Most schemas can be found in the <a href="https://www.schemastore.org/json/">JSON Schema Store</a>. Since YAML/JSON/TOML are the most common formats in the <a href="https://www.schemastore.org/api/json/catalog.json">catalog</a>, I'll show how to use those in this blog post. However I'll mostly focus on YAML files since that's what I'm using the most.</p>
+<p>In the following sections I'll go through each file format and show how to setup the LSP client config using <a href="https://github.com/neovim/nvim-lspconfig">neovim/nvim-lspconfig</a>.</p>
+<h2 id="yaml">YAML</h2>
+<p><img src="https://www.arthurkoziel.com/json-schemas-in-neovim/gha-workflow-error.png" alt="" /></p>
+<p>There are (at least) 3 plugins which are related to JSON schemas for YAML files:</p>
+<ul>
+<li><a href="https://github.com/redhat-developer/yaml-language-server">yaml-language-server</a></li>
+<li><a href="https://github.com/b0o/SchemaStore.nvim">b0o/SchemaStore.nvim</a></li>
+<li><a href="https://github.com/someone-stole-my-name/yaml-companion.nvim">someone-stole-my-name/yaml-companion.nvim</a></li>
+</ul>
+<p>In the following sections I'll describe them and show example configurations.</p>
+<h3 id="yaml-language-server">yaml-language-server</h3>
+<p>For LSP-support, we most likely have the <a href="https://github.com/redhat-developer/yaml-language-server">yaml-language-server</a> installed. Support for JSON schemas, and fetching them from the schema store, is built-in and enabled by default.</p>
+<p>Every time the language-server is started, it will fetch the <a href="https://www.schemastore.org/api/json/catalog.json">catalog</a> (around 300kb) and try to match a schema by filename. Each entry in the catalog, has a <code>fileMatch</code> property that will be checked. For example for a file named <code>kustomization.yaml</code> it will load the JSON Schema for <a href="https://json.schemastore.org/kustomization.json">kustomize files</a> since it matches the pattern <code>[&quot;kustomization.yaml&quot;, &quot;kustomization.yml&quot;]</code>.</p>
+<p>In my experience, using the default settings with the whole schema store catalog is not a good idea, as some of the entries have very generic filenames. For example a <code>template.yaml</code> file will load the schema for <code>AWS CloudFormation Serverless Application Model</code>, for a YAML file inside a <code>test_data/</code> directory it will load the <code>Drupal info file</code> schema, and for a <code>plugin.yml</code> file a <code>PocketMine plugin manifest file</code>.</p>
+<p>This will often lead to situations where we have a file with a name like <code>template.yaml</code> that has nothing to do with AWS SAM and our editor will be full of errors. To avoid this, it's best to only use a subset of the catalog. The following example disables the schema store support and only uses 3 schemas:</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&#39;lspconfig&#39;</span><span>)</span><span style="color:#ff79c6;">.</span><span>yamlls</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#f1fa8c;">settings </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">yaml </span><span>= </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">validate </span><span>= </span><span style="color:#bd93f9;">true</span><span>,
+</span><span>      </span><span style="color:#6272a4;">-- disable the schema store
+</span><span>      </span><span style="color:#f1fa8c;">schemaStore </span><span>= </span><span style="color:#ffffff;">{
+</span><span>        </span><span style="color:#f1fa8c;">enable </span><span>= </span><span style="color:#bd93f9;">false</span><span>,
+</span><span>        </span><span style="color:#f1fa8c;">url </span><span>= </span><span style="color:#f1fa8c;">&quot;&quot;</span><span>,
+</span><span>      </span><span style="color:#ffffff;">}</span><span>,
+</span><span>      </span><span style="color:#6272a4;">-- manually select schemas
+</span><span>      </span><span style="color:#f1fa8c;">schemas </span><span>= </span><span style="color:#ffffff;">{
+</span><span>        [</span><span style="color:#f1fa8c;">&#39;https://json.schemastore.org/kustomization.json&#39;</span><span>] = </span><span style="color:#f1fa8c;">&#39;kustomization.{yml,yaml}&#39;</span><span>,
+</span><span>        [</span><span style="color:#f1fa8c;">&#39;https://raw.githubusercontent.com/docker/compose/master/compose/config/compose_spec.json&#39;</span><span>] = </span><span style="color:#f1fa8c;">&#39;docker-compose*.{yml,yaml}&#39;
+</span><span>        [</span><span style="color:#f1fa8c;">&quot;https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/argoproj.io/application_v1alpha1.json&quot;</span><span>] </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;argocd-application.yaml&quot;</span><span>,
+</span><span>      </span><span style="color:#ffffff;">}
+</span><span>    </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span style="color:#ffffff;">}
+</span></code></pre>
+<p>Most of the values can be copied from the <a href="https://www.schemastore.org/api/json/catalog.json">catalog</a>, and additional schemas for Kubernetes can be found in <a href="https://github.com/datreeio/CRDs-catalog">datreeio/CRDs-catalog</a>. It takes more time to setup but the result is better than having to deal with errors because the wrong schema was loaded.</p>
+<h3 id="schemastore-nvim">SchemaStore.nvim</h3>
+<p>The <a href="https://github.com/b0o/SchemaStore.nvim">SchemaStore.nvim</a> plugin was initially written for the json-language-server but support for the yaml-language-server has been added later on.</p>
+<p>Compared to the yamlls built-in support it makes it easy to select, ignore or replace specific schemas from store catalog. The code example from above, which includes 2 schemas from the store catalog and adds one extra schema from outside of it, could be rewritten as:</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&#39;lspconfig&#39;</span><span>)</span><span style="color:#ff79c6;">.</span><span>yamlls</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#f1fa8c;">settings </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">yaml </span><span>= </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">schemaStore </span><span>= </span><span style="color:#ffffff;">{
+</span><span>        </span><span style="color:#f1fa8c;">enable </span><span>= </span><span style="color:#bd93f9;">false</span><span>,
+</span><span>        </span><span style="color:#f1fa8c;">url </span><span>= </span><span style="color:#f1fa8c;">&quot;&quot;</span><span>,
+</span><span>      </span><span style="color:#ffffff;">}</span><span>,
+</span><span>      </span><span style="color:#f1fa8c;">schemas </span><span>= </span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&#39;schemastore&#39;</span><span>)</span><span style="color:#ff79c6;">.</span><span>yaml</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">schemas </span><span style="color:#ffffff;">{
+</span><span>        </span><span style="color:#6272a4;">-- select subset from the JSON schema catalog
+</span><span>        </span><span style="color:#f1fa8c;">select </span><span>= </span><span style="color:#ffffff;">{
+</span><span>          </span><span style="color:#f1fa8c;">&#39;kustomization.yaml&#39;</span><span>,
+</span><span>          </span><span style="color:#f1fa8c;">&#39;docker-compose.yml&#39;
+</span><span>        </span><span style="color:#ffffff;">}</span><span>,
+</span><span>
+</span><span>        </span><span style="color:#6272a4;">-- additional schemas (not in the catalog)
+</span><span>        </span><span style="color:#f1fa8c;">extra </span><span>= </span><span style="color:#ffffff;">{
+</span><span>          </span><span style="color:#f1fa8c;">url </span><span>= </span><span style="color:#f1fa8c;">&#39;https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/argoproj.io/application_v1alpha1.json&#39;</span><span>,
+</span><span>          </span><span style="color:#f1fa8c;">name </span><span>= </span><span style="color:#f1fa8c;">&#39;Argo CD Application&#39;</span><span>,
+</span><span>          </span><span style="color:#f1fa8c;">fileMatch </span><span>= </span><span style="color:#f1fa8c;">&#39;argocd-application.yaml&#39;
+</span><span>        </span><span style="color:#ffffff;">}
+</span><span>      </span><span style="color:#ffffff;">}
+</span><span>    </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span style="color:#ffffff;">}
+</span></code></pre>
+<p>Each item in the <code>select</code> attribute has to match the <code>name</code> attribute in the catalog. The file name pattern that will be matched can not be changed.</p>
+<p>Choosing between the yamlls built-in schema store support and the SchemaStore.nvim is personal preferrence. Both work great.</p>
+<h3 id="yaml-companion-nvim">yaml-companion.nvim</h3>
+<p><img src="https://www.arthurkoziel.com/json-schemas-in-neovim/yaml-telescope-picker.png" alt="" /></p>
+<p>The yaml-companion plugin is more like a &quot;frontend&quot; for JSON schemas. It comes with a Telescope picker that lets us manually choose the schema for the current buffer, enhances the auto-completion by showing descriptions and has good support for Kubernetes resources (see Kubernetes section below).</p>
+<p>In the following example, we use the yamlls built-in schema store support to automatically load the GitHub Actions Workflows schema based on a filename pattern. Additionally, we add an extra schema for Flux GitRepository resources, which can be loaded manually by selecting it in the Telescope picker (<code>:Telescope yaml_schema</code>):</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#ff79c6;">local </span><span style="color:#ffffff;">cfg </span><span style="color:#ff79c6;">= </span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;yaml-companion&quot;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup</span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#6272a4;">-- Additional schemas available in Telescope picker
+</span><span>  </span><span style="color:#f1fa8c;">schemas </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">name </span><span>= </span><span style="color:#f1fa8c;">&quot;Flux GitRepository&quot;</span><span>,
+</span><span>      </span><span style="color:#f1fa8c;">uri </span><span>= </span><span style="color:#f1fa8c;">&quot;https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/gitrepository-source-v1.json&quot;</span><span>,
+</span><span>    </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}</span><span>,
+</span><span>
+</span><span>  </span><span style="color:#6272a4;">-- Pass any additional options that will be merged in the final LSP config
+</span><span>  </span><span style="color:#6272a4;">-- Defaults: https://github.com/someone-stole-my-name/yaml-companion.nvim/blob/main/lua/yaml-companion/config.lua
+</span><span>  </span><span style="color:#f1fa8c;">lspconfig </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">settings </span><span>= </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">yaml </span><span>= </span><span style="color:#ffffff;">{
+</span><span>        </span><span style="color:#f1fa8c;">validate </span><span>= </span><span style="color:#bd93f9;">true</span><span>,
+</span><span>        </span><span style="color:#f1fa8c;">schemaStore </span><span>= </span><span style="color:#ffffff;">{
+</span><span>          </span><span style="color:#f1fa8c;">enable </span><span>= </span><span style="color:#bd93f9;">false</span><span>,
+</span><span>          </span><span style="color:#f1fa8c;">url </span><span>= </span><span style="color:#f1fa8c;">&quot;&quot;</span><span>,
+</span><span>        </span><span style="color:#ffffff;">}</span><span>,
+</span><span>        </span><span style="color:#f1fa8c;">schemas </span><span>= </span><span style="color:#ffffff;">{
+</span><span>          [</span><span style="color:#f1fa8c;">&#39;https://json.schemastore.org/github-workflow.json&#39;</span><span>] = </span><span style="color:#f1fa8c;">&#39;.github/workflows/*.{yml,yaml}&#39;</span><span>,
+</span><span>        </span><span style="color:#ffffff;">}
+</span><span>      </span><span style="color:#ffffff;">}
+</span><span>    </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span style="color:#ffffff;">}
+</span><span>
+</span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;lspconfig&quot;</span><span>)[</span><span style="color:#f1fa8c;">&quot;yamlls&quot;</span><span>]</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup</span><span>(</span><span style="color:#ffffff;">cfg</span><span>)
+</span><span>
+</span><span style="color:#6272a4;">-- :Telescope yaml_schema
+</span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;telescope&quot;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">load_extension</span><span>(</span><span style="color:#f1fa8c;">&quot;yaml_schema&quot;</span><span>)
+</span></code></pre>
+<p>The plugin also makes it possible to get the active schema in the current buffer, which we can then use in <a href="https://github.com/nvim-lualine/lualine.nvim">lualine</a>. In the screenshot below we can see at the bottom-right that the &quot;Kubernetes&quot; schema is loaded.</p>
+<p><img src="https://www.arthurkoziel.com/json-schemas-in-neovim/yaml-lualine.png" alt="" /></p>
+<p>The following config will show the active schema in lualine like in the screenshot:</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#ff79c6;">local </span><span style="font-style:italic;color:#8be9fd;">function </span><span style="color:#50fa7b;">get_schema</span><span>()
+</span><span>  </span><span style="color:#ff79c6;">local </span><span style="color:#ffffff;">schema </span><span style="color:#ff79c6;">= </span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;yaml-companion&quot;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">get_buf_schema</span><span>(</span><span style="color:#bd93f9;">0</span><span>)
+</span><span>  </span><span style="color:#ff79c6;">if </span><span style="color:#ffffff;">schema</span><span style="color:#ff79c6;">.</span><span>result[</span><span style="color:#bd93f9;">1</span><span>]</span><span style="color:#ff79c6;">.</span><span>name </span><span style="color:#ff79c6;">== </span><span style="color:#f1fa8c;">&quot;none&quot; </span><span style="color:#ff79c6;">then
+</span><span>    </span><span style="color:#ff79c6;">return </span><span style="color:#f1fa8c;">&quot;&quot;
+</span><span>  </span><span style="color:#ff79c6;">end
+</span><span>  </span><span style="color:#ff79c6;">return </span><span style="color:#ffffff;">schema</span><span style="color:#ff79c6;">.</span><span>result[</span><span style="color:#bd93f9;">1</span><span>]</span><span style="color:#ff79c6;">.</span><span>name
+</span><span style="color:#ff79c6;">end
+</span><span>
+</span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&#39;lualine&#39;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#f1fa8c;">sections </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">lualine_x </span><span>= </span><span style="color:#ffffff;">{</span><span style="color:#f1fa8c;">&#39;encoding&#39;</span><span>, </span><span style="color:#f1fa8c;">&#39;fileformat&#39;</span><span>, </span><span style="color:#f1fa8c;">&#39;filetype&#39;</span><span>, </span><span style="color:#ffffff;">get_schema}</span><span>,
+</span><span>  </span><span style="color:#ffffff;">}</span><span>,
+</span><span style="color:#ffffff;">}
+</span></code></pre>
+<p>However, this only works if the schema is loaded either via Kubernetes auto-detect or if it's listed in the yaml-companion schemas setting, like Flux CD GitRepository in the example above. To automatically load a schema and have it show in the statusline, it needs to be added twice: to the <code>yaml-companion.schemas</code> and to the <code>lspconfig.settings.yaml.schemas</code>.</p>
+<h3 id="kubernetes">Kubernetes</h3>
+<p>Kubernetes resources are not included in the JSON schema store and they cannot be matched by filename since there is no naming convention. To reliably detect them, we have to check the file content for <code>apiVersion</code> and <code>kind</code> attributes, and then load the correct schema based on the values.</p>
+<p>Both the yaml-language-server and the yaml-companion plugin have support for Kubernetes, but they use a different approach.</p>
+<p>In yamlls it has to be explicitly enabled by specifying a filename pattern:</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#ffffff;">lspconfig</span><span style="color:#ff79c6;">.</span><span>yamlls</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#f1fa8c;">settings </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">yaml </span><span>= </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">validate </span><span>= </span><span style="color:#bd93f9;">true</span><span>,
+</span><span>      </span><span style="color:#f1fa8c;">schemas </span><span>= </span><span style="color:#ffffff;">{
+</span><span>        </span><span style="color:#f1fa8c;">kubernetes </span><span>= </span><span style="color:#ffffff;">{ </span><span style="color:#f1fa8c;">&#39;k8s**.yaml&#39;</span><span>, </span><span style="color:#f1fa8c;">&#39;kube*/*.yaml&#39; </span><span style="color:#ffffff;">}</span><span>,
+</span><span>      </span><span style="color:#ffffff;">}
+</span><span>    </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span style="color:#ffffff;">}
+</span></code></pre>
+<p>The Kubernetes schemas are downloaded from <a href="https://github.com/yannh/kubernetes-json-schema">yannh/kubernetes-json-schema</a>. It's currently uses the schemas from Kubernetes v1.22.4. The Kubernetes version is hardcoded and needs to be updated manually by the developers.</p>
+<p>Yaml-companion has a more advanced Kubernetes support by detecting schemas based on the file content. It checks if the YAML file has a <code>kind</code> attribute, and that the value matches a <a href="https://github.com/someone-stole-my-name/yaml-companion.nvim/blob/main/lua/yaml-companion/builtin/kubernetes/resources.lua">pre-defined</a> resource name. Similar to yamlls the Kubernetes version is hardcoded to 1.22.4:</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#ff79c6;">local </span><span style="color:#ffffff;">cfg </span><span style="color:#ff79c6;">= </span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;yaml-companion&quot;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#f1fa8c;">builtin_matchers </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">kubernetes </span><span>= </span><span style="color:#ffffff;">{ </span><span style="color:#f1fa8c;">enabled </span><span>= </span><span style="color:#bd93f9;">true </span><span style="color:#ffffff;">}</span><span>,
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#6272a4;">-- ...
+</span><span style="color:#ffffff;">}
+</span><span>
+</span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;lspconfig&quot;</span><span>)[</span><span style="color:#f1fa8c;">&quot;yamlls&quot;</span><span>]</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup</span><span>(</span><span style="color:#ffffff;">cfg</span><span>)
+</span></code></pre>
+<p>Since the list of resources is hardcoded, the auto-detection doesn't work for Custom Resources (CRDs). To load a CRD schema, we have two options:</p>
+<ul>
+<li>Manually load it by adding it to the <code>schemas</code> setting (see example further above with <code>Flux GitRepository</code>) and then selecting it from the Telescope picker (<code>:Telescope yaml_schema</code>).</li>
+<li>Add it to the yamlls schemas and define a matching filename pattern. The benefit of this is that they will be automatically loaded.</li>
+</ul>
+<p>I use the first approach for all the examples in this post.</p>
+<h3 id="full-yaml-config">Full YAML config</h3>
+<p>The following config combines the plugins mentioned above. It uses the SchemaStore.nvim plugin to select a subset of schemas from the store and pass them to the yaml-language-server. It uses the yaml-companion Kubernetes support for default Kubernetes objects (Deployment, Service, etc.) and makes additional schemas that cannot be matched based on the filename available in the Telescope picker:</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#ff79c6;">local </span><span style="color:#ffffff;">cfg </span><span style="color:#ff79c6;">= </span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;yaml-companion&quot;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#6272a4;">-- detect k8s schemas based on file content
+</span><span>  </span><span style="color:#f1fa8c;">builtin_matchers </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">kubernetes </span><span>= </span><span style="color:#ffffff;">{ </span><span style="color:#f1fa8c;">enabled </span><span>= </span><span style="color:#bd93f9;">true </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}</span><span>,
+</span><span>
+</span><span>  </span><span style="color:#6272a4;">-- schemas available in Telescope picker
+</span><span>  </span><span style="color:#f1fa8c;">schemas </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#6272a4;">-- not loaded automatically, manually select with
+</span><span>    </span><span style="color:#6272a4;">-- :Telescope yaml_schema
+</span><span>    </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">name </span><span>= </span><span style="color:#f1fa8c;">&quot;Argo CD Application&quot;</span><span>,
+</span><span>      </span><span style="color:#f1fa8c;">uri </span><span>= </span><span style="color:#f1fa8c;">&quot;https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/argoproj.io/application_v1alpha1.json&quot;
+</span><span>    </span><span style="color:#ffffff;">}</span><span>,
+</span><span>    </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">name </span><span>= </span><span style="color:#f1fa8c;">&quot;SealedSecret&quot;</span><span>,
+</span><span>      </span><span style="color:#f1fa8c;">uri </span><span>= </span><span style="color:#f1fa8c;">&quot;https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/bitnami.com/sealedsecret_v1alpha1.json&quot;
+</span><span>    </span><span style="color:#ffffff;">}</span><span>,
+</span><span>    </span><span style="color:#6272a4;">-- schemas below are automatically loaded, but added
+</span><span>    </span><span style="color:#6272a4;">-- them here so that they show up in the statusline
+</span><span>    </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">name </span><span>= </span><span style="color:#f1fa8c;">&quot;Kustomization&quot;</span><span>,
+</span><span>      </span><span style="color:#f1fa8c;">uri </span><span>= </span><span style="color:#f1fa8c;">&quot;https://json.schemastore.org/kustomization.json&quot;
+</span><span>    </span><span style="color:#ffffff;">}</span><span>,
+</span><span>    </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">name </span><span>= </span><span style="color:#f1fa8c;">&quot;GitHub Workflow&quot;</span><span>,
+</span><span>      </span><span style="color:#f1fa8c;">uri </span><span>= </span><span style="color:#f1fa8c;">&quot;https://json.schemastore.org/github-workflow.json&quot;
+</span><span>    </span><span style="color:#ffffff;">}</span><span>,
+</span><span>  </span><span style="color:#ffffff;">}</span><span>,
+</span><span>
+</span><span>  </span><span style="color:#f1fa8c;">lspconfig </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">settings </span><span>= </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">yaml </span><span>= </span><span style="color:#ffffff;">{
+</span><span>        </span><span style="color:#f1fa8c;">validate </span><span>= </span><span style="color:#bd93f9;">true</span><span>,
+</span><span>        </span><span style="color:#f1fa8c;">schemaStore </span><span>= </span><span style="color:#ffffff;">{
+</span><span>          </span><span style="color:#f1fa8c;">enable </span><span>= </span><span style="color:#bd93f9;">false</span><span>,
+</span><span>          </span><span style="color:#f1fa8c;">url </span><span>= </span><span style="color:#f1fa8c;">&quot;&quot;
+</span><span>        </span><span style="color:#ffffff;">}</span><span>,
+</span><span>
+</span><span>        </span><span style="color:#6272a4;">-- schemas from store, matched by filename
+</span><span>        </span><span style="color:#6272a4;">-- loaded automatically
+</span><span>        </span><span style="color:#f1fa8c;">schemas </span><span>= </span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&#39;schemastore&#39;</span><span>)</span><span style="color:#ff79c6;">.</span><span>yaml</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">schemas </span><span style="color:#ffffff;">{
+</span><span>          </span><span style="color:#f1fa8c;">select </span><span>= </span><span style="color:#ffffff;">{
+</span><span>            </span><span style="color:#f1fa8c;">&#39;kustomization.yaml&#39;</span><span>,
+</span><span>            </span><span style="color:#f1fa8c;">&#39;GitHub Workflow&#39;</span><span>,
+</span><span>          </span><span style="color:#ffffff;">}
+</span><span>        </span><span style="color:#ffffff;">}
+</span><span>      </span><span style="color:#ffffff;">}
+</span><span>    </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span style="color:#ffffff;">}
+</span><span>
+</span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;lspconfig&quot;</span><span>)[</span><span style="color:#f1fa8c;">&quot;yamlls&quot;</span><span>]</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup</span><span>(</span><span style="color:#ffffff;">cfg</span><span>)
+</span><span>
+</span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;telescope&quot;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">load_extension</span><span>(</span><span style="color:#f1fa8c;">&quot;yaml_schema&quot;</span><span>)
+</span><span>
+</span><span style="color:#6272a4;">-- get schema for current buffer
+</span><span style="color:#ff79c6;">local </span><span style="font-style:italic;color:#8be9fd;">function </span><span style="color:#50fa7b;">get_schema</span><span>()
+</span><span>  </span><span style="color:#ff79c6;">local </span><span style="color:#ffffff;">schema </span><span style="color:#ff79c6;">= </span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&quot;yaml-companion&quot;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">get_buf_schema</span><span>(</span><span style="color:#bd93f9;">0</span><span>)
+</span><span>  </span><span style="color:#ff79c6;">if </span><span style="color:#ffffff;">schema</span><span style="color:#ff79c6;">.</span><span>result[</span><span style="color:#bd93f9;">1</span><span>]</span><span style="color:#ff79c6;">.</span><span>name </span><span style="color:#ff79c6;">== </span><span style="color:#f1fa8c;">&quot;none&quot; </span><span style="color:#ff79c6;">then
+</span><span>    </span><span style="color:#ff79c6;">return </span><span style="color:#f1fa8c;">&quot;&quot;
+</span><span>  </span><span style="color:#ff79c6;">end
+</span><span>  </span><span style="color:#ff79c6;">return </span><span style="color:#ffffff;">schema</span><span style="color:#ff79c6;">.</span><span>result[</span><span style="color:#bd93f9;">1</span><span>]</span><span style="color:#ff79c6;">.</span><span>name
+</span><span style="color:#ff79c6;">end
+</span><span>
+</span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&#39;lualine&#39;</span><span>)</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#f1fa8c;">sections </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">lualine_x </span><span>= </span><span style="color:#ffffff;">{</span><span style="color:#f1fa8c;">&#39;fileformat&#39;</span><span>, </span><span style="color:#f1fa8c;">&#39;filetype&#39;</span><span>, </span><span style="color:#ffffff;">get_schema}
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span style="color:#ffffff;">}
+</span></code></pre>
+<h2 id="json">JSON</h2>
+<p><img src="https://www.arthurkoziel.com/json-schemas-in-neovim/jsonls-warning.png" alt="" /></p>
+<p>The <a href="https://github.com/hrsh7th/vscode-langservers-extracted">json-language-server</a> has support for JSON schemas, but cannot fetch them from the schema store. To select schemas from the store catalog, we have to use the SchemaStore.nvim plugin.</p>
+<p>In the following example, it only uses 2 schemas. The names are taken from the <code>name</code> attribute in the <a href="https://www.schemastore.org/api/json/catalog.json">catalog</a>.</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&#39;lspconfig&#39;</span><span>)</span><span style="color:#ff79c6;">.</span><span>jsonls</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#f1fa8c;">settings </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">json </span><span>= </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">schemas </span><span>= </span><span style="color:#8be9fd;">require</span><span>(</span><span style="color:#f1fa8c;">&#39;schemastore&#39;</span><span>)</span><span style="color:#ff79c6;">.</span><span>json</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">schemas </span><span style="color:#ffffff;">{
+</span><span>        </span><span style="color:#f1fa8c;">select </span><span>= </span><span style="color:#ffffff;">{
+</span><span>          </span><span style="color:#f1fa8c;">&#39;Renovate&#39;</span><span>,
+</span><span>          </span><span style="color:#f1fa8c;">&#39;GitHub Workflow Template Properties&#39;
+</span><span>        </span><span style="color:#ffffff;">}
+</span><span>      </span><span style="color:#ffffff;">}</span><span>,
+</span><span>      </span><span style="color:#f1fa8c;">validate </span><span>= </span><span style="color:#ffffff;">{ </span><span style="color:#f1fa8c;">enable </span><span>= </span><span style="color:#bd93f9;">true </span><span style="color:#ffffff;">}</span><span>,
+</span><span>    </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span style="color:#ffffff;">}
+</span></code></pre>
+<p>This is similar to the yamlls config from above, but instead of getting the YAML schemas with <code>require('schemastore').yaml.schemas</code>, we have to get the JSON schemas with <code>require('schemastore').json.schemas</code>.</p>
+<p>Changing the filename matching pattern is not possible when using <code>select</code> but can be done by replacing a schema (check the <a href="https://github.com/b0o/SchemaStore.nvim">docs</a> for the <code>replace</code> function) which allows to set a new <code>fileMatch</code> attribute.</p>
+<h2 id="toml">TOML</h2>
+<p><img src="https://www.arthurkoziel.com/json-schemas-in-neovim/toml-cargo-warn.png" alt="" /></p>
+<p>The <a href="https://github.com/tamasfe/taplo">taplo</a> language-server for TOML files supports JSON schemas and the schema store. It's enabled by default, however, it's not possible to only select a subset of the catalog:</p>
+<pre data-lang="lua" style="background-color:#282a36;color:#f8f8f2;" class="language-lua "><code class="language-lua" data-lang="lua"><span style="color:#ffffff;">lspconfig</span><span style="color:#ff79c6;">.</span><span>taplo</span><span style="color:#ff79c6;">.</span><span style="color:#50fa7b;">setup </span><span style="color:#ffffff;">{
+</span><span>  </span><span style="color:#f1fa8c;">settings </span><span>= </span><span style="color:#ffffff;">{
+</span><span>    </span><span style="color:#f1fa8c;">evenBetterToml </span><span>= </span><span style="color:#ffffff;">{
+</span><span>      </span><span style="color:#f1fa8c;">schema </span><span>= </span><span style="color:#ffffff;">{
+</span><span>        </span><span style="color:#6272a4;">-- add additional schemas
+</span><span>        </span><span style="color:#f1fa8c;">associations </span><span>= </span><span style="color:#ffffff;">{
+</span><span>          [</span><span style="color:#f1fa8c;">&#39;example</span><span style="color:#ff79c6;">\\</span><span style="color:#f1fa8c;">.toml$&#39;</span><span>] = </span><span style="color:#f1fa8c;">&#39;https://json.schemastore.org/example.json&#39;</span><span>,
+</span><span>        </span><span style="color:#ffffff;">}
+</span><span>      </span><span style="color:#ffffff;">}
+</span><span>    </span><span style="color:#ffffff;">}
+</span><span>  </span><span style="color:#ffffff;">}
+</span><span style="color:#ffffff;">}
+</span></code></pre>
+<p>The above config will use the entire catalog from the schema store and add one additional schema.</p>
+
+</article>
+
+
+</body>
+</html>

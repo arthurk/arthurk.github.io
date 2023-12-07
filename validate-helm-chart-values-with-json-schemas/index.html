@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Validating Helm Chart Values with JSON Schemas</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Validating Helm Chart Values with JSON Schemas</h1>
+    <div id="date">
+      <time class="date" datetime="2020-02-08">February 08, 2020</time>
+    
+    </div>
+  </header>
+
+  <p>Helm v3 <a href="https://github.com/helm/helm/pull/5350">added support</a> to validate values in a chart's <code>values.yaml</code> file with <a href="https://json-schema.org/">JSON schemas</a>. It allows us to do:</p>
+<ul>
+<li>Requirement checks. Example: An <code>API_KEY</code> environment variable is set</li>
+<li>Type validation. Example: The image tag is a string such as <code>&quot;1.5&quot;</code> and not the number <code>1.5</code></li>
+<li>Range validation. Example: The value for a CPU utilization percentage key is between 1 and 100</li>
+<li>Constraint Validation. Example: The <code>pullPolicy</code> is <code>IfNotPresent</code>, <code>Always</code>, or <code>Never</code>; A URL has the format <code>http(s)://&lt;host&gt;:&lt;port&gt;</code></li>
+</ul>
+<p>In this post I'm going to show how to create a JSON schema and use it to validate a chart's <code>values.yaml</code> file. After that I'm going to show how to automatically generate a schema from an existing values file.</p>
+<h2 id="example">Example</h2>
+<p>For this example I'm using the chart that is created when running <code>helm create mychart</code>. We'll create a JSON schema that will validate that the following conditions are met:</p>
+<ul>
+<li><code>image.repository</code> is a valid docker image name</li>
+<li><code>image.pullPolicy</code> is <code>IfNotPresent</code>, <code>Always</code> or <code>Never</code></li>
+</ul>
+<p>The relevant part in the <code>values.yaml</code> file is:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">image</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">repository</span><span>: </span><span style="color:#f1fa8c;">my-docker-image
+</span><span>  </span><span style="color:#ff79c6;">pullPolicy</span><span>: </span><span style="color:#f1fa8c;">IfNotPresent
+</span></code></pre>
+<p>The JSON schema needs to be in a file named <code>values.schema.json</code>. It has to be located in the same directory as the <code>values.yaml</code> file. To match the requirements from above the file needs to have the following content:</p>
+<pre data-lang="json" style="background-color:#282a36;color:#f8f8f2;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>  </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">$schema</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">http://json-schema.org/schema#</span><span style="color:#eeeeee;">&quot;</span><span>,
+</span><span>  </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">type</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">object</span><span style="color:#eeeeee;">&quot;</span><span>,
+</span><span>  </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">required</span><span style="color:#eeeeee;">&quot;</span><span>: [
+</span><span>    </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">image</span><span style="color:#eeeeee;">&quot;
+</span><span>  ],
+</span><span>  </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">properties</span><span style="color:#eeeeee;">&quot;</span><span>: {
+</span><span>    </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">image</span><span style="color:#eeeeee;">&quot;</span><span>: {
+</span><span>      </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">type</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">object</span><span style="color:#eeeeee;">&quot;</span><span>,
+</span><span>      </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">required</span><span style="color:#eeeeee;">&quot;</span><span>: [
+</span><span>        </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">repository</span><span style="color:#eeeeee;">&quot;</span><span>,
+</span><span>        </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">pullPolicy</span><span style="color:#eeeeee;">&quot;
+</span><span>      ],
+</span><span>      </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">properties</span><span style="color:#eeeeee;">&quot;</span><span>: {
+</span><span>        </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">repository</span><span style="color:#eeeeee;">&quot;</span><span>: {
+</span><span>          </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">type</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">string</span><span style="color:#eeeeee;">&quot;</span><span>,
+</span><span>          </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">pattern</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">^[a-z0-9-_]+$</span><span style="color:#eeeeee;">&quot;
+</span><span>        },
+</span><span>        </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">pullPolicy</span><span style="color:#eeeeee;">&quot;</span><span>: {
+</span><span>          </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">type</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">string</span><span style="color:#eeeeee;">&quot;</span><span>,
+</span><span>          </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">pattern</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">^(Always|Never|IfNotPresent)$</span><span style="color:#eeeeee;">&quot;
+</span><span>        }
+</span><span>      }
+</span><span>    }
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>Note that putting a key in the <code>required</code> array does not mean that it has a value. In YAML if a key doesn't have a value it will be set to an empty string. To make sure the value was set, a regex for the <code>pattern</code> key has to be added that matches a non-empty string.</p>
+<p>To demonstrate that the validation is working I'm leaving the <code>repo</code> empty and set <code>pullPolicy</code> to an invalid value. Running lint shows the following output:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ helm lint .
+</span><span>
+</span><span>==&gt; Linting .
+</span><span>[ERROR] values.yaml: - image.repository: Invalid type. Expected: string, given: null
+</span><span>- image.pullPolicy: Does not match pattern &#39;^(Always|Never|IfNotPresent)$&#39;
+</span><span>
+</span><span>[ERROR] templates/: values don&#39;t meet the specifications of the schema(s) in the following chart(s):
+</span><span>mychart:
+</span><span>- image.repository: Invalid type. Expected: string, given: null
+</span><span>- image.pullPolicy: Does not match pattern &#39;^(Always|Never|IfNotPresent)$&#39;
+</span><span>
+</span><span>Error: 1 chart(s) linted, 1 chart(s) failed
+</span></code></pre>
+<p>The schema is automatically validated when running the following commands:</p>
+<ul>
+<li>helm install</li>
+<li>helm upgrade</li>
+<li>helm lint</li>
+<li>helm template</li>
+</ul>
+<p>The YAML values and the JSON schema need to be kept in sync manually. Helm will not check if keys from the YAML values file are missing from the schema. It will only validate fields that are specified in the schema.</p>
+<h2 id="creating-a-json-schema-for-existing-yaml-values">Creating a JSON Schema for existing YAML values</h2>
+<p>We can infer a schema from existing YAML values and use it as a starting point when writing a new schema. The steps are:</p>
+<ol>
+<li>Convert your values YAML file to JSON on <a href="https://www.json2yaml.com/">https://www.json2yaml.com/</a></li>
+<li>Paste the JSON on <a href="https://www.jsonschema.net">https://www.jsonschema.net/</a> and click on &quot;Infer Schema&quot;</li>
+<li>Paste the schema into the <code>values.schema.json</code> file</li>
+</ol>
+<p>We can run <code>helm lint</code> to make sure the schema has been generated correctly:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ helm lint mychart/
+</span><span>
+</span><span>==&gt; Linting .
+</span><span>
+</span><span>1 chart(s) linted, 0 chart(s) failed
+</span></code></pre>
+<p>The inferred schema will mark all keys as required and set their type. A regex can be added to keys to make sure they have a value set. The <code>id</code>, <code>title</code>, <code>default</code> and <code>examples</code> fields are not necessary for validating helm charts and can be removed.</p>
+
+</article>
+
+
+</body>
+</html>

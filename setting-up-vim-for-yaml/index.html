@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Setting up Vim for YAML editing</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Setting up Vim for YAML editing</h1>
+    <div id="date">
+      <time class="date" datetime="2020-03-23">March 23, 2020</time>
+    
+    </div>
+  </header>
+
+  <p>In this blog post I'm going to show how to set up Vim for easier YAML editing.</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-vim-for-yaml/full-example.png" alt="Screenshot of Vim" /></p>
+<p>You can scroll down to the end for a summary of all installed plugins and config file changes.</p>
+<h2 id="syntax-highlighting">Syntax Highlighting</h2>
+<p>There's not much to do here. VIM has YAML syntax highlighting built-in and it's great.</p>
+<p>A few years back YAML highlighting in Vim was very slow, and there was often a noticeable lag when opening large files. The workaround was to use the <a href="https://github.com/stephpy/vim-yaml">vim-yaml</a> plugin for fast syntax highlighting.</p>
+<p>I decided to make a performance benchmark. I loaded up a <a href="https://github.com/istio/istio/blob/master/manifests/base/files/gen-istio-cluster.yaml">large YAML file</a> (6100 lines) and compared the time:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span># default syntax highlighting
+</span><span>$ vim gen-istio-cluster.yaml --startuptime default.log
+</span><span>$ tail -1 default.log
+</span><span>055.563
+</span><span>
+</span><span># vim-yaml plugin
+</span><span>$ vim gen-istio-cluster.yaml --startuptime vimyaml.log
+</span><span>$ tail -1 vimyaml.log
+</span><span>060.320
+</span></code></pre>
+<p>As we can see the default syntax highlighting is just as fast as the plugin and there's no need to install a separate plugin to fix the slow syntax highlighting anymore.</p>
+<h2 id="indentation">Indentation</h2>
+<p>Indentation probably the most annoying part about editing YAML files. Large documents with deeply nested blocks are often hard to track and errors are easily made.</p>
+<p>YAML documents are required to have a 2 space indentation. However, Vim does not set this by default but it's an easy fix by putting the following line in the vim config:</p>
+<pre data-lang="vim" style="background-color:#282a36;color:#f8f8f2;" class="language-vim "><code class="language-vim" data-lang="vim"><span style="color:#8be9fd;">autocmd </span><span>FileType yaml </span><span style="color:#8be9fd;">setlocal</span><span> ts=</span><span style="color:#bd93f9;">2</span><span> sts=</span><span style="color:#bd93f9;">2</span><span> sw=</span><span style="color:#bd93f9;">2 </span><span style="color:#8be9fd;">expandtab
+</span></code></pre>
+<p>We can also setup Indentation guides. Indentation guides are thin vertical lines at each indentation level and useful to help line up nested YAML blocks.</p>
+<p>We can display those lines by using the <a href="https://github.com/Yggdroot/indentLine">indentLine plugin</a>. I've modified the indentation character to display a thinner line (default is &quot;¦&quot;):</p>
+<pre data-lang="vim" style="background-color:#282a36;color:#f8f8f2;" class="language-vim "><code class="language-vim" data-lang="vim"><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:indentLine_char</span><span> = </span><span style="color:#f1fa8c;">&#39;⦙&#39;
+</span></code></pre>
+<p>The result should look like this:</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-vim-for-yaml/indentlines.png" alt="Screenshot of Vim showing the indentLine plugin" /></p>
+<h2 id="folding">Folding</h2>
+<p>With folding we can hide parts of the file that are not relevant to our current task.</p>
+<p>Vim has built-in support for folding based on the indentation level but the default folding rules make it hard to tell what is folded. This is because the folding starts on the line <em>following</em> the start of a block. To change this we can install the <a href="https://github.com/pedrohdz/vim-yaml-folds">vim-yaml-folds</a> plugin.</p>
+<p>Here's a side-by-side comparison of the default folding (left) compared to vim-yaml-folds (right):</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-vim-for-yaml/folding-compare.png" alt="comparison of default folding with vim-yaml-folds" /></p>
+<p>To work with folding we need to remember a few keyboard commands. Vimcasts has a great episode on this <a href="http://vimcasts.org/episodes/how-to-fold/">here</a>. Most of the time I use the following commands:</p>
+<ul>
+<li>za: Toggle current fold</li>
+<li>zR: Expand all folds</li>
+</ul>
+<p>After the plugin is installed and folding is enabled the default settings will fold all blocks by default. To start with unfolded content we can set:</p>
+<pre data-lang="vim" style="background-color:#282a36;color:#f8f8f2;" class="language-vim "><code class="language-vim" data-lang="vim"><span style="color:#8be9fd;">set</span><span> foldlevelstart=</span><span style="color:#bd93f9;">20
+</span></code></pre>
+<p>There's also a plugin called <a href="https://www.vim.org/scripts/script.php?script_id=4021">restore_view</a> which will save the folds for each file. But be aware that this plugin will create an extra file with folding information for each opened document.</p>
+<h2 id="linting">Linting</h2>
+<p>Linting will analyze the code and show any potential errors while we're writing it which helps us catch formatting or syntax errors early on.</p>
+<p>To do this in Vim we can use <a href="https://github.com/dense-analysis/ale">ALE</a>, an asynchronous linting framework that has support for many languages and tools including YAML. To enable YAML linting in ALE we have to install <a href="https://github.com/adrienverge/yamllint">yamllint</a>, a Python-based YAML linter.</p>
+<p>Installation instructions are <a href="https://yamllint.readthedocs.io/en/stable/quickstart.html#installing-yamllint">here</a>. On macOS we can install it with Homebrew:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ brew install yamllint
+</span></code></pre>
+<p>The default configuration is fairly strict and shows errors in document style such as line length, trailing spaces or comment indentation.</p>
+<p>We can modify the configuration to be less strict. Yamllint already comes with a <a href="https://github.com/adrienverge/yamllint/blob/master/yamllint/conf/relaxed.yaml">relaxed</a> version of the default config that is a good starting point. The only additional thing I've decided to disable is line length checking.</p>
+<p>To do this we open up <code>~/.config/yamllint/config</code> and paste the following:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">extends</span><span>: </span><span style="color:#f1fa8c;">relaxed
+</span><span>
+</span><span style="color:#ff79c6;">rules</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">line-length</span><span>: </span><span style="color:#f1fa8c;">disable
+</span></code></pre>
+<p>I've modified the ALE configuration to change the message format, error symbols and only lint when the file is saved:</p>
+<pre data-lang="vim" style="background-color:#282a36;color:#f8f8f2;" class="language-vim "><code class="language-vim" data-lang="vim"><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:ale_echo_msg_format</span><span> = </span><span style="color:#f1fa8c;">&#39;[%linter%] %s [%severity%]&#39;
+</span><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:ale_sign_error</span><span> = </span><span style="color:#f1fa8c;">&#39;✘&#39;
+</span><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:ale_sign_warning</span><span> = </span><span style="color:#f1fa8c;">&#39;⚠&#39;
+</span><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:ale_lint_on_text_changed</span><span> = </span><span style="color:#f1fa8c;">&#39;never&#39;
+</span></code></pre>
+<p>We can see the errors and warnings on the left side:</p>
+<p><img src="https://www.arthurkoziel.com/setting-up-vim-for-yaml/full-example.png" alt="Screenshot of Vim" /></p>
+<h2 id="summary">Summary</h2>
+<p>Here's a summary of the plugins, applications and config modifications:</p>
+<h3 id="vim-plugins">Vim Plugins</h3>
+<ul>
+<li><a href="https://github.com/Yggdroot/indentLine">indentLine</a></li>
+<li><a href="https://github.com/pedrohdz/vim-yaml-folds">vim-yaml-folds</a></li>
+<li><a href="https://github.com/dense-analysis/ale">ALE</a></li>
+</ul>
+<h3 id="applications">Applications</h3>
+<ul>
+<li><a href="https://github.com/adrienverge/yamllint">yamllint</a></li>
+</ul>
+<h3 id="config">Config</h3>
+<p>In <code>~/.vimrc</code> or <code>~/.config/nvim/init.vim</code></p>
+<pre data-lang="vim" style="background-color:#282a36;color:#f8f8f2;" class="language-vim "><code class="language-vim" data-lang="vim"><span style="color:#8be9fd;">autocmd </span><span>FileType yaml </span><span style="color:#8be9fd;">setlocal</span><span> ts=</span><span style="color:#bd93f9;">2</span><span> sts=</span><span style="color:#bd93f9;">2</span><span> sw=</span><span style="color:#bd93f9;">2 </span><span style="color:#8be9fd;">expandtab
+</span><span>
+</span><span style="color:#8be9fd;">set</span><span> foldlevelstart=</span><span style="color:#bd93f9;">20
+</span><span>
+</span><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:ale_echo_msg_format</span><span> = </span><span style="color:#f1fa8c;">&#39;[%linter%] %s [%severity%]&#39;
+</span><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:ale_sign_error</span><span> = </span><span style="color:#f1fa8c;">&#39;✘&#39;
+</span><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:ale_sign_warning</span><span> = </span><span style="color:#f1fa8c;">&#39;⚠&#39;
+</span><span style="color:#8be9fd;">let </span><span style="color:#ffffff;">g:ale_lint_on_text_changed</span><span> = </span><span style="color:#f1fa8c;">&#39;never&#39;
+</span></code></pre>
+<p>In <code>~/.config/yamllint/config</code></p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">extends</span><span>: </span><span style="color:#f1fa8c;">relaxed
+</span><span>
+</span><span style="color:#ff79c6;">rules</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">line-length</span><span>: </span><span style="color:#f1fa8c;">disable
+</span></code></pre>
+
+</article>
+
+
+</body>
+</html>

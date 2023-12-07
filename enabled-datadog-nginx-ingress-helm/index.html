@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Enabling Datadog integration for ingress-nginx Helm chart</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Enabling Datadog integration for ingress-nginx Helm chart</h1>
+    <div id="date">
+      <time class="date" datetime="2022-08-21">August 21, 2022</time>
+    
+    </div>
+  </header>
+
+  <p>This is a guide on how to enable the Datadog <a href="https://github.com/DataDog/integrations-core/tree/master/nginx">nginx</a> and
+<a href="https://github.com/DataDog/integrations-core/tree/master/nginx_ingress_controller">nginx_ingress_controller</a> integrations
+when using the <a href="https://github.com/kubernetes/ingress-nginx/tree/main/charts/ingress-nginx">ingress-nginx Helm
+chart</a>.</p>
+<h2 id="available-integrations-in-datadog">Available Integrations in Datadog</h2>
+<p>In Datadog, there are two NGINX-related integrations available:</p>
+<ul>
+<li><code>nginx</code>: Metrics reported by NGINX status page. The required
+<code>ngx_http_stub_status_module</code> is enabled by default in the ingress-nginx Helm
+chart. Access to the status page is restricted, and we need to whitelist the Datadog
+agent's IP. The list of metrics can be found in the <a href="https://nginx.org/en/docs/http/ngx_http_stub_status_module.html">nginx
+documentation</a>.</li>
+<li><code>nginx_ingress_controller</code>: Metrics reported by the NGINX Ingress controller. It exposes metrics in the Prometheus format. The list of metrics can
+be found in a <a href="https://github.com/kubernetes/ingress-nginx/issues/2924">GitHub
+PR</a>.</li>
+</ul>
+<p>In this guide, we will enable both integrations.</p>
+<h2 id="enabling-metrics-endpoint-and-status-page">Enabling metrics endpoint and status page</h2>
+<p>Metrics for the NGINX Ingress controller are disabled by default. We have to enable the Prometheus metrics endpoint:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">controller</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">metrics</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">enabled</span><span>: </span><span style="color:#bd93f9;">true
+</span></code></pre>
+<p>For NGINX, we have to whitelist the IP of the Datadog agent to allow access to
+the status page. In the following example, I've simply whitelisted all IPs in the
+Kubernetes VPC so that any Pod can access it: </p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">controller</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">config</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">nginx-status-ipv4-whitelist</span><span>: </span><span style="color:#f1fa8c;">&quot;10.1.0.0/16&quot;
+</span></code></pre>
+<h2 id="agent-check-configuration">Agent check configuration</h2>
+<p>The Datadog agent looks for a <code>ad.datadoghq.com/&lt;CONTAINER_IDENTIFIER&gt;.checks</code> annotation
+on Pods to check for integration configurations.</p>
+<p>The <code>CONTAINER_IDENTIFIER</code> is the name of the container that the integration applies to. By default, the container name of the NGINX Ingress controller is <code>controller</code> so our
+annotation is named <code>ad.datadoghq.com/controller.checks</code>.</p>
+<p>For the Datadog <code>nginx</code> integration, we have to set the <code>nginx_status_url</code>. The path is always <code>/nginx_status</code>.</p>
+<p>For the <code>nginx_ingress_controller</code> integration, we have to set the URL of the
+Prometheus metrics endpoint. By default, they are exposed on port <code>10254</code>. The path is always <code>/metrics</code>.</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">controller</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">podAnnotations</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">ad.datadoghq.com/controller.checks</span><span>: </span><span style="color:#ff79c6;">|
+</span><span style="color:#f1fa8c;">      {
+</span><span style="color:#f1fa8c;">        &quot;nginx&quot;: {
+</span><span style="color:#f1fa8c;">          &quot;instances&quot;: [{&quot;nginx_status_url&quot;: &quot;http://%%host%%/nginx_status&quot;}]
+</span><span style="color:#f1fa8c;">        },
+</span><span style="color:#f1fa8c;">        &quot;nginx_ingress_controller&quot; : {
+</span><span style="color:#f1fa8c;">          &quot;instances&quot;: [{&quot;prometheus_url&quot;: &quot;http://%%host%%:10254/metrics&quot;}]
+</span><span style="color:#f1fa8c;">        }
+</span><span style="color:#f1fa8c;">      }
+</span></code></pre>
+<p>The <code>%%host%%</code> part is a <a href="https://docs.datadoghq.com/agent/guide/template_variables/">template
+variable</a> that will
+be replaced automatically with the agent's host service IP. This will only work
+if the agent is running on every host.</p>
+<h2 id="check-if-everything-works">Check if everything works</h2>
+<p>We can check if the metrics collection works by running the <code>agent status</code> command in an
+agent container. If everything is working, it will report a successful
+execution date:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Last Execution Date : 2022-07-27 03:43:24 UTC (1658893404000)
+</span><span>Last Successful Execution Date : 2022-07-27 03:43:24 UTC (1658893404000)
+</span></code></pre>
+<p>Finally, we should enable the integrations in the Datadog Web UI. Go
+to &quot;Integrations&quot;, select nginx/nginx-ingress-controller and click on &quot;Enable&quot;.
+Doing this will also create 3 default dashboards.</p>
+
+</article>
+
+
+</body>
+</html>

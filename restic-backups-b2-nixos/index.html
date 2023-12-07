@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Restic Backups on Backblaze B2 with NixOS</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Restic Backups on Backblaze B2 with NixOS</h1>
+    <div id="date">
+      <time class="date" datetime="2023-11-29">November 29, 2023</time>
+    
+    </div>
+  </header>
+
+  <p>In this post I'll show how I setup <a href="https://restic.net/">restic</a> backups on my desktop computer that is running <a href="https://nixos.org/">NixOS</a>. I'll go though the steps on how to create a <a href="https://www.backblaze.com/cloud-storage">B2</a> bucket, the NixOS configuration including secret storage with <a href="https://github.com/FiloSottile/age">age</a> via <a href="https://github.com/ryantm/agenix">agenix</a>, and desktop notifications in case there are errors.</p>
+<p><img src="https://www.arthurkoziel.com/restic-backups-b2-nixos/title.jpg" alt="image of a computer in pixel art style" /></p>
+<p>We start by creating a bucket on B2 where the encrypted restic backups will be stored.</p>
+<h2 id="creating-the-b2-bucket">Creating the B2 bucket</h2>
+<p>To create a bucket named <code>restic-blog-test-bucket</code> we run the following command:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ backblaze-b2 create_bucket restic-blog-test-bucket allPrivate \
+</span><span>  --defaultServerSideEncryption=SSE-B2 \
+</span><span>  --lifecycleRules=&#39;[{&quot;daysFromHidingToDeleting&quot;: 30, &quot;daysFromUploadingToHiding&quot;: null, &quot;fileNamePrefix&quot;: &quot;&quot;}]&#39;
+</span></code></pre>
+<p>Bucket names are globally unique, meaning that they must have a unique name across all B2 buckets (not just in the account). The important thing is to set the visibility to private (<code>allPrivate</code>). Enabling Server-Side Encryption (SSE) is not strictly necessary given that restic already encrypts the data.</p>
+<p>We also add a lifecycle-rule to delete old versions of files (files that have been overwritten) after 30 days. This saves storage space. By default a B2 bucket retains old versions of a file indefinitely. For us this feature is unnecessary since restic will automatically manage file versions (revisions) and regularly prune old ones.</p>
+<p>Next we create an application key so that we can programatically access the B2 API from within the systemd service later on:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ backblaze-b2 create-key --bucket restic-blog-test-bucket blog-test-key &quot;deleteFiles, listAllBucketNames, listBuckets, listFiles, readBucketEncryption, readBucketReplications, readBuckets, readFiles, shareFiles, writeBucketEncryption, writeBucketReplications, writeFiles&quot;
+</span></code></pre>
+<p>The permissions allow restic to do any operation within the bucket. The <code>listAllBucketNames</code> allows to list all bucket names in the account. It is also necessary and without it the backup will break.</p>
+<p>The command will output two values which we need to save. The first value is the application key <em>ID</em> and the second value is the application key itself. Both are sensitive values that we need to store in an encrypted format.</p>
+<h2 id="setup-agenix">Setup agenix</h2>
+<p>For restic to be able to access the B2 bucket from within the systemd service, we need to store the credentials. We store the credentials in files and use <a href="https://github.com/FiloSottile/age">age</a> to encrypt them.</p>
+<p><a href="https://github.com/ryantm/agenix">Agenix</a> makes it easy to use age-encrypted secrets in NixOS. Installation via flakes can be done by adding the input and importing the module:</p>
+<pre data-lang="nix" style="background-color:#282a36;color:#f8f8f2;" class="language-nix "><code class="language-nix" data-lang="nix"><span>{
+</span><span>  </span><span style="color:#50fa7b;">inputs</span><span>.</span><span style="color:#50fa7b;">agenix</span><span>.</span><span style="color:#50fa7b;">url </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;github:ryantm/agenix&quot;</span><span>;
+</span><span>
+</span><span>  </span><span style="color:#50fa7b;">outputs </span><span style="color:#ff79c6;">= </span><span>{ </span><span style="font-style:italic;color:#ffb86c;">self</span><span style="color:#ff79c6;">, </span><span style="font-style:italic;color:#ffb86c;">nixpkgs</span><span style="color:#ff79c6;">, </span><span style="font-style:italic;color:#ffb86c;">agenix </span><span>}: {
+</span><span>    </span><span style="color:#50fa7b;">nixosConfigurations</span><span>.</span><span style="color:#50fa7b;">yourhostname </span><span style="color:#ff79c6;">= </span><span style="font-style:italic;color:#ffb86c;">nixpkgs</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">lib</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">nixosSystem </span><span>{
+</span><span>      </span><span style="color:#6272a4;"># ...
+</span><span>      </span><span style="color:#50fa7b;">modules </span><span style="color:#ff79c6;">= </span><span>[
+</span><span>        </span><span style="color:#6272a4;"># ...
+</span><span>        </span><span style="font-style:italic;color:#ffb86c;">agenix</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">nixosModules</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">default
+</span><span>      ];
+</span><span>    };
+</span><span>  };
+</span><span>}
+</span></code></pre>
+<p>To create a secret we need to use the <code>agenix</code> CLI. By default, the program looks for a file called <code>secrets.nix</code> that specifies the SSH public keys to use for each encrypted file.</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ mkdir -p secrets/restic
+</span><span>$ cd secrets/
+</span><span>$ touch secrets.nix
+</span></code></pre>
+<p>For our setup we need to store 3 secrets: The repository name, password and specific environment variables that are required by the restic B2 integration. We are using the same SSH public key for all files:</p>
+<pre data-lang="nix" style="background-color:#282a36;color:#f8f8f2;" class="language-nix "><code class="language-nix" data-lang="nix"><span style="color:#ff79c6;">let
+</span><span>  </span><span style="color:#50fa7b;">arthur </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;ssh-ed25519 AAAAC3NzaC1lZD...t07oaewMGVuqmcb&quot;</span><span>;
+</span><span style="color:#ff79c6;">in
+</span><span>{
+</span><span>  </span><span style="color:#f1fa8c;">&quot;restic/env.age&quot;</span><span>.</span><span style="color:#50fa7b;">publicKeys </span><span style="color:#ff79c6;">= </span><span>[ </span><span style="font-style:italic;color:#ffb86c;">arthur </span><span>];
+</span><span>  </span><span style="color:#f1fa8c;">&quot;restic/repo.age&quot;</span><span>.</span><span style="color:#50fa7b;">publicKeys </span><span style="color:#ff79c6;">= </span><span>[ </span><span style="font-style:italic;color:#ffb86c;">arthur </span><span>];
+</span><span>  </span><span style="color:#f1fa8c;">&quot;restic/password.age&quot;</span><span>.</span><span style="color:#50fa7b;">publicKeys </span><span style="color:#ff79c6;">= </span><span>[ </span><span style="font-style:italic;color:#ffb86c;">arthur </span><span>];
+</span><span>}
+</span></code></pre>
+<h3 id="password-secret-file">Password secret file</h3>
+<p>First we create the repository password file:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ nix run github:ryantm/agenix -- -e restic/password.age
+</span></code></pre>
+<p>The password will be used by restic to encrypt and decrypt the files in the repository. Since our repository doesn't exist yet, we can generate a new password and store it in the file.</p>
+<h3 id="environment-secret-file">Environment Secret file</h3>
+<p>Second we create the environment file:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ nix run github:ryantm/agenix -- -e restic/env.age
+</span></code></pre>
+<p>When running the backup job the restic systemd service will read environment variables from this file. For the restic B2 integration we have to specify the <code>B2_ACCOUNT_KEY</code> and <code>B2_ACCOUNT_ID</code> environment variables. The values are the output of the <code>create-key</code> command from before. The file content should be in this format:</p>
+<pre data-lang="sh" style="background-color:#282a36;color:#f8f8f2;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#ffffff;">B2_ACCOUNT_ID</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">&quot;my-id&quot;
+</span><span style="color:#ffffff;">B2_ACCOUNT_KEY</span><span style="color:#ff79c6;">=</span><span style="color:#f1fa8c;">&quot;my-key&quot;
+</span></code></pre>
+<h3 id="repository-secret-file">Repository secret file</h3>
+<p>Lastly we specify the repository name in the repo file:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ nix run github:ryantm/agenix -- -e restic/repo.age
+</span></code></pre>
+<p>This is the name of the B2 bucket that we created with the <code>create_bucket</code> command before. The name has to be prefixed with <code>b2:</code>:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>b2:my-bucket-name
+</span></code></pre>
+<h3 id="decrypting-files">Decrypting files</h3>
+<p>You might run into the following issue when trying to decrypt the age files (for example for editing them):</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Error: Unsupported SSH key: /home/arthur/.ssh/id_rsa
+</span></code></pre>
+<p>This happens if you didn't specify your SSH keys in <code>config.services.openssh.hostKeys</code>. If you're not running an OpenSSH server on your machine, this is probably not set, in which case agenix defaults to using the <code>id_rsa</code> key. For example I used my <code>id_ed25519</code> key.</p>
+<p>The fix is to pass the key via the <code>-i</code> (identity path) argument:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>nix run github:ryantm/agenix -- -e restic/env.age -i ~/.ssh/id_ed25519
+</span></code></pre>
+<p>We also need to specify the identity path in the NixOS configuration in the next step.</p>
+<h2 id="create-the-nixos-config">Create the NixOS config</h2>
+<p>In our <code>configuration.nix</code> file we import <code>restic.nix</code> (it can also be put into the same file if preferred) and set the identity paths for agenix:</p>
+<pre data-lang="nix" style="background-color:#282a36;color:#f8f8f2;" class="language-nix "><code class="language-nix" data-lang="nix"><span>{
+</span><span>  </span><span style="color:#50fa7b;">imports </span><span style="color:#ff79c6;">= </span><span>[
+</span><span>    </span><span style="color:#f1fa8c;">./hardware-configuration.nix
+</span><span>    </span><span style="color:#6272a4;"># ...
+</span><span>    </span><span style="color:#f1fa8c;">./restic.nix
+</span><span>  ];
+</span><span>
+</span><span>  </span><span style="color:#50fa7b;">age</span><span>.</span><span style="color:#50fa7b;">identityPaths </span><span style="color:#ff79c6;">= </span><span>[ </span><span style="color:#f1fa8c;">&quot;</span><span style="font-style:italic;color:#ff79c6;">${</span><span style="font-style:italic;color:#ffb86c;">config</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">users</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">users</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">arthur</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">home</span><span style="font-style:italic;color:#ff79c6;">}</span><span style="color:#f1fa8c;">/.ssh/id_ed25519&quot; </span><span>];
+</span><span>}
+</span></code></pre>
+<p>In our NixOS config directory we create a new file called <code>restic.nix</code> with the following content:</p>
+<pre data-lang="nix" style="background-color:#282a36;color:#f8f8f2;" class="language-nix "><code class="language-nix" data-lang="nix"><span>{
+</span><span>  </span><span style="color:#6272a4;"># configure agenix secrets
+</span><span>  </span><span style="color:#50fa7b;">age</span><span>.</span><span style="color:#50fa7b;">secrets </span><span style="color:#ff79c6;">= </span><span>{
+</span><span>    </span><span style="color:#f1fa8c;">&quot;restic/env&quot;</span><span>.</span><span style="color:#50fa7b;">file </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">../secrets/restic/env.age</span><span>;
+</span><span>    </span><span style="color:#f1fa8c;">&quot;restic/repo&quot;</span><span>.</span><span style="color:#50fa7b;">file </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">../secrets/restic/repo.age</span><span>;
+</span><span>    </span><span style="color:#f1fa8c;">&quot;restic/password&quot;</span><span>.</span><span style="color:#50fa7b;">file </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">../secrets/restic/password.age</span><span>;
+</span><span>  };
+</span><span>
+</span><span>  </span><span style="color:#6272a4;"># configure restic backup services
+</span><span>  </span><span style="color:#50fa7b;">services</span><span>.</span><span style="color:#50fa7b;">restic</span><span>.</span><span style="color:#50fa7b;">backups </span><span style="color:#ff79c6;">= </span><span>{
+</span><span>    </span><span style="color:#50fa7b;">daily </span><span style="color:#ff79c6;">= </span><span>{
+</span><span>      </span><span style="color:#50fa7b;">initialize </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true</span><span>;
+</span><span>
+</span><span>      </span><span style="color:#50fa7b;">environmentFile </span><span style="color:#ff79c6;">= </span><span style="font-style:italic;color:#ffb86c;">config</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">age</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">secrets</span><span style="color:#ff79c6;">.</span><span style="color:#f1fa8c;">&quot;restic/env&quot;</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">path</span><span>;
+</span><span>      </span><span style="color:#50fa7b;">repositoryFile </span><span style="color:#ff79c6;">= </span><span style="font-style:italic;color:#ffb86c;">config</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">age</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">secrets</span><span style="color:#ff79c6;">.</span><span style="color:#f1fa8c;">&quot;restic/repo&quot;</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">path</span><span>;
+</span><span>      </span><span style="color:#50fa7b;">passwordFile </span><span style="color:#ff79c6;">= </span><span style="font-style:italic;color:#ffb86c;">config</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">age</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">secrets</span><span style="color:#ff79c6;">.</span><span style="color:#f1fa8c;">&quot;restic/password&quot;</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">path</span><span>;
+</span><span>
+</span><span>      </span><span style="color:#50fa7b;">paths </span><span style="color:#ff79c6;">= </span><span>[
+</span><span>        </span><span style="color:#f1fa8c;">&quot;</span><span style="font-style:italic;color:#ff79c6;">${</span><span style="font-style:italic;color:#ffb86c;">config</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">users</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">users</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">arthur</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">home</span><span style="font-style:italic;color:#ff79c6;">}</span><span style="color:#f1fa8c;">/documents&quot;
+</span><span>      ];
+</span><span>
+</span><span>      </span><span style="color:#50fa7b;">pruneOpts </span><span style="color:#ff79c6;">= </span><span>[
+</span><span>        </span><span style="color:#f1fa8c;">&quot;--keep-daily 7&quot;
+</span><span>        </span><span style="color:#f1fa8c;">&quot;--keep-weekly 5&quot;
+</span><span>        </span><span style="color:#f1fa8c;">&quot;--keep-monthly 12&quot;
+</span><span>      ];
+</span><span>    };
+</span><span>  };
+</span><span>}
+</span></code></pre>
+<p>The secrets specify the path to our encrypted age files that we created before.</p>
+<p>The <a href="https://github.com/NixOS/nixpkgs/blob/nixos-23.05/nixos/modules/services/backup/restic.nix">backup service</a> has the name <code>daily</code> (can be changed to any other name if preferred), which will create a systemd service called <code>restic-backups-daily.service</code>.</p>
+<p>The default systemd timer config runs the job at midnight each day. It also enables the <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html#Persistent=">Persistent</a> option by default, meaning that if the computer was off during the trigger time, it will run the job immediatelly after the machine starts up again.</p>
+<p>The prune option will remove old data that is not needed anymore. This is used to save space. The NixOS service will run the <code>restic forget --prune</code> command. In the example above we want to keep the most recent 7 daily, 5 weekly and 12 monthly snapshots. If left out, each daily backup will be kept forever.</p>
+<p>Add the files to git, rebuild your system and switch to the new configuration:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ git add secrets/ restic.nix
+</span><span>$ nixos-rebuild --flake .#mycomputer switch
+</span></code></pre>
+<p>This should create the restic backup systemd services (but not trigger them yet).</p>
+<h3 id="systemd-service">Systemd Service</h3>
+<p>The systemd service that will run the backups each day looks like this:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ systemctl status restic-backups-daily.service
+</span><span>○ restic-backups-daily.service
+</span><span>     Loaded: loaded (/etc/systemd/system/restic-backups-daily.service; linked; preset: enabled)
+</span><span>     Active: inactive (dead) since Wed 2023-11-22 14:40:38 CET; 3h 5min ago
+</span><span>TriggeredBy: ● restic-backups-daily.timer
+</span></code></pre>
+<p>We can see that the service is triggered by <code>restic-backups-daily.timer</code>, which looks like this:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ systemctl status restic-backups-daily.timer
+</span><span>● restic-backups-daily.timer
+</span><span>     Loaded: loaded (/etc/systemd/system/restic-backups-daily.timer; enabled; preset: enabled)
+</span><span>     Active: active (waiting) since Wed 2023-11-22 13:52:14 CET; 3h 53min ago
+</span><span>    Trigger: Thu 2023-11-23 00:00:00 CET; 6h left
+</span><span>   Triggers: ● restic-backups-daily.service
+</span></code></pre>
+<p>To test if backups are working we start the service manually:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ sudo systemctl start restic-backups-daily.service
+</span></code></pre>
+<p>To check the output we run:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ journalctl -u restic-backups-daily.service
+</span><span>systemd[1]: Starting restic-backups-daily.service...
+</span><span>restic-backups-daily-pre-start[53021]: Fatal: unable to open config file: Stat: b2_download_file_by_name: 404:
+</span><span>restic-backups-daily-pre-start[53021]: Is there a repository at the following location?
+</span><span>restic-backups-daily-pre-start[53021]: b2:my-bucket
+</span><span>restic-backups-daily-pre-start[53038]: created restic repository c66237620d at
+</span><span>restic-backups-daily-pre-start[53038]: Please note that knowledge of your password is required to access
+</span><span>restic-backups-daily-pre-start[53038]: the repository. Losing your password means that your data is
+</span><span>restic-backups-daily-pre-start[53038]: irrecoverably lost.
+</span><span>restic[53054]: no parent snapshot found, will read all files
+</span><span>restic[53054]: Files:         846 new,     0 changed,     0 unmodified
+</span><span>restic[53054]: Dirs:          107 new,     0 changed,     0 unmodified
+</span><span>restic[53054]: Added to the repository: 244.128 MiB (212.474 MiB stored)
+</span><span>restic[53054]: processed 846 files, 314.304 MiB in 0:16
+</span><span>restic[53054]: snapshot d409fc8f saved
+</span><span>restic[53079]: Applying Policy: keep 7 daily, 5 weekly, 12 monthly snapshots
+</span><span>restic[53079]: keep 1 snapshots:
+</span><span>restic[53079]: ID        Time                 Host        Tags        Reasons           Paths
+</span><span>restic[53079]: -----------------------------------------------------------------------------------------------
+</span><span>restic[53079]: d409fc8f  2023-11-22 14:09:36  mycomputer              daily snapshot    /home/arthur/documents
+</span><span>restic[53079]:                                                        weekly snapshot
+</span><span>restic[53079]:                                                        monthly snapshot
+</span><span>restic[53079]: -----------------------------------------------------------------------------------------------
+</span><span>restic[53079]: 1 snapshots
+</span><span>restic[53096]: using temporary cache in /var/cache/restic-backups-daily/restic-check-cache-1922151602
+</span><span>restic[53096]: create exclusive lock for repository
+</span><span>restic[53096]: load indexes
+</span><span>restic[53096]: check all packs
+</span><span>restic[53096]: check snapshots, trees and blobs
+</span><span>restic[53096]: [0:01] 100.00%  1 / 1 snapshots
+</span><span>restic[53096]: no errors were found
+</span><span>systemd[1]: restic-backups-daily.service: Deactivated successfully.
+</span><span>systemd[1]: Finished restic-backups-daily.service.
+</span><span>systemd[1]: restic-backups-daily.service: Consumed 8.131s CPU time, received 1.6M IP traffic, sent 213.2M IP traffic.
+</span></code></pre>
+<p>The backup finished successfully. Since this is the first run and the restic repository didn't exist before, there was an error at the beginning which can be ignored. The next run should not have this error since the repository has been initialized now.</p>
+<h2 id="testing-backup-restore">Testing Backup Restore</h2>
+<p>To test that we can restore backups we use the restic CLI. Since NixOS 23.11, the restic service creates wrapper scripts for each job. The script is name <code>restic-$job</code>, which is <code>restic-daily</code> in our case. It will automatically load the environment variables, repository name and password from the service definition.</p>
+<p>To list snapshots we run:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ sudo restic-daily snapshots
+</span><span>repository c6622116 opened (version 2, compression level auto)
+</span><span>ID        Time                 Host        Tags        Paths
+</span><span>-----------------------------------------------------------------------------
+</span><span>47a123a4  2023-11-22 14:40:11  desktop                 /home/arthur/documents
+</span><span>-----------------------------------------------------------------------------
+</span></code></pre>
+<p>To restore it into the <code>restore-backup</code> directory we run:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ sudo restic-daily restore --target restore-backup latest
+</span></code></pre>
+<p>The files should be restored from the latest backup.</p>
+<h2 id="desktop-notifications-for-failures">Desktop notifications for failures</h2>
+<p>To notify us in case the backup fails we can setup desktop notifications. This also works when the backup is started (and fails) before the window manager launched. The notification will be shown on the next start.</p>
+<p>Basically we create a systemd service that runs the <code>notify-send</code> command in a shell script, and attach it to the <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#OnFailure="><code>OnFailure</code></a> event of the restic backup service.</p>
+<p>We put the following code into the same <code>restic.nix</code> file as above:</p>
+<pre data-lang="nix" style="background-color:#282a36;color:#f8f8f2;" class="language-nix "><code class="language-nix" data-lang="nix"><span>{
+</span><span>  </span><span style="color:#50fa7b;">environment</span><span>.</span><span style="color:#50fa7b;">systemPackages </span><span style="color:#ff79c6;">= </span><span>[
+</span><span>    </span><span style="font-style:italic;color:#ffb86c;">pkgs</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">libnotify
+</span><span>  ];
+</span><span>
+</span><span>  </span><span style="color:#50fa7b;">systemd</span><span>.</span><span style="color:#50fa7b;">services</span><span>.</span><span style="color:#50fa7b;">restic-backups-daily</span><span>.</span><span style="color:#50fa7b;">unitConfig</span><span>.</span><span style="color:#50fa7b;">OnFailure </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;notify-backup-failed.service&quot;</span><span>;
+</span><span>
+</span><span>  </span><span style="color:#50fa7b;">systemd</span><span>.</span><span style="color:#50fa7b;">services</span><span>.</span><span style="color:#f1fa8c;">&quot;notify-backup-failed&quot; </span><span style="color:#ff79c6;">= </span><span>{
+</span><span>    </span><span style="color:#50fa7b;">enable </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">true</span><span>;
+</span><span>    </span><span style="color:#50fa7b;">description </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;Notify on failed backup&quot;</span><span>;
+</span><span>    </span><span style="color:#50fa7b;">serviceConfig </span><span style="color:#ff79c6;">= </span><span>{
+</span><span>      </span><span style="color:#50fa7b;">Type </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;oneshot&quot;</span><span>;
+</span><span>      </span><span style="color:#50fa7b;">User </span><span style="color:#ff79c6;">= </span><span style="font-style:italic;color:#ffb86c;">config</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">users</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">users</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">arthur</span><span style="color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">name</span><span>;
+</span><span>    };
+</span><span>
+</span><span>    </span><span style="color:#6272a4;"># required for notify-send
+</span><span>    </span><span style="color:#50fa7b;">environment</span><span>.</span><span style="color:#50fa7b;">DBUS_SESSION_BUS_ADDRESS </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;unix:path=/run/user/</span><span style="font-style:italic;color:#ff79c6;">${
+</span><span style="font-style:italic;color:#ffb86c;">            </span><span style="color:#8be9fd;">toString </span><span style="font-style:italic;color:#ffb86c;">config</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">users</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">users</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">arthur</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">uid
+</span><span style="font-style:italic;color:#ffb86c;">          </span><span style="font-style:italic;color:#ff79c6;">}</span><span style="color:#f1fa8c;">/bus&quot;</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#50fa7b;">script </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&#39;&#39;
+</span><span style="color:#f1fa8c;">      </span><span style="font-style:italic;color:#ff79c6;">${</span><span style="font-style:italic;color:#ffb86c;">pkgs</span><span style="font-style:italic;color:#ff79c6;">.</span><span style="font-style:italic;color:#ffb86c;">libnotify</span><span style="font-style:italic;color:#ff79c6;">}</span><span style="color:#f1fa8c;">/bin/notify-send --urgency=critical \
+</span><span style="color:#f1fa8c;">        &quot;Backup failed&quot; \
+</span><span style="color:#f1fa8c;">        &quot;$(journalctl -u restic-backups-daily -n 5 -o cat)&quot;
+</span><span style="color:#f1fa8c;">    &#39;&#39;</span><span>;
+</span><span>  };
+</span><span>}
+</span></code></pre>
+<p>To try it out we set the user of the restic backup service to a non-existing one:</p>
+<pre data-lang="nix" style="background-color:#282a36;color:#f8f8f2;" class="language-nix "><code class="language-nix" data-lang="nix"><span>{
+</span><span>  </span><span style="color:#50fa7b;">services</span><span>.</span><span style="color:#50fa7b;">restic</span><span>.</span><span style="color:#50fa7b;">backups </span><span style="color:#ff79c6;">= </span><span>{
+</span><span>    </span><span style="color:#50fa7b;">daily </span><span style="color:#ff79c6;">= </span><span>{
+</span><span>      </span><span style="color:#6272a4;"># ...
+</span><span>      </span><span style="color:#50fa7b;">user </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;doesntexist&quot;</span><span>;
+</span><span>    };
+</span><span>  };
+</span><span>}
+</span></code></pre>
+<p>Now we manyally trigger a backup:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ sudo systemctl start restic-backups-daily.service
+</span><span>Job for restic-backups-daily.service failed because the control process exited with error code.
+</span></code></pre>
+<p>This will show a desktop notification:</p>
+<p><img src="https://www.arthurkoziel.com/restic-backups-b2-nixos/notification.png" alt="example desktop notification" /></p>
+<p>With this working the automated backups are done. They will run every day at midnight or on the next boot if the machine was off. In case the backup fails we will get a notification and can then use the systemd logs to further investigate and fix the issue.</p>
+
+</article>
+
+
+</body>
+</html>

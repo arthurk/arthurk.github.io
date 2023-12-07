@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Sync AWS Secrets Manager to Kubernetes Secrets</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Sync AWS Secrets Manager to Kubernetes Secrets</h1>
+    <div id="date">
+      <time class="date" datetime="2022-09-28">September 28, 2022</time>
+    
+    </div>
+  </header>
+
+  <p>In this blog post I'll describe how to automatically sync an <a href="https://aws.amazon.com/secrets-manager/">AWS Secrets Manager</a> secret to a Kubernetes <code>Secret</code> object.</p>
+<p>We'll create an example that will expose the Secrets Manager secret as an environment variable in a Pod's container. </p>
+<h2 id="installation">Installation</h2>
+<p>There are two components which we'll need to install on the Kubernetes cluster:</p>
+<ul>
+<li><a href="https://secrets-store-csi-driver.sigs.k8s.io">Secrets Store CSI driver</a>: Integrates secrets stores with Kubernetes</li>
+<li><a href="https://github.com/aws/secrets-store-csi-driver-provider-aws">AWS provider for the Secrets Store CSI Driver</a>: Provider for the Secrets Store CSI driver that integrates with AWS Secrets Manager</li>
+</ul>
+<p>Both come with an official Helm chart that we'll use.</p>
+<p>First we'll install the Secrets Store CSI driver. The <em>Sync as Kubernetes secret</em> feature is disabled by default. We can enable it in the Helm values file with:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">syncSecret</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">enabled</span><span>: </span><span style="color:#bd93f9;">true
+</span></code></pre>
+<p>Then we add the Helm repo and install the chart:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ helm repo add secrets-store-csi-driver \
+</span><span>    https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+</span><span>$ helm install csi-secrets-store \
+</span><span>    secrets-store-csi-driver/secrets-store-csi-driver -f values.yaml
+</span></code></pre>
+<p>The Secrets Store CSI driver by itself is just an interface for providers (AWS, GCP, Azure, Vault, etc.) to integrate with. To use AWS Secrets Manager we also need to install the AWS Provider:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ helm repo add eks https://aws.github.io/eks-charts
+</span><span>$ helm install csi-secrets-store-provider-aws eks/csi-secrets-store-provider-aws
+</span></code></pre>
+<h2 id="create-a-secret-in-secrets-manager">Create a secret in Secrets Manager</h2>
+<p>Next we create a secret in AWS Secrets Manager that we'll use for testing. We name it <code>CSI-driver-test-secret</code> with the secret value <code>secretkey</code>. Using the <a href="https://aws.amazon.com/cli/">AWS CLI</a> we run:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ aws --region us-east-1 secretsmanager \
+</span><span>    create-secret \
+</span><span>    --name CSI-driver-test-secret \
+</span><span>    --secret-string &#39;secretkey&#39;
+</span></code></pre>
+<p>The output is a JSON document with information about the created secret. The <code>ARN</code> value is important for the next step.</p>
+<pre data-lang="json" style="background-color:#282a36;color:#f8f8f2;" class="language-json "><code class="language-json" data-lang="json"><span>{
+</span><span>    </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">ARN</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">arn:aws:secretsmanager:us-east-1:123456:secret:CSI-driver-test-secret-sWJ9Yz</span><span style="color:#eeeeee;">&quot;</span><span>,
+</span><span>    </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">Name</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">CSI-driver-test-secret</span><span style="color:#eeeeee;">&quot;</span><span>,
+</span><span>    </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">VersionId</span><span style="color:#eeeeee;">&quot;</span><span>: </span><span style="color:#eeeeee;">&quot;</span><span style="color:#f1fa8c;">123-123-123-123</span><span style="color:#eeeeee;">&quot;
+</span><span>}
+</span></code></pre>
+<h2 id="create-an-aws-iam-policy">Create an AWS IAM Policy</h2>
+<p>We need to create an IAM Policy that allows an IAM Role (that we create in the next step) to access the secret that we just created. The <code>Resource</code> field in the Policy document needs to contain the ARN from the previous step:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ aws --region us-east-1 \
+</span><span>    --query Policy.Arn \
+</span><span>    --output text iam create-policy \
+</span><span>    --policy-name deployment-policy \
+</span><span>    --policy-document &#39;{
+</span><span>    &quot;Version&quot;: &quot;2012-10-17&quot;,
+</span><span>    &quot;Statement&quot;: [ {
+</span><span>        &quot;Effect&quot;: &quot;Allow&quot;,
+</span><span>        &quot;Action&quot;: [&quot;secretsmanager:GetSecretValue&quot;, &quot;secretsmanager:DescribeSecret&quot;],
+</span><span>        &quot;Resource&quot;: [&quot;arn:aws:secretsmanager:us-east-1:123456:secret:CSI-driver-test-secret-sWJ9Yz&quot;]
+</span><span>    } ] }&#39;
+</span><span>arn:aws:iam::123456:policy/deployment-policy
+</span></code></pre>
+<p>The output of this command is the IAM Policy ARN. We'll need it in the next step.</p>
+<h2 id="aws-iam-role-and-kubernetes-service-account">AWS IAM Role and Kubernetes Service Account</h2>
+<p>Next we create an IAM Role that has the previously created IAM Policy attached. Then we create a Kubernetes <code>ServiceAccount</code> object that has the IAM Role's ARN as an annotation.</p>
+<p>For this to work you'll need to have <a href="https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html">IAM Roles for Service Accounts (IRSA)</a> enabled. It allows us to easily map Kubernetes Service Accounts with AWS IAM Policies.</p>
+<p>I'm using <a href="https://eksctl.io/usage/iamserviceaccounts/">eksctl</a> which simplifies all necessary steps into a single command, but it can also be done <a href="https://docs.aws.amazon.com/eks/latest/userguide/create-service-account-iam-policy-and-role.html#create-service-account-iam-role">using the AWS CLI</a> if you don't want to install eksctl.</p>
+<p>Make sure to replace the <code>attach-policy-arn</code> with the output of the previous step.</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ eksctl create iamserviceaccount \
+</span><span>    --name nginx-deployment-sa \
+</span><span>    --region us-east-1 \
+</span><span>    --cluster my-cluster \
+</span><span>    --attach-policy-arn &quot;arn:aws:iam::123456:policy/deployment-policy&quot; \
+</span><span>    --approve
+</span></code></pre>
+<p>To verify that it worked we can output the new <code>ServiceAccount</code> and check that it has a <code>role-arn</code> annotation:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl get sa -n default nginx-deployment-sa -o yaml | grep role-arn
+</span><span>eks.amazonaws.com/role-arn: arn:aws:iam::123456:role/eksctl-my-cluster-addon-iamser-Role1-11RZDP3FRDZKI
+</span></code></pre>
+<p>We now have all necessary permissions setup to allow our Pod to access the secret in Secrets Manager.</p>
+<h2 id="create-secret-provider-class">Create Secret Provider Class</h2>
+<p>To create a Kubernetes Secret that is linked to a Secrets Manager secret, we have to create a <code>SecretProviderClass</code> object.</p>
+<p>In our example we tell it to create a Secret in Kubernetes called <code>foosecret</code> and set it to the value of the <code>CSI-driver-test-secret</code> secret from Secrets Manager:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">secrets-store.csi.x-k8s.io/v1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">SecretProviderClass
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">nginx-deployment-aws-secrets
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">provider</span><span>: </span><span style="color:#f1fa8c;">aws
+</span><span>  </span><span style="color:#ff79c6;">secretObjects</span><span>:
+</span><span>  - </span><span style="color:#ff79c6;">data</span><span>:
+</span><span>    - </span><span style="color:#ff79c6;">key</span><span>: </span><span style="color:#f1fa8c;">SECRET_API_KEY
+</span><span>      </span><span style="color:#ff79c6;">objectName</span><span>: </span><span style="color:#f1fa8c;">CSI-driver-test-secret
+</span><span>    </span><span style="color:#ff79c6;">secretName</span><span>: </span><span style="color:#f1fa8c;">foosecret
+</span><span>    </span><span style="color:#ff79c6;">type</span><span>: </span><span style="color:#f1fa8c;">Opaque
+</span><span>  </span><span style="color:#ff79c6;">parameters</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">objects</span><span>: </span><span style="color:#ff79c6;">|
+</span><span style="color:#f1fa8c;">        - objectName: &quot;CSI-driver-test-secret&quot;
+</span><span style="color:#f1fa8c;">          objectType: &quot;secretsmanager&quot;
+</span></code></pre>
+<p>Save the YAML to a file and then apply it:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl apply -f secretproviderclass.yaml
+</span></code></pre>
+<p>The secret will be created when a Pod starts that has a volume mounted which uses the Secret Store CSI driver (see next step for an example). It will be deleted when the Pod terminates. If there is a Deployment with multiple replicas, all Pods need to be terminated for the Secret to be deleted.</p>
+<p>If auto-rotation is enabled in Secrets Manager you will need to either manually restart the Pod(s) or use the <a href="https://secrets-store-csi-driver.sigs.k8s.io/topics/secret-auto-rotation.html">rotation reconciler feature</a> in the Secrets Store CSI Driver.</p>
+<p>The rotation reconciler feature will poll Secrets Manager periodically and as pricing is based on API Calls it will increase cost.</p>
+<h2 id="update-the-nginx-deployment">Update the nginx Deployment</h2>
+<p>We can now create a Pod to access the secret. In this example we'll use a Deployment with 3 replicas to read the secret and expose it as an environment variable in each container.</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">apps/v1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Deployment
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">csi-secret-driver-test-nginx-deployment
+</span><span>  </span><span style="color:#ff79c6;">labels</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">app</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">replicas</span><span>: </span><span style="color:#bd93f9;">3
+</span><span>  </span><span style="color:#ff79c6;">selector</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">matchLabels</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">app</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span>  </span><span style="color:#ff79c6;">template</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">labels</span><span>:
+</span><span>        </span><span style="color:#ff79c6;">app</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span>    </span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">serviceAccountName</span><span>: </span><span style="color:#f1fa8c;">nginx-deployment-sa
+</span><span>      </span><span style="color:#ff79c6;">volumes</span><span>:
+</span><span>      - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">secrets-store-inline
+</span><span>        </span><span style="color:#ff79c6;">csi</span><span>:
+</span><span>          </span><span style="color:#ff79c6;">driver</span><span>: </span><span style="color:#f1fa8c;">secrets-store.csi.k8s.io
+</span><span>          </span><span style="color:#ff79c6;">readOnly</span><span>: </span><span style="color:#bd93f9;">true
+</span><span>          </span><span style="color:#ff79c6;">volumeAttributes</span><span>:
+</span><span>            </span><span style="color:#ff79c6;">secretProviderClass</span><span>: </span><span style="color:#f1fa8c;">nginx-deployment-aws-secrets
+</span><span>      </span><span style="color:#ff79c6;">containers</span><span>:
+</span><span>      - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span>        </span><span style="color:#ff79c6;">image</span><span>: </span><span style="color:#f1fa8c;">nginx:1.14.2
+</span><span>        </span><span style="color:#ff79c6;">ports</span><span>:
+</span><span>        - </span><span style="color:#ff79c6;">containerPort</span><span>: </span><span style="color:#bd93f9;">80
+</span><span>        </span><span style="color:#ff79c6;">volumeMounts</span><span>:
+</span><span>        - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">secrets-store-inline
+</span><span>          </span><span style="color:#ff79c6;">mountPath</span><span>: </span><span style="color:#f1fa8c;">&quot;/mnt/secrets-store&quot;
+</span><span>          </span><span style="color:#ff79c6;">readOnly</span><span>: </span><span style="color:#bd93f9;">true
+</span><span>        </span><span style="color:#ff79c6;">env</span><span>:
+</span><span>        - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">SECRET_API_KEY
+</span><span>          </span><span style="color:#ff79c6;">valueFrom</span><span>:
+</span><span>            </span><span style="color:#ff79c6;">secretKeyRef</span><span>:
+</span><span>              </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">foosecret
+</span><span>              </span><span style="color:#ff79c6;">key</span><span>: </span><span style="color:#f1fa8c;">SECRET_API_KEY
+</span></code></pre>
+<p>After applying the file check that the <code>SECRET_API_KEY</code> is now in the env vars of our nginx container and contains our secret <code>secretkey</code>:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ kubectl apply -f test-nginx.yaml
+</span><span>$ kubectl exec csi-secret-driver-test-nginx-deployment-abc123 -- \
+</span><span>    env | grep SECRET_API_KEY
+</span><span>SECRET_API_KEY=secretkey
+</span></code></pre>
+<p>And with that we have successfully synced our secret from AWS Secrets Manager to Kubernetes.</p>
+<h2 id="resources">Resources</h2>
+<ul>
+<li><a href="https://docs.aws.amazon.com/secretsmanager/latest/userguide/integrating_csi_driver.html">https://docs.aws.amazon.com/secretsmanager/latest/userguide/integrating_csi_driver.html</a></li>
+<li><a href="https://docs.aws.amazon.com/secretsmanager/latest/userguide/integrating_csi_driver_tutorial.html">https://docs.aws.amazon.com/secretsmanager/latest/userguide/integrating_csi_driver_tutorial.html</a></li>
+<li><a href="https://github.com/aws/secrets-store-csi-driver-provider-aws">https://github.com/aws/secrets-store-csi-driver-provider-aws</a></li>
+<li><a href="https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/main/charts/secrets-store-csi-driver">https://github.com/kubernetes-sigs/secrets-store-csi-driver/blob/main/charts/secrets-store-csi-driver</a></li>
+<li><a href="https://secrets-store-csi-driver.sigs.k8s.io/topics/sync-as-kubernetes-secret.html">https://secrets-store-csi-driver.sigs.k8s.io/topics/sync-as-kubernetes-secret.html</a></li>
+</ul>
+
+</article>
+
+
+</body>
+</html>

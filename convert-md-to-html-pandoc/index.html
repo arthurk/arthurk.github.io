@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Convert Markdown to HTML with Pandoc</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Convert Markdown to HTML with Pandoc</h1>
+    <div id="date">
+      <time class="date" datetime="2020-11-29">November 29, 2020</time>
+    
+    </div>
+  </header>
+
+  <p>In this post I'll describe how to use <a href="https://pandoc.org/">Pandoc</a> to convert Markdown to a full HTML page (including header/footer).</p>
+<p>The Pandoc version used for the examples below is 2.11.2.</p>
+<h2 id="what-is-pandoc">What is Pandoc?</h2>
+<p>Pandoc is an open-source document converter that is written in Haskell. It was initially
+released in 2006 and has been under active development since then.</p>
+<p>The goal of Pandoc is to convert a document from one markup format to another. It distinguishes
+between input formats and output formats. As of writing this it supports <a href="https://pandoc.org/MANUAL.html#input-formats">38 input formats</a> and
+<a href="https://pandoc.org/MANUAL.html#output-formats">59 output formats</a>.</p>
+<p>In this post we'll use Markdown as an input format and HTML as an output format.</p>
+<h2 id="preparing-the-html-template">Preparing the HTML template</h2>
+<p>To generate a full HTML page we have to use Pandoc's standalone mode which will use a <a href="https://pandoc.org/MANUAL.html#templates">template</a> to add header and footer.</p>
+<p>Pandoc ships with a default template, if you wish to use that skip this section and omit the <code>--template</code> argument.</p>
+<p>The template we'll use is this (save it to <code>template.html</code>):</p>
+<pre data-lang="html" style="background-color:#282a36;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!doctype html&gt;
+</span><span>&lt;</span><span style="color:#ff79c6;">html </span><span style="color:#50fa7b;">lang</span><span>=</span><span style="color:#f1fa8c;">&quot;en&quot;</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#ff79c6;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#ff79c6;">meta </span><span style="color:#50fa7b;">charset</span><span>=</span><span style="color:#f1fa8c;">&quot;utf-8&quot;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#ff79c6;">meta </span><span style="color:#50fa7b;">name</span><span>=</span><span style="color:#f1fa8c;">&quot;date&quot; </span><span style="color:#50fa7b;">content</span><span>=</span><span style="color:#f1fa8c;">&#39;$date-meta$&#39;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#ff79c6;">title</span><span>&gt;$title$&lt;/</span><span style="color:#ff79c6;">title</span><span>&gt;
+</span><span>  &lt;/</span><span style="color:#ff79c6;">head</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#ff79c6;">body</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#ff79c6;">p</span><span>&gt;Date: $date$&lt;/</span><span style="color:#ff79c6;">p</span><span>&gt;
+</span><span>$body$
+</span><span>  &lt;/</span><span style="color:#ff79c6;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#ff79c6;">html</span><span>&gt;
+</span></code></pre>
+<p>Pandoc's template variables can have <a href="https://pandoc.org/MANUAL.html#interpolated-variables">different formats</a>,
+the one we're using here start and end with a dollar sign:</p>
+<ul>
+<li><code>$date$</code>: A date in a parsable format. See the <a href="https://pandoc.org/MANUAL.html#variables-set-automatically">date-meta docs</a> for a list of recognized formats for the <code>date</code> variable. We use this to show when the document was created</li>
+<li><code>$date-meta$</code>: The <code>date</code> parsed to ISO 8601 format. This is automatically done</li>
+<li><code>$title$</code>: The document title</li>
+<li><code>$body$</code>: The document body in HTML (the converted Markdown)</li>
+</ul>
+<p>We only need to set the <code>date</code> and <code>title</code> in the Markdown document via a metadata block.</p>
+<h2 id="writing-the-markdown-file">Writing the Markdown file</h2>
+<p>Create a Markdown file <code>doc.md</code> with the following content:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>---
+</span><span>title: My Document
+</span><span>date: September 22, 2020
+</span><span>---
+</span><span>
+</span><span>## Test
+</span><span>some text
+</span></code></pre>
+<p>The beginning of the document is the metadata block with required <code>date</code> and <code>title</code> variables mentioned above.</p>
+<p>Several Markdown variants are <a href="https://pandoc.org/MANUAL.html#Markdown-variants">supported</a> such as GitHub-Flavored markdown. This example uses <a href="https://pandoc.org/MANUAL.html#pandocs-markdown">Pandoc's extended markdown</a> which is the default input for files with the <code>md</code> extension. </p>
+<h2 id="converting-the-document">Converting the document</h2>
+<p>Run the following command to generate the HTML page:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>pandoc --standalone --template template.html doc.md
+</span></code></pre>
+<p>Pandoc will try to guess the input format from the file extension (<code>.md</code> will use the Markdown input format) and output
+it to HTML (the default output format). </p>
+<p>The output will be printed to the terminal:</p>
+<pre data-lang="html" style="background-color:#282a36;color:#f8f8f2;" class="language-html "><code class="language-html" data-lang="html"><span>&lt;!doctype html&gt;
+</span><span>&lt;</span><span style="color:#ff79c6;">html </span><span style="color:#50fa7b;">lang</span><span>=</span><span style="color:#f1fa8c;">&quot;en&quot;</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#ff79c6;">head</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#ff79c6;">meta </span><span style="color:#50fa7b;">charset</span><span>=</span><span style="color:#f1fa8c;">&quot;utf-8&quot;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#ff79c6;">meta </span><span style="color:#50fa7b;">name</span><span>=</span><span style="color:#f1fa8c;">&quot;date&quot; </span><span style="color:#50fa7b;">content</span><span>=</span><span style="color:#f1fa8c;">&#39;2020-09-22&#39;</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#ff79c6;">title</span><span>&gt;My Document&lt;/</span><span style="color:#ff79c6;">title</span><span>&gt;
+</span><span>  &lt;/</span><span style="color:#ff79c6;">head</span><span>&gt;
+</span><span>  &lt;</span><span style="color:#ff79c6;">body</span><span>&gt;
+</span><span>    &lt;</span><span style="color:#ff79c6;">p</span><span>&gt;Date: September 22, 2020&lt;/</span><span style="color:#ff79c6;">p</span><span>&gt;
+</span><span>&lt;</span><span style="color:#ff79c6;">h2 </span><span style="color:#50fa7b;">id</span><span>=</span><span style="color:#f1fa8c;">&quot;test&quot;</span><span>&gt;Test&lt;/</span><span style="color:#ff79c6;">h2</span><span>&gt;
+</span><span>&lt;</span><span style="color:#ff79c6;">p</span><span>&gt;some text&lt;/</span><span style="color:#ff79c6;">p</span><span>&gt;
+</span><span>  &lt;/</span><span style="color:#ff79c6;">body</span><span>&gt;
+</span><span>&lt;/</span><span style="color:#ff79c6;">html</span><span>&gt;
+</span></code></pre>
+<p>To save the document to a file we can either redirect stdout or use the <code>-o</code> argument:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>pandoc --standalone --template template.html doc.md -o doc.html
+</span></code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this example we've converted Markdown to a standalone HTML page that is using a custom template.</p>
+<p>This was just a simple example of what Pandoc is capable to do. The standalone mode coupled with the
+bundled default templates makes it easy to generate a wide variety of outputs such as HTML presentations, Jupyter notebooks or PDF documents.</p>
+
+</article>
+
+
+</body>
+</html>

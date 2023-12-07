@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Arthur Koziel">
+  <title>Managing Kubernetes resources in Terraform: Kubernetes provider</title>
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://www.arthurkoziel.com/feed.xml">
+  <style>
+  /* light theme for mobile screens,
+     dark theme and laptop/desktop overrides at bottom */
+  body {
+    font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.25;
+    max-width: 630px;
+    margin: 0 15px;
+    background-color: #fff;
+    color: #0b0c0c;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    margin-bottom: 50px;
+  }
+
+  /* links */
+  a { color: #1d70b8 }
+  a:hover { color: #003078 }
+
+  /* main heading and date */
+  nav {
+    margin-bottom: 30px;
+  }
+
+  /* headings */
+  h1, h2, h3 {
+    color: #202124;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.09;
+    margin-bottom: 30px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.11;
+    margin-bottom: 15px;
+  }
+
+  /* date below main heading */
+  #date {
+    color: #505a5f;
+    font-weight: 400;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  /* images */
+  img {
+    height: auto;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  /* code */
+  code, pre {
+    font-size: 0.9rem;
+  }
+
+  pre {
+    padding: 1rem;
+    overflow: auto;
+    margin: 25px 0;
+  }
+
+  /* inline code */
+  article > p > code, article > ul > li > code {
+    font-weight: 700;
+    color: #202124;
+  }
+
+  /* tables */
+  table {
+    border-collapse: collapse;
+    margin: 18px 0;
+  }
+
+  table tr {
+    vertical-align: top;
+  }
+
+  table td {
+    border-bottom: 1px solid #777;
+    padding: .5em 0;
+  }
+
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* first column */
+  table td:nth-child(1) {
+    width: 25%;
+    padding-right: 1em;
+    color: #777;
+  }
+
+  /* lists */
+  ul, ol {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin-bottom: 15px;
+    padding-left: 20px;
+  }
+
+  ul > li, ol > li {
+    margin-bottom: 1em;
+  }
+
+  ul#blog-archive {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  ul#blog-archive li {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #b1b4b6;
+  }
+
+  ul#blog-archive li a {
+    font-weight: 700;
+  }
+
+  ul#blog-archive li p {
+    margin: 5px 0;
+    color: #505a5f;
+  }
+
+  /*
+  * Laptop/Desktop screens
+  */
+
+  @media(min-width: 48em) {
+    body {
+        font-size: 1.1875rem;
+        line-height: 1.31;
+        margin-right:auto;
+        margin-left: auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      line-height: 1.04;
+    }
+
+    h2 {
+      font-size: 2.25rem;
+      line-height: 1.11;
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.25;
+      margin-bottom: 20px;
+    }
+
+    ol, ul {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+      margin-bottom: 20px;
+    }
+
+    ul#blog-archive {
+      font-size: 1.1875rem;
+      line-height: 1.31;
+    }
+
+    ul#blog-archive li p {
+      font-size: 1rem;
+      line-height: 1.5
+    }
+
+    code, pre {
+      font-size: 1rem;
+    }
+  }
+
+  /*
+  * Dark theme
+  */
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #202124;
+      color: #bdc1c6;
+    }
+    h1, h2, h3 { color: #e8eaed }
+    #date, ul#blog-archive li p {
+      color: #bdc1c6
+    }
+    article > p > code, article > ul > li > code {
+      color: #bdc1c6
+    }
+    a { color: #8ab4f8  }
+    a:hover { color: #fff }
+    li::marker { color: #e8eaed }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <p>
+    <a href="https://www.arthurkoziel.com/">Home</a> |
+    <a href="https://www.arthurkoziel.com/blog/">Blog</a>
+  </p>
+</nav>
+
+
+<article>
+  <header>
+    <h1 class="title">Managing Kubernetes resources in Terraform: Kubernetes provider</h1>
+    <div id="date">
+      <time class="date" datetime="2023-10-20">October 20, 2023</time>
+    
+    </div>
+  </header>
+
+  <p><img src="https://www.arthurkoziel.com/managing-kubernetes-resources-in-terraform-kubernetes-provider/title.jpeg" alt="title" /></p>
+<p>Using Terraform to manage resources in Kubernetes has the following benefits, when compared to a GitOps solution such as Argo CD or Flux:</p>
+<ul>
+<li>All infrastructure is managed with one tool. Teams that already use Terraform don't have to learn how to install, operate and maintain a separate tool to manage applications inside the Kubernetes cluster.</li>
+<li>Changes can be done in one commit. For example, the provisioning of a database, saving the connection details in the cluster and then deploying application code that connects to the database.</li>
+<li>Faster disaster recovery. In the worst case, we can recover everything locally using the Terraform CLI.</li>
+</ul>
+<p>Hashicorp has two official Terraform providers related to managing Kubernetes resources: The <a href="https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs">Kubernetes provider</a> and the <a href="https://registry.terraform.io/providers/hashicorp/helm/latest/docs">Helm provider</a>. In this blog post I'll focus on how to use the Kubernetes provider, provide examples and show pros/cons at the end of this post.</p>
+<p>The examples were written using Kubernetes 1.26 and Terraform 1.5.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>The <a href="https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs">Kubernetes provider for Terraform</a> provides resources and data sources for most of the <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#api-groups">Kubernetes APIs</a>. For example, the Terraform equivalent of a Kubernetes <code>Deployment</code> is the <code>kubernetes_deployment</code> resource. All of them can be seen in the providers documentation sidebar, grouped by API.</p>
+<p>For resources that are not part of the default Kubernetes API, we need to use the <code>kubernetes_manifest</code> resource, which can be the HCL representation of any Kubernetes YAML manifest.</p>
+<p>The following examples show the same Kubernetes Deployment in YAML, Terraform <code>kubernetes_deployment</code> and Terraform <code>kubernetes_manifest</code>:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">apiVersion</span><span>: </span><span style="color:#f1fa8c;">apps/v1
+</span><span style="color:#ff79c6;">kind</span><span>: </span><span style="color:#f1fa8c;">Deployment
+</span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">nginx-deployment
+</span><span>  </span><span style="color:#ff79c6;">labels</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">app</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">replicas</span><span>: </span><span style="color:#bd93f9;">3
+</span><span>  </span><span style="color:#ff79c6;">selector</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">matchLabels</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">app</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span>  </span><span style="color:#ff79c6;">template</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">metadata</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">labels</span><span>:
+</span><span>        </span><span style="color:#ff79c6;">app</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span>    </span><span style="color:#ff79c6;">spec</span><span>:
+</span><span>      </span><span style="color:#ff79c6;">containers</span><span>:
+</span><span>      - </span><span style="color:#ff79c6;">name</span><span>: </span><span style="color:#f1fa8c;">nginx
+</span><span>        </span><span style="color:#ff79c6;">image</span><span>: </span><span style="color:#f1fa8c;">nginx:1.14.2
+</span><span>        </span><span style="color:#ff79c6;">ports</span><span>:
+</span><span>        - </span><span style="color:#ff79c6;">containerPort</span><span>: </span><span style="color:#bd93f9;">80
+</span></code></pre>
+<p>The same deployment In Terraform HCL using the Kubernetes provider <code>kubernetes_deployment</code> resource:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;kubernetes_deployment&quot; &quot;nginx&quot;</span><span> {
+</span><span>  metadata {
+</span><span>    name      </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>  }
+</span><span>
+</span><span>  spec {
+</span><span>    replicas </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">2
+</span><span>
+</span><span>    selector {
+</span><span>      match_labels </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>        app </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>      }
+</span><span>    }
+</span><span>
+</span><span>    template {
+</span><span>      metadata {
+</span><span>        labels </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>          app </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>        }
+</span><span>      }
+</span><span>
+</span><span>      spec {
+</span><span>        container {
+</span><span>          image </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx:1.25.2-alpine&quot;
+</span><span>          name  </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>
+</span><span>          port {
+</span><span>            container_port </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">80
+</span><span>          }
+</span><span>        }
+</span><span>      }
+</span><span>    }
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>Alternatively, we can also use the <code>kubernetes_manifest</code> resource, which can be the HCL representation of any Kubernetes YAML manifest:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;kubernetes_manifest&quot; &quot;deployment_nginx_deployment&quot;</span><span> {
+</span><span>  manifest </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>    &quot;apiVersion&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;apps/v1&quot;
+</span><span>    &quot;kind&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;Deployment&quot;
+</span><span>    &quot;metadata&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>      &quot;labels&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>        &quot;app&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>      }
+</span><span>      &quot;name&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>    }
+</span><span>    &quot;spec&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>      &quot;replicas&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">2
+</span><span>      &quot;selector&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>        &quot;matchLabels&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>          &quot;app&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>        }
+</span><span>      }
+</span><span>      &quot;template&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>        &quot;metadata&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>          &quot;labels&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>            &quot;app&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>          }
+</span><span>        }
+</span><span>        &quot;spec&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>          &quot;containers&quot; </span><span style="color:#ff79c6;">=</span><span> [
+</span><span>            {
+</span><span>              &quot;image&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx:1.25.2-alpine&quot;
+</span><span>              &quot;name&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;nginx&quot;
+</span><span>              &quot;ports&quot; </span><span style="color:#ff79c6;">=</span><span> [
+</span><span>                {
+</span><span>                  &quot;containerPort&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#bd93f9;">80
+</span><span>                },
+</span><span>              ]
+</span><span>            },
+</span><span>          ]
+</span><span>        }
+</span><span>      }
+</span><span>    }
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>Both of the HCL versions result in the same deployment, but using <code>kubernetes_deployment</code> is less verbose and Terraform will do basic validation on the values (like checking if <code>replicas</code> is an integer). But as mentioned above, for custom resources, we have no other option than using <code>kubernetes_manifest</code>.</p>
+<p>Rather than just a single Deployment, we're going to install <a href="https://istio.io">Istio</a> as a real-world example. It requires custom resource definitions (CRDs) and various resources (RBAC, ServiceAccounts, ConfigMaps etc.) for the istio daemon to be deployed.</p>
+<h2 id="installing-istio">Installing Istio</h2>
+<p>As most Kubernetes resources are distributed in YAML, the first step is always the conversion to Terraform HCL. The Istio YAML manifests for the default profile are around 10,000 lines long and contain 47 Kubernetes resources. Doing the conversion manually would take too long.</p>
+<p>To automate the conversion, we can use <a href="https://github.com/jrhouston/tfk8s">tfk8s</a>. Here are the commands to generate the Istio YAML manifests and convert them to HCL:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ istioctl manifest generate &gt; istio.yaml
+</span><span>$ tfk8s -f istio.yaml &gt; istio.tf
+</span></code></pre>
+<h3 id="crds-module">CRDs module</h3>
+<p>A good practice when deploying applications that have CRDs is to put them into its own Terraform module. When applying the Kubernetes provider does not make a difference between custom resources and core resources, which could lead to the case where it tries to deploy a custom resource when the definition hasn't been installed yet.</p>
+<p>For our Istio installation we have to (manually) split the istio.tf file into two files, where one of them contains the CRDs. We put them into their own Terraform modules: <code>istio</code> and <code>istio-crds</code>.</p>
+<p>The directory tree should look like this:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>.
+</span><span>├── istio
+</span><span>│   └── main.tf
+</span><span>├── istio-crds
+</span><span>│   └── main.tf
+</span><span>├── main.tf
+</span></code></pre>
+<p>In the root <code>main.tf</code> file, we can add a dependency between them, so that the CRDs will be installed first:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">module </span><span style="color:#f1fa8c;">&quot;istio-crds&quot;</span><span> {
+</span><span>  </span><span style="color:#ff79c6;">source = </span><span style="color:#f1fa8c;">&quot;./istio-crds&quot;
+</span><span>}
+</span><span>
+</span><span style="font-style:italic;color:#8be9fd;">module </span><span style="color:#f1fa8c;">&quot;istio&quot;</span><span> {
+</span><span>  </span><span style="color:#ff79c6;">source = </span><span style="color:#f1fa8c;">&quot;./istio&quot;
+</span><span>
+</span><span>  </span><span style="color:#ff79c6;">depends_on =</span><span> [
+</span><span>    </span><span style="color:#bd93f9;">module</span><span style="color:#ff79c6;">.</span><span>istio</span><span style="color:#ff79c6;">-</span><span>crds
+</span><span>  ]
+</span><span>}
+</span></code></pre>
+<p>We also need to add the namespace to the <code>main/istio.tf</code> file, as it is not created automatically:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;kubernetes_namespace&quot; &quot;istio_system&quot;</span><span> {
+</span><span>  metadata {
+</span><span>    name </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;istio-system&quot;
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>Running a <code>terraform apply</code> at this point will not succeed and show many errors. I've not included them in this post because the output is too long, but they can be grouped into the following two main issues.</p>
+<h3 id="inconsistent-result-error">Inconsistent result error</h3>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Error: Provider produced inconsistent result after apply
+</span><span>
+</span><span>When applying changes to kubernetes_manifest.deployment_istio_system_istiod, provider
+</span><span>&quot;provider[\&quot;registry.terraform.io/hashicorp/kubernetes\&quot;]&quot; produced an unexpected new value:
+</span><span>.object.spec.template.spec.containers[0].resources.requests[&quot;memory&quot;]: was cty.StringVal(&quot;2048Mi&quot;), but now
+</span><span>cty.StringVal(&quot;2Gi&quot;).
+</span><span>
+</span><span>This is a bug in the provider, which should be reported in the provider&#39;s own issue tracker.
+</span></code></pre>
+<p>The Deployment specifies a memory request of <code>2048Mi</code> and the Kubernetes API reports it back as <code>2Gi</code>, to make it easier to read. The Kubernetes provider does not handle this case, so the fix is to change the value in the istio.tf file to be <code>2Gi</code>. </p>
+<p>In the same file, there are also two other cases where the value needs to be changed. The memory from <code>1024Mi</code> to <code>1Gi</code>, and the CPU from <code>2000m</code> to <code>2</code>.</p>
+<h3 id="null-value-conversion-error">Null value conversion error</h3>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Error: API response status: Failure
+</span><span>
+</span><span>  with kubernetes_manifest.deployment_istio_system_istio_ingressgateway,
+</span><span>  on istio.tf line 14211, in resource &quot;kubernetes_manifest&quot; &quot;deployment_istio_system_istio_ingressgateway&quot;:
+</span><span>14211: resource &quot;kubernetes_manifest&quot; &quot;deployment_istio_system_istio_ingressgateway&quot; {
+</span><span>
+</span><span>Deployment.apps &quot;istio-ingressgateway&quot; is invalid:
+</span><span>spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms: Required value: must
+</span><span>have at least one node selector term
+</span></code></pre>
+<p>The problem is with the conversion of null values. For example, this YAML:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#ff79c6;">affinity</span><span>:
+</span><span>  </span><span style="color:#ff79c6;">nodeAffinity</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">requiredDuringSchedulingIgnoredDuringExecution</span><span>:
+</span><span>    </span><span style="color:#ff79c6;">preferredDuringSchedulingIgnoredDuringExecution</span><span>:
+</span></code></pre>
+<p>which was converted to:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span>&quot;affinity&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>  &quot;nodeAffinity&quot; </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>    &quot;preferredDuringSchedulingIgnoredDuringExecution&quot; </span><span style="color:#ff79c6;">=</span><span> null
+</span><span>    &quot;requiredDuringSchedulingIgnoredDuringExecution&quot; </span><span style="color:#ff79c6;">=</span><span> null
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>The original YAML file will apply successfully with kubectl because it removes fields with empty values. But the Kubernetes provider for Terraform doesn't work in the same way. When we set the value to <code>null</code>, it will send the empty field to the Kubernetes API, resulting in the above error. </p>
+<p>To fix it we have to remove all keys with <code>null</code> values from the HCL file. I've submitted a <a href="https://github.com/jrhouston/tfk8s/issues/61">feature request</a> to tfk8s to remove them automatically.</p>
+<p>After the removal, we can apply successfully:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>$ terraform apply
+</span><span>
+</span><span>**Apply complete! Resources: 48 added, 0 changed, 0 destroyed.**
+</span></code></pre>
+<h3 id="re-apply-issues">Re-apply issues</h3>
+<p>But when we run plan again it will show us two changes, even if we didn't change anything:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span>Terraform will perform the following actions</span><span style="color:#ff79c6;">:
+</span><span>
+</span><span>  </span><span style="color:#6272a4;"># module.istio.kubernetes_manifest.service_istio_system_istio_ingressgateway will be updated in-place
+</span><span>  ~ </span><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;kubernetes_manifest&quot; &quot;service_istio_system_istio_ingressgateway&quot;</span><span> {
+</span><span>      ~ object   </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>          ~ metadata   </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>              </span><span style="color:#ff79c6;">+ </span><span>annotations                </span><span style="color:#ff79c6;">=</span><span> (known after apply)
+</span><span>                name                       </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;istio-ingressgateway&quot;
+</span><span>                </span><span style="color:#6272a4;"># (13 unchanged attributes hidden)
+</span><span>            }
+</span><span>            </span><span style="color:#6272a4;"># (3 unchanged attributes hidden)
+</span><span>        }
+</span><span>        </span><span style="color:#6272a4;"># (1 unchanged attribute hidden)
+</span><span>    }
+</span><span>
+</span><span>  </span><span style="color:#6272a4;"># module.istio.kubernetes_manifest.validatingwebhookconfiguration_istio_validator_istio_system will be updated in-place
+</span><span>  ~ </span><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;kubernetes_manifest&quot; &quot;validatingwebhookconfiguration_istio_validator_istio_system&quot;</span><span> {
+</span><span>      ~ object   </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>          ~ webhooks   </span><span style="color:#ff79c6;">=</span><span> [
+</span><span>              ~ {
+</span><span>                  ~ failurePolicy           </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;Fail&quot; </span><span style="color:#ff79c6;">-&gt; </span><span style="color:#f1fa8c;">&quot;Ignore&quot;
+</span><span>                    name                    </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;rev.validation.istio.io&quot;
+</span><span>                    </span><span style="color:#6272a4;"># (9 unchanged attributes hidden)
+</span><span>                },
+</span><span>            ]
+</span><span>            </span><span style="color:#6272a4;"># (3 unchanged attributes hidden)
+</span><span>        }
+</span><span>        </span><span style="color:#6272a4;"># (1 unchanged attribute hidden)
+</span><span>    }
+</span><span>
+</span><span>Plan</span><span style="color:#ff79c6;">: </span><span style="color:#bd93f9;">0</span><span> to add, </span><span style="color:#bd93f9;">2</span><span> to change, </span><span style="color:#bd93f9;">0</span><span> to destroy</span><span style="color:#ff79c6;">.
+</span></code></pre>
+<p>Trying to apply these changes will fail with the following error:</p>
+<pre style="background-color:#282a36;color:#f8f8f2;"><code><span>Error: There was a field manager conflict when trying to apply the manifest for &quot;/istio-validator-istio-system&quot;
+</span><span>
+</span><span>  with module.istio.kubernetes_manifest.validatingwebhookconfiguration_istio_validator_istio_system,
+</span><span>  on istio/main.tf line 1173, in resource &quot;kubernetes_manifest&quot; &quot;validatingwebhookconfiguration_istio_validator_istio_system&quot;:
+</span><span>1173: resource &quot;kubernetes_manifest&quot; &quot;validatingwebhookconfiguration_istio_validator_istio_system&quot; {
+</span><span>
+</span><span>The API returned the following conflict: &quot;Apply failed with 1 conflict: conflict with \&quot;pilot-discovery\&quot; using
+</span><span>admissionregistration.k8s.io/v1: .webhooks[name=\&quot;rev.validation.istio.io\&quot;].failurePolicy&quot;
+</span><span>
+</span><span>You can override this conflict by setting &quot;force_conflicts&quot; to true in the &quot;field_manager&quot; block.
+</span></code></pre>
+<p>The suggested fix by setting <code>force_conflicts = true</code> is not a good solution. It will allow us to apply the plan, but always show the same changes on every plan output.</p>
+<p>The cause of the issue can be found by looking at the Istio YAML manifests, which have the following comment:</p>
+<pre data-lang="yaml" style="background-color:#282a36;color:#f8f8f2;" class="language-yaml "><code class="language-yaml" data-lang="yaml"><span style="color:#6272a4;"># Fail open until the validation webhook is ready. The webhook controller
+</span><span style="color:#6272a4;"># will update this to `Fail` and patch in the `caBundle` when the webhook
+</span><span style="color:#6272a4;"># endpoint is ready.
+</span><span style="color:#ff79c6;">failurePolicy</span><span>: </span><span style="color:#f1fa8c;">Ignore
+</span></code></pre>
+<p>The issue is that the Istio webhook controller will change the failurePolicy after the deployment, but this state change is not reflected in the Terraform state.</p>
+<p>To fix it we can comment out the failurePolicy in the <code>ValidatingWebhookConfiguration</code>, which will set it to <code>Fail</code>:</p>
+<pre data-lang="hcl" style="background-color:#282a36;color:#f8f8f2;" class="language-hcl "><code class="language-hcl" data-lang="hcl"><span style="color:#6272a4;"># shortened example
+</span><span style="font-style:italic;color:#8be9fd;">resource </span><span style="color:#f1fa8c;">&quot;kubernetes_manifest&quot; &quot;validatingwebhookconfiguration_istio_validator_istio_system&quot;</span><span> {
+</span><span>  manifest </span><span style="color:#ff79c6;">=</span><span> {
+</span><span>    &quot;apiVersion&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;admissionregistration.k8s.io/v1&quot;
+</span><span>    &quot;kind&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;ValidatingWebhookConfiguration&quot;
+</span><span>    &quot;webhooks&quot; </span><span style="color:#ff79c6;">=</span><span> [
+</span><span>      {
+</span><span>        &quot;name&quot; </span><span style="color:#ff79c6;">= </span><span style="color:#f1fa8c;">&quot;rev.validation.istio.io&quot;
+</span><span>        </span><span style="color:#6272a4;">// &quot;failurePolicy&quot; = &quot;Ignore&quot;
+</span><span>      }
+</span><span>    ]
+</span><span>  }
+</span><span>}
+</span></code></pre>
+<p>Now running <code>terraform plan</code> will show us no changes. The installation is complete and we have successfully installed Istio using the Kubernetes provider.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The Terraform Kubernetes provider is a good option for managing application deployments in the following cases:</p>
+<ul>
+<li>Small team with simple infrastructure</li>
+<li>Write custom and minimal deployment specifications for third party applications.</li>
+<li>Infrequently update applications</li>
+</ul>
+<p>For larger, production deployments I wouldn't consider it a good option:</p>
+<ul>
+<li>The YAML to HCL conversion takes too long. Tools like tfk8s are helpful, but not perfect. Getting it to apply successfully requires trial and error.</li>
+<li>Upgrading to a new version is difficult. The whole process of converting and fixing has to be repeated.</li>
+<li>Running terraform plan takes too long. It's easy to have over 100 resources to manage after installing a few third party applications. (We could use the <code>-target</code> option, but then always need to find the right resource names).</li>
+<li>Constant fixing of Terraform state. Both tools manage their own state, and Kubernetes constantly reconciles. Any changes in the Kubernetes state need to be manually changed in the Terraform state. See above example, where Istio patches Kubernetes resources after the deployment, and Terraform always tries to revert them.</li>
+</ul>
+<p>In my next blog post I'm going to cover the <a href="https://registry.terraform.io/providers/hashicorp/helm/latest/docs">Terraform Helm provider</a>, which makes it easier to install third party applications, but also comes with a few downsides.</p>
+
+</article>
+
+
+</body>
+</html>
